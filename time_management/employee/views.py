@@ -132,16 +132,18 @@ def employee_view_api(request, employee_id=None):
 def mntl_view_api(request, employee_id=None):
     # GET (single or list)
     if request.method == "GET":
+        # Filter employees based on roles 'teamlead' or 'manager'
+        employees_qs = Employee.objects.filter(user__role__in=["teamlead", "manager"])
         if employee_id:
             try:
                 employee = Employee.objects.get(employee_id=employee_id)
-                serializer = EmployeeViewSerializer(employee)
+                serializer = EmployeeViewSerializer(employees_qs)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Employee.DoesNotExist:
                 return Response(
-                    {"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND
+                    {"error": "Manager or TeamLead not found"}, status=status.HTTP_404_NOT_FOUND
                 )
         else:
             employees = Employee.objects.all()
-            serializer = EmployeeViewSerializer(employees, many=True)
+            serializer = EmployeeViewSerializer(employees_qs, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)

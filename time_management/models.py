@@ -356,7 +356,7 @@ def generate_auto_id(model_class, prefix):
 class Building(models.Model):
     building_id = models.CharField(max_length=50, primary_key=True, blank=True)
     building_title = models.CharField(max_length=200)
-    building_description = models.TextField()
+    building_description = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
 
     def save(self, *args, **kwargs):
@@ -371,7 +371,7 @@ class Building(models.Model):
 class Task(models.Model):
     task_id = models.CharField(max_length=50, primary_key=True, blank=True)
     task_title = models.CharField(max_length=200)
-    task_description = models.TextField()
+    task_description = models.TextField(blank=True, null=True)
     priority = models.CharField(max_length=50)
     attachments = models.FileField(
         upload_to="tasks/attachments/", blank=True, null=True

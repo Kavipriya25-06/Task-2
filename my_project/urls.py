@@ -30,7 +30,11 @@ from time_management.models import (
     Calendar,
     BiometricData,
 )
-from time_management.employee.views import employee_api, employee_view_api
+from time_management.employee.views import (
+    employee_api,
+    employee_view_api,
+    mntl_view_api,
+)
 from time_management.user.views import user_api
 from time_management.hierarchy.views import (
     hierarchy_api,
@@ -67,6 +71,8 @@ urlpatterns = [
     path("employees/<str:employee_id>/", employee_api),
     path("employees-details/", employee_view_api),
     path("employees-details/<str:employee_id>/", employee_view_api),
+    path("teamlead-and-managers/", mntl_view_api, name="managers-and-team-leads"),
+    path("teamlead-and-managers/<str:employee_id>/", mntl_view_api),
     path("users/", user_api),
     path("users/<str:user_id>/", user_api),
     path("hierarchy/", hierarchy_api),
