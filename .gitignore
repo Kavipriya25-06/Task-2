@@ -1,5 +1,6 @@
 # Django/Python specific ignores
 __pycache__/
+*/__pycache__/
 *.py[cod]
 *.sqlite3
 *.log
