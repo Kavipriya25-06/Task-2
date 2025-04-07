@@ -307,7 +307,7 @@ class BiometricData(models.Model):
         return f"{self.employee_name} - {self.date}"
 
 
-# # Projects Table
+### Projects Table
 
 
 class Project(models.Model):
@@ -316,13 +316,16 @@ class Project(models.Model):
     project_type = models.CharField(max_length=100)
     start_date = models.DateField()
     estimated_hours = models.DecimalField(max_digits=10, decimal_places=2)
-    project_description = models.TextField(blank=True)
+    project_description = models.TextField(blank=True, null=True)
     area_of_work = models.CharField(max_length=255)
     project_code = models.CharField(max_length=100, unique=True)
     subdivision = models.CharField(max_length=100)
     discipline_code = models.CharField(max_length=100)
-    discipline = models.CharField(max_length=100)
+    discipline = models.CharField(max_length=100, blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.project_id:
@@ -358,6 +361,9 @@ class Building(models.Model):
     building_title = models.CharField(max_length=200)
     building_description = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
+    # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    # updated_at = models.DateTimeField(auto_now=True)
+    # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.building_id:
@@ -378,6 +384,9 @@ class Task(models.Model):
     )
     comments = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
+    # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    # updated_at = models.DateTimeField(auto_now=True)
+    # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.task_id:
@@ -391,9 +400,20 @@ class Task(models.Model):
 class ProjectAssign(models.Model):
     project_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
     project_hours = models.DecimalField(max_digits=6, decimal_places=2)
-    status = models.CharField(max_length=50)
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ("inprogress", "In Progress"),
+            ("completed", "Completed"),
+            ("pending", "Pending"),
+        ],
+        default="pending",
+    )
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    # updated_at = models.DateTimeField(auto_now=True)
+    # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.project_assign_id:
@@ -404,7 +424,15 @@ class ProjectAssign(models.Model):
 class BuildingAssign(models.Model):
     building_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
     building_hours = models.DecimalField(max_digits=6, decimal_places=2)
-    status = models.CharField(max_length=50)
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ("inprogress", "In Progress"),
+            ("completed", "Completed"),
+            ("pending", "Pending"),
+        ],
+        default="pending",
+    )
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True)
     project_assign = models.ForeignKey(
@@ -421,7 +449,15 @@ class TaskAssign(models.Model):
     task_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
     task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True)
-    status = models.CharField(max_length=50)
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ("inprogress", "In Progress"),
+            ("completed", "Completed"),
+            ("pending", "Pending"),
+        ],
+        default="pending",
+    )
     start_date = models.DateField()
     end_date = models.DateField()
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)

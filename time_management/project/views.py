@@ -3,7 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from ..models import Project, ProjectAssign
-from time_management.project.serializers import ProjectSerializer, ProjectAssignSerializer
+from time_management.project.serializers import (
+    ProjectSerializer,
+    ProjectAssignSerializer,
+)
 
 
 @api_view(["GET", "POST"])
@@ -90,7 +93,9 @@ def project_assign_detail(request, project_assign_id):
         )
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Project assignment updated", "data": serializer.data})
+            return Response(
+                {"message": "Project assignment updated", "data": serializer.data}
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "DELETE":
