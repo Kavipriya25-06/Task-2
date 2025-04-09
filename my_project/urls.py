@@ -42,9 +42,14 @@ from time_management.hierarchy.views import (
     manager_hierarchy,
     teamlead_hierarchy,
     org_hierarchy,
+    teamleads_under_manager,
 )
 from time_management.leaves_available.views import leaves_available_api
-from time_management.leaves_taken.views import leaves_taken_api
+from time_management.leaves_taken.views import (
+    leaves_taken_api,
+    org_leaves,
+    leave_request_api,
+)
 from time_management.calendar.views import calendar_api
 from time_management.biometric.views import biometric_data_api
 from time_management.project.views import (
@@ -52,6 +57,7 @@ from time_management.project.views import (
     project_detail,
     project_assign_detail,
     project_assign_list_create,
+    project_and_assign,
 )
 from time_management.building.views import (
     building_list_create,
@@ -64,6 +70,8 @@ from time_management.task.views import (
     task_detail,
     task_assign_detail,
     task_assign_list_create,
+    task_and_assign,
+    task_and_assign_test,
 )
 
 urlpatterns = [
@@ -95,6 +103,8 @@ urlpatterns = [
     path("leaves-available/<str:leave_avail_id>/", leaves_available_api),
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),
+    path("leave-request/", leave_request_api),
+    path("leave-request/<str:manager_id>/", leave_request_api),
     path("calendar/", calendar_api),
     path("calendar/<str:calendar_id>/", calendar_api),
     path("biometric-data/", biometric_data_api),
@@ -109,6 +119,16 @@ urlpatterns = [
     path(
         "projects-assigned/<str:project_assign_id>/",
         project_assign_detail,
+        name="project-assign-detail",
+    ),
+    path(
+        "projects-and-assigned/",
+        project_and_assign,
+        name="project-assign-list-create",
+    ),
+    path(
+        "projects-and-assigned/<str:project_assign_id>/",
+        project_and_assign,
         name="project-assign-detail",
     ),
     path("buildings/", building_list_create, name="building-list-create"),
@@ -133,6 +153,16 @@ urlpatterns = [
     path(
         "tasks-assigned/<str:task_assign_id>/",
         task_assign_detail,
+        name="task-assign-detail",
+    ),
+    path(
+        "tasks-and-assigned/",
+        task_and_assign,
+        name="task-assign-list-create",
+    ),
+    path(
+        "tasks-and-assigned/<str:task_assign_id>/",
+        task_and_assign,
         name="task-assign-detail",
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

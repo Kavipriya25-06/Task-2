@@ -9,7 +9,12 @@ from time_management.project.serializers import (
 )
 
 from ..models import Task, TaskAssign
-from time_management.task.serializers import TaskSerializer, TaskAssignSerializer
+from time_management.task.serializers import (
+    TaskSerializer,
+    TaskAssignSerializer,
+    TaskAndAssignSerializer,
+    TaskAndAssignSerializerTest,
+)
 
 
 @api_view(["GET", "POST"])
@@ -96,3 +101,39 @@ def task_assign_detail(request, task_assign_id):
     elif request.method == "DELETE":
         task.delete()
         return Response({"message": "Task deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET"])
+def task_and_assign(request, task_assign_id=None):
+    if task_assign_id:
+        try:
+            tasks = TaskAssign.objects.get(task_assign_id=task_assign_id)
+        except TaskAssign.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        # projects = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+        serializer = TaskAndAssignSerializer(tasks)
+        return Response(serializer.data)
+    else:
+        tasks = TaskAssign.objects.all()
+        serializer = TaskAndAssignSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+
+@api_view(["GET"])
+def task_and_assign_test(request, task_id=None):
+    if task_id:
+        try:
+            tasks = Task.objects.get(task_id=task_id)
+        except Task.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        # projects = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+        serializer = TaskAndAssignSerializerTest(tasks)
+        return Response(serializer.data)
+    else:
+        tasks = Task.objects.all()
+        serializer = TaskAndAssignSerializerTest(tasks, many=True)
+        return Response(serializer.data)

@@ -6,6 +6,7 @@ from ..models import Project, ProjectAssign
 from time_management.project.serializers import (
     ProjectSerializer,
     ProjectAssignSerializer,
+    ProjectAndAssignSerializer,
 )
 
 
@@ -103,3 +104,21 @@ def project_assign_detail(request, project_assign_id):
         return Response(
             {"message": "Project deleted"}, status=status.HTTP_204_NO_CONTENT
         )
+
+
+@api_view(["GET"])
+def project_and_assign(request, project_assign_id=None):
+    if project_assign_id:
+        try:
+            projects = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+        except ProjectAssign.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        # projects = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+        serializer = ProjectAndAssignSerializer(projects)
+        return Response(serializer.data)
+    else:
+        projects = ProjectAssign.objects.all()
+        serializer = ProjectAndAssignSerializer(projects, many=True)
+        return Response(serializer.data)

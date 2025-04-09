@@ -298,9 +298,9 @@ class BiometricData(models.Model):
                 )["biometric_id__max"]
                 if last:
                     last_num = int(last.split("_")[1])
-                    self.biometric_id = f"BIO_{last_num + 1:05d}"
+                    self.biometric_id = f"BIO_{last_num + 1:09d}"
                 else:
-                    self.biometric_id = "BIO_00001"
+                    self.biometric_id = "BIO_000000001"
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -468,6 +468,21 @@ class TaskAssign(models.Model):
     def save(self, *args, **kwargs):
         if not self.task_assign_id:
             self.task_assign_id = generate_auto_id(TaskAssign, "TKASS")
+        super().save(*args, **kwargs)
+
+
+class TimeSheet(models.Model):
+    timesheet_id = models.CharField(max_length=50, primary_key=True, blank=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    task_assign = models.ForeignKey(TaskAssign, on_delete=models.SET_NULL, null=True)
+    task_hours = models.DecimalField(max_digits=6, decimal_places=2)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    date = models.DateField()
+
+    def save(self, *args, **kwargs):
+        if not self.timesheet_id:
+            self.timesheet_id = generate_auto_id(TimeSheet, "TS")
         super().save(*args, **kwargs)
 
 

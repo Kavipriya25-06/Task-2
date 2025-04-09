@@ -192,6 +192,7 @@ def org_hierarchy(request, emp_id=None):
                 {
                     "employee_id": emp_h.employee.employee_id,
                     "employee_name": emp_h.employee.employee_name,
+                    "employee_role": emp_h.employee.designation,
                 }
                 for emp_h in employees_qs
             ]
@@ -200,6 +201,7 @@ def org_hierarchy(request, emp_id=None):
                 {
                     "teamlead_id": teamlead_emp.employee_id,
                     "teamlead_name": teamlead_emp.employee_name,
+                    "teamlead_role": teamlead_emp.designation,
                     "employees": employee_list,
                 }
             )
@@ -209,6 +211,7 @@ def org_hierarchy(request, emp_id=None):
                 {
                     "employee_id": teamlead_emp.employee_id,
                     "employee_name": teamlead_emp.employee_name,
+                    "employee_role": teamlead_emp.designation,
                 }
             )
 
@@ -217,6 +220,86 @@ def org_hierarchy(request, emp_id=None):
         "manager_name": manager.employee_name,
         "teamleads": teamleads_data,
         "employees": direct_employees,
+    }
+
+    return Response(response)
+
+
+@api_view(["GET"])
+def teamleads_under_manager(request, manager_id):
+    try:
+        # Get the manager's employee record
+        manager = Employee.objects.get(employee_id=manager_id)
+    except Employee.DoesNotExist:
+        return Response(
+            {"error": "Manager not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Get all team leads that report to the manager
+    teamleads = Hierarchy.objects.filter(reporting_to=manager)
+
+    # Prepare the list of team leads with their employees
+    teamlead_data = []
+    for teamlead in teamleads:
+        teamlead_emp = teamlead.employee  # The team lead employee object
+
+        # Get employees reporting to this team lead
+        employees = Hierarchy.objects.filter(reporting_to=teamlead_emp)
+
+        # Add the team lead data with the associated employees
+        teamlead_data.append(
+            {
+                "teamlead_id": teamlead_emp.employee_id,
+                "teamlead_name": teamlead_emp.employee_name,
+                "employees": [
+                    {
+                        "employee_id": emp.employee.employee_id,
+                        "employee_name": emp.employee.employee_name,
+                    }
+                    for emp in employees
+                ],
+            }
+        )
+
+    # Return the data as a response
+    return Response(teamlead_data)
+
+
+@api_view(["GET"])
+def emp_under_manager(request, emp_id=None):
+    try:
+        manager = Employee.objects.get(employee_id=emp_id)
+    except Employee.DoesNotExist:
+        return Response({"error": "Employee not found"}, status=404)
+
+    teamleads_data = []
+    employee_list = []
+
+    # filtering all employees in the hierarchy table who reports to the manager
+    teamleads_qs = Hierarchy.objects.filter(reporting_to=manager)
+
+    # Iterating through each filtered hierarchy entry to get team leads and their employees
+    for tl_hierarchy in teamleads_qs:
+        teamlead_emp = (
+            tl_hierarchy.employee
+        )  # Getting the employee from hierarchy table
+        employees_qs = Hierarchy.objects.filter(reporting_to=teamlead_emp)
+
+        for emp_hierarchy in employees_qs:
+            employee_emp = (
+                emp_hierarchy.employee
+            )  # Getting the employee from hierarchy table
+            employee_list.append(employee_emp)
+
+        teamleads_data.append(teamlead_emp)
+
+    # Combining teamleads_data and employees_data // This is a list of employee objects
+    all_employees = teamleads_data + employee_list
+
+    response = {
+        "manager_id": manager.employee_id,
+        "manager_name": manager.employee_name,
+        "teamleads": teamleads_data,
     }
 
     return Response(response)

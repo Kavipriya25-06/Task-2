@@ -35,14 +35,14 @@ class HierarchySerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ["task_id", "task_title", "task_description", "priority", "status"]
+        fields = "__all__"
 
 
 # Serializer for Building Model
 class BuildingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Building
-        fields = ["building_id", "building_title", "building_description"]
+        fields = "__all__"
 
 
 # Serializer for Task Assignment Model
