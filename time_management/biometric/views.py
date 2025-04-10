@@ -1,9 +1,11 @@
 from rest_framework.viewsets import ModelViewSet
-from ..models import BiometricData
+from ..models import BiometricData, Employee
 from time_management.biometric.serializers import BiometricDataSerializer
+from time_management.hierarchy.serializers import emp_under_manager
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
 def biometric_data_api(request, biometric_id=None):
@@ -76,3 +78,19 @@ def biometric_data_api(request, biometric_id=None):
                 {"error": "Biometric record not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+@api_view(["GET"])
+def attendance(request, employee_id=None):
+    try:
+        manager = Employee.objects.get(employee_id=employee_id)
+    except Employee.DoesNotExist:
+        return Response({"error": "Employee not found"}, status=404)
+
+    employees = emp_under_manager(manager)
+
+    biometric_qs = BiometricData.objects.filter(employee__in=employees)
+
+    serializer = BiometricDataSerializer(biometric_qs, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

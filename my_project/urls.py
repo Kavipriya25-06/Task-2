@@ -51,7 +51,7 @@ from time_management.leaves_taken.views import (
     leave_request_api,
 )
 from time_management.calendar.views import calendar_api
-from time_management.biometric.views import biometric_data_api
+from time_management.biometric.views import biometric_data_api, attendance
 from time_management.project.views import (
     project_list_create,
     project_detail,
@@ -109,6 +109,8 @@ urlpatterns = [
     path("calendar/<str:calendar_id>/", calendar_api),
     path("biometric-data/", biometric_data_api),
     path("biometric-data/<str:biometric_id>/", biometric_data_api),
+    path("attendance/", attendance),
+    path("attendance/<str:employee_id>/", attendance),
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
     path(

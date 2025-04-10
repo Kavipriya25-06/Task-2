@@ -230,7 +230,7 @@ def leave_request_api(request, manager_id=None):
 
                 # Fetching the leave records for all team leads and employees
                 leave_qs = LeavesTaken.objects.filter(employee__in=all_employees)
-
+ 
                 serializer = LeaveRequestSerializer(leave_qs, many=True)
 
                 return Response(serializer.data, status=status.HTTP_200_OK)
