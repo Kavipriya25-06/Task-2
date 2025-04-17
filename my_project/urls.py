@@ -34,6 +34,7 @@ from time_management.employee.views import (
     employee_api,
     employee_view_api,
     mntl_view_api,
+    emp_under_mngr_view,
 )
 from time_management.assignment.views import manager_tl_projects, tl_projects
 from time_management.user.views import user_api
@@ -51,7 +52,7 @@ from time_management.leaves_taken.views import (
     leave_request_api,
 )
 from time_management.calendar.views import calendar_api
-from time_management.biometric.views import biometric_data_api, attendance
+from time_management.biometric.views import biometric_data_api, attendance, weekly_attendance
 from time_management.project.views import (
     project_list_create,
     project_detail,
@@ -80,6 +81,8 @@ urlpatterns = [
     path("employees/<str:employee_id>/", employee_api),
     path("employees-details/", employee_view_api),
     path("employees-details/<str:employee_id>/", employee_view_api),
+    path("emp-details/", emp_under_mngr_view),
+    path("emp-details/<str:employee_id>/", emp_under_mngr_view),
     path("teamlead-and-managers/", mntl_view_api, name="managers-and-team-leads"),
     path("teamlead-and-managers/<str:employee_id>/", mntl_view_api),
     path(
@@ -111,6 +114,8 @@ urlpatterns = [
     path("biometric-data/<str:biometric_id>/", biometric_data_api),
     path("attendance/", attendance),
     path("attendance/<str:employee_id>/", attendance),
+    path("weekly-attendance/", weekly_attendance),
+    path("weekly-attendance/<str:employee_id>/", weekly_attendance),
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
     path(

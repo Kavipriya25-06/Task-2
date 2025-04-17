@@ -5,6 +5,7 @@ from time_management.employee.serializers import (
     UserSerializer,
     EmployeeViewSerializer,
 )
+from time_management.hierarchy.serializers import emp_under_manager
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -129,6 +130,32 @@ def employee_view_api(request, employee_id=None):
 
 @api_view(["GET"])
 # @parser_classes([MultiPartParser, FormParser])
+def emp_under_mngr_view(request, employee_id=None):
+    # GET (single or list)
+    """
+    This gives the Employee details of all the employees and team leads under a manager up to 2 levels
+    """
+    if request.method == "GET":
+        if employee_id:
+            try:
+                manager = Employee.objects.get(employee_id=employee_id)
+                employees = emp_under_manager(manager)
+                employee = Employee.objects.filter(employee_id__in=employees)
+                serializer = EmployeeViewSerializer(employee, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            employees = Employee.objects.all()
+            serializer = EmployeeViewSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+# @parser_classes([MultiPartParser, FormParser])
 def mntl_view_api(request, employee_id=None):
     # GET (single or list)
     if request.method == "GET":
@@ -141,7 +168,8 @@ def mntl_view_api(request, employee_id=None):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Employee.DoesNotExist:
                 return Response(
-                    {"error": "Manager or TeamLead not found"}, status=status.HTTP_404_NOT_FOUND
+                    {"error": "Manager or TeamLead not found"},
+                    status=status.HTTP_404_NOT_FOUND,
                 )
         else:
             employees = Employee.objects.all()

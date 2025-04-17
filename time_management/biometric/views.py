@@ -5,6 +5,9 @@ from time_management.hierarchy.serializers import emp_under_manager
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import render
+from datetime import datetime, timedelta
+from django.http import JsonResponse
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
@@ -82,15 +85,115 @@ def biometric_data_api(request, biometric_id=None):
 
 @api_view(["GET"])
 def attendance(request, employee_id=None):
-    try:
-        manager = Employee.objects.get(employee_id=employee_id)
-    except Employee.DoesNotExist:
-        return Response({"error": "Employee not found"}, status=404)
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
 
-    employees = emp_under_manager(manager)
+        employees = emp_under_manager(manager)
 
-    biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        biometric_qs = BiometricData.objects.filter(employee__in=employees)
 
-    serializer = BiometricDataSerializer(biometric_qs, many=True)
+        serializer = BiometricDataSerializer(biometric_qs, many=True)
 
-    return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        serializer = BiometricDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def weekly_attendance(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        employees = emp_under_manager(manager)
+
+        biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            calendar_entries = biometric_qs.filter(date__range=(start, end)).order_by(
+                "date"
+            )
+
+            serializer = BiometricDataSerializer(calendar_entries, many=True)
+        else:
+            serializer = BiometricDataSerializer(biometric_qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            calendar_entries = objs.filter(date__range=(start, end)).order_by("date")
+
+            serializer = BiometricDataSerializer(calendar_entries, many=True)
+        else:
+            serializer = BiometricDataSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def weekly_attendance_leave(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        employees = emp_under_manager(manager)
+
+        biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            calendar_entries = biometric_qs.filter(date__range=(start, end)).order_by(
+                "date"
+            )
+
+            serializer = BiometricDataSerializer(calendar_entries, many=True)
+        else:
+            serializer = BiometricDataSerializer(biometric_qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            calendar_entries = objs.filter(date__range=(start, end)).order_by("date")
+
+            serializer = BiometricDataSerializer(calendar_entries, many=True)
+        else:
+            serializer = BiometricDataSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
