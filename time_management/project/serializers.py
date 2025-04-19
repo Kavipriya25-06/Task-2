@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Project, ProjectAssign
+from ..models import Project, ProjectAssign, AreaOfWork
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -26,3 +26,9 @@ class ProjectAndAssignSerializer(serializers.ModelSerializer):
             "employee",
             "project",
         ]
+
+
+class AreaOfWorkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AreaOfWork
+        fields = "__all__"

@@ -103,6 +103,16 @@ class Employee(models.Model):
         return self.employee_id
 
 
+### roles table
+
+
+class Roles(models.Model):
+    role = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.role
+
+
 class User(models.Model):
     user_id = models.CharField(max_length=50, primary_key=True, blank=True)
     email = models.EmailField(unique=True)
@@ -116,7 +126,9 @@ class User(models.Model):
             ("employee", "Employee"),
             ("manager", "Manager"),
         ],
+        default="employee",
     )
+    # role = models.ManyToManyField(Roles, blank=True)
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
@@ -133,7 +145,7 @@ class User(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.email
+        return f"{self.email} - {self.employee_id}"
 
 
 # Hierarchy Table
@@ -170,7 +182,7 @@ class Hierarchy(models.Model):
 # Leaves Available Table
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.OneToOneField(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     sick_leave = models.IntegerField(default=0)
     casual_leave = models.IntegerField(default=0)
     comp_off = models.IntegerField(default=0)
@@ -307,6 +319,16 @@ class BiometricData(models.Model):
         return f"{self.employee_name} - {self.date}"
 
 
+### Area of work table static
+
+
+class AreaOfWork(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 ### Projects Table
 
 
@@ -317,7 +339,7 @@ class Project(models.Model):
     start_date = models.DateField()
     estimated_hours = models.DecimalField(max_digits=10, decimal_places=2)
     project_description = models.TextField(blank=True, null=True)
-    area_of_work = models.CharField(max_length=255)
+    area_of_work = models.ManyToManyField(AreaOfWork, blank=True)
     project_code = models.CharField(max_length=100, unique=True)
     subdivision = models.CharField(max_length=100)
     discipline_code = models.CharField(max_length=100)
@@ -349,7 +371,8 @@ class Project(models.Model):
 
 
 def generate_auto_id(model_class, prefix):
-    last = model_class.objects.order_by("-id").first()
+    pk_name = model_class._meta.pk.name
+    last = model_class.objects.order_by(f"-{pk_name}").first()
     if last and hasattr(last, model_class._meta.pk.name):
         last_num = int(getattr(last, model_class._meta.pk.name).split("_")[1])
         return f"{prefix}_{last_num + 1:05d}"
@@ -361,6 +384,7 @@ class Building(models.Model):
     building_title = models.CharField(max_length=200)
     building_description = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
+    building_code = models.CharField(max_length=20, blank=True, null=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -378,12 +402,13 @@ class Task(models.Model):
     task_id = models.CharField(max_length=50, primary_key=True, blank=True)
     task_title = models.CharField(max_length=200)
     task_description = models.TextField(blank=True, null=True)
-    priority = models.CharField(max_length=50)
+    priority = models.CharField(max_length=50, blank=True, null=True)
     attachments = models.FileField(
         upload_to="tasks/attachments/", blank=True, null=True
     )
     comments = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
+    task_code = models.CharField(max_length=20, blank=True, null=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -458,6 +483,11 @@ class TaskAssign(models.Model):
         ],
         default="pending",
     )
+    priority = models.CharField(max_length=50, blank=True, null=True)
+    attachments = models.FileField(
+        upload_to="tasks/attachments/", blank=True, null=True
+    )
+    comments = models.TextField(blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField()
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)

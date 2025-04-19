@@ -52,13 +52,18 @@ from time_management.leaves_taken.views import (
     leave_request_api,
 )
 from time_management.calendar.views import calendar_api
-from time_management.biometric.views import biometric_data_api, attendance, weekly_attendance
+from time_management.biometric.views import (
+    biometric_data_api,
+    attendance,
+    weekly_attendance,
+)
 from time_management.project.views import (
     project_list_create,
     project_detail,
     project_assign_detail,
     project_assign_list_create,
     project_and_assign,
+    areaofwork_api,
 )
 from time_management.building.views import (
     building_list_create,
@@ -138,6 +143,8 @@ urlpatterns = [
         project_and_assign,
         name="project-assign-detail",
     ),
+    path("area-of-work/", areaofwork_api, name="Area-of-work"),
+    path("area-of-work/<int:id>/", areaofwork_api, name="Area-of-work"),
     path("buildings/", building_list_create, name="building-list-create"),
     path("buildings/<str:building_id>/", building_detail, name="building-detail"),
     path(

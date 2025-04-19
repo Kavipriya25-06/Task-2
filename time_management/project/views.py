@@ -2,11 +2,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models import Project, ProjectAssign
+from ..models import Project, ProjectAssign, AreaOfWork
 from time_management.project.serializers import (
     ProjectSerializer,
     ProjectAssignSerializer,
     ProjectAndAssignSerializer,
+    AreaOfWorkSerializer,
 )
 
 
@@ -122,3 +123,76 @@ def project_and_assign(request, project_assign_id=None):
         projects = ProjectAssign.objects.all()
         serializer = ProjectAndAssignSerializer(projects, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
+def areaofwork_api(request, id=None):
+    if request.method == "GET":
+        if id:
+            try:
+                obj = AreaOfWork.objects.get(id=id)
+                serializer = AreaOfWorkSerializer(obj)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except AreaOfWork.DoesNotExist:
+                return Response(
+                    {"error": "AreaOfWork record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            objs = AreaOfWork.objects.all()
+            serializer = AreaOfWorkSerializer(objs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == "POST":
+        serializer = AreaOfWorkSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "AreaOfWork created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method in ["PUT", "PATCH"]:
+        if not id:
+            return Response(
+                {"error": "AreaOfWork ID is required for update"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            obj = AreaOfWork.objects.get(id=id)
+        except AreaOfWork.DoesNotExist:
+            return Response(
+                {"error": "AreaOfWork record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = AreaOfWorkSerializer(
+            obj, data=request.data, partial=(request.method == "PATCH")
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "AreaOfWork updated", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == "DELETE":
+        if not id:
+            return Response(
+                {"error": "AreaOfWork ID is required for DELETE"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            obj = AreaOfWork.objects.get(id=id)
+            obj.delete()
+            return Response(
+                {"message": "AreaOfWork deleted successfully"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except AreaOfWork.DoesNotExist:
+            return Response(
+                {"error": "AreaOfWork record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
