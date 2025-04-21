@@ -6,6 +6,7 @@ from ..models import Building, BuildingAssign
 from time_management.building.serializers import (
     BuildingSerializer,
     BuildingAssignSerializer,
+    BuildingAndAssignSerializer,
 )
 
 
@@ -103,3 +104,22 @@ def building_assign_detail(request, building_assign_id):
         return Response(
             {"message": "Building deleted"}, status=status.HTTP_204_NO_CONTENT
         )
+
+
+@api_view(["GET"])
+def building_and_assign(request, building_assign_id=None):
+    if building_assign_id:
+        try:
+            buildings = BuildingAssign.objects.get(
+                building_assign_id=building_assign_id
+            )
+        except BuildingAssign.DoesNotExist:
+            return Response(
+                {"error": "building not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = BuildingAndAssignSerializer(buildings)
+        return Response(serializer.data)
+    else:
+        buildings = BuildingAssign.objects.all()
+        serializer = BuildingAndAssignSerializer(buildings, many=True)
+        return Response(serializer.data)

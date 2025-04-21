@@ -458,7 +458,9 @@ class BuildingAssign(models.Model):
         ],
         default="pending",
     )
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, blank=True, null=True
+    )
     building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True)
     project_assign = models.ForeignKey(
         ProjectAssign, on_delete=models.SET_NULL, null=True

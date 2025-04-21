@@ -70,6 +70,7 @@ from time_management.building.views import (
     building_detail,
     building_assign_detail,
     building_assign_list_create,
+    building_and_assign,
 )
 from time_management.task.views import (
     task_list_create,
@@ -156,6 +157,16 @@ urlpatterns = [
         "buildings-assigned/<str:building_assign_id>/",
         building_assign_detail,
         name="building-assign-detail",
+    ),
+    path(
+        "buildings-and-assigned/",
+        building_and_assign,
+        name="building-and-assign",
+    ),
+    path(
+        "buildings-and-assigned/<str:building_assign_id>/",
+        building_and_assign,
+        name="building-and-assign",
     ),
     path("tasks/", task_list_create, name="task-list-create"),
     path("tasks/<str:task_id>/", task_detail, name="task-detail"),

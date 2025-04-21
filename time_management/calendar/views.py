@@ -11,6 +11,7 @@ from datetime import datetime
 def calendar_api(request, calendar_id=None):
     if request.method == "GET":
         year = request.query_params.get("year")  # <-- Get the 'year' from query params
+        month = request.query_params.get("month")
         if calendar_id:
             try:
                 obj = Calendar.objects.get(calendar_id=calendar_id)
