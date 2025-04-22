@@ -37,7 +37,7 @@ from time_management.employee.views import (
     emp_under_mngr_view,
 )
 from time_management.assignment.views import manager_tl_projects, tl_projects
-from time_management.user.views import user_api
+from time_management.user.views import user_api, user_details
 from time_management.hierarchy.views import (
     hierarchy_api,
     manager_hierarchy,
@@ -103,6 +103,8 @@ urlpatterns = [
     path("teamlead_projects/<str:employee_id>/", tl_projects),
     path("users/", user_api),
     path("users/<str:user_id>/", user_api),
+    path("user-details/", user_details),
+    path("user-details/<str:user_id>/", user_details),
     path("hierarchy/", hierarchy_api),
     path("hierarchy/<str:hierarchy_id>/", hierarchy_api),
     path("manager-hierarchy/", manager_hierarchy),

@@ -106,6 +106,7 @@ def manager_hierarchy(request, manager_id=None):
                 {
                     "employee_id": emp_h.employee.employee_id,
                     "employee_name": emp_h.employee.employee_name,
+                    "employee_code": emp_h.employee.employee_code,
                 }
                 for emp_h in employees_qs
             ]
@@ -114,6 +115,7 @@ def manager_hierarchy(request, manager_id=None):
                 {
                     "teamlead_id": teamlead_emp.employee_id,
                     "teamlead_name": teamlead_emp.employee_name,
+                    "employee_code": teamlead_emp.employee_code,
                     "employees": employee_list,
                 }
             )
@@ -123,6 +125,7 @@ def manager_hierarchy(request, manager_id=None):
                 {
                     "employee_id": teamlead_emp.employee_id,
                     "employee_name": teamlead_emp.employee_name,
+                    "employee_code": teamlead_emp.employee_code,
                 }
             )
 
@@ -150,6 +153,7 @@ def teamlead_hierarchy(request, emp_id=None):
         {
             "employee_id": h.employee.employee_id,
             "employee_name": h.employee.employee_name,
+            "employee_code": h.employee.employee_code,
         }
         for h in reporting_employees
     ]
@@ -157,6 +161,7 @@ def teamlead_hierarchy(request, emp_id=None):
     response = {
         "teamlead_id": teamlead.employee_id,
         "teamlead_name": teamlead.employee_name,
+        "employee_code": teamlead.employee_code,
         "employees": employees,
     }
 
@@ -193,6 +198,7 @@ def org_hierarchy(request, emp_id=None):
                     "employee_id": emp_h.employee.employee_id,
                     "employee_name": emp_h.employee.employee_name,
                     "employee_role": emp_h.employee.designation,
+                    "employee_code": emp_h.employee.employee_code,
                 }
                 for emp_h in employees_qs
             ]
@@ -202,6 +208,7 @@ def org_hierarchy(request, emp_id=None):
                     "teamlead_id": teamlead_emp.employee_id,
                     "teamlead_name": teamlead_emp.employee_name,
                     "teamlead_role": teamlead_emp.designation,
+                    "employee_code": teamlead_emp.employee_code,
                     "employees": employee_list,
                 }
             )
@@ -212,6 +219,7 @@ def org_hierarchy(request, emp_id=None):
                     "employee_id": teamlead_emp.employee_id,
                     "employee_name": teamlead_emp.employee_name,
                     "employee_role": teamlead_emp.designation,
+                    "employee_code": teamlead_emp.employee_code,
                 }
             )
 
@@ -251,10 +259,12 @@ def teamleads_under_manager(request, manager_id):
             {
                 "teamlead_id": teamlead_emp.employee_id,
                 "teamlead_name": teamlead_emp.employee_name,
+                "employee_code": teamlead_emp.employee_code,
                 "employees": [
                     {
                         "employee_id": emp.employee.employee_id,
                         "employee_name": emp.employee.employee_name,
+                        "employee_code": emp.employee.employee_code,
                     }
                     for emp in employees
                 ],
