@@ -71,6 +71,7 @@ from time_management.building.views import (
     building_assign_detail,
     building_assign_list_create,
     building_and_assign,
+    building_and_project,
 )
 from time_management.task.views import (
     task_list_create,
@@ -79,7 +80,9 @@ from time_management.task.views import (
     task_assign_list_create,
     task_and_assign,
     task_and_assign_test,
+    task_building,
 )
+from time_management.time_sheet.views import timesheet_data_api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -168,6 +171,16 @@ urlpatterns = [
         building_and_assign,
         name="building-and-assign",
     ),
+    path(
+        "buildings-and-projects/",
+        building_and_project,
+        name="building-and-project",
+    ),
+    path(
+        "buildings-and-projects/<str:building_assign_id>/",
+        building_and_project,
+        name="building-and-project",
+    ),
     path("tasks/", task_list_create, name="task-list-create"),
     path("tasks/<str:task_id>/", task_detail, name="task-detail"),
     path(
@@ -190,4 +203,16 @@ urlpatterns = [
         task_and_assign,
         name="task-assign-detail",
     ),
+    path(
+        "tasks-building/",
+        task_building,
+        name="Tasks-and-buildings",
+    ),
+    path(
+        "tasks-building/<str:task_assign_id>/",
+        task_building,
+        name="tasks-and-buildings",
+    ),
+    path("timesheet/", timesheet_data_api, name="timesheet"),
+    path("timesheet/<str:timesheet_id>/", timesheet_data_api, name="timesheet"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

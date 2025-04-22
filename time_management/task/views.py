@@ -14,6 +14,7 @@ from time_management.task.serializers import (
     TaskAssignSerializer,
     TaskAndAssignSerializer,
     TaskAndAssignSerializerTest,
+    TaskBuildingSerializer,
 )
 
 
@@ -136,4 +137,22 @@ def task_and_assign_test(request, task_id=None):
     else:
         tasks = Task.objects.all()
         serializer = TaskAndAssignSerializerTest(tasks, many=True)
+        return Response(serializer.data)
+
+
+@api_view(["GET"])
+def task_building(request, task_assign_id=None):
+    if task_assign_id:
+        try:
+            tasks = TaskAssign.objects.get(task_assign_id=task_assign_id)
+        except TaskAssign.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = TaskBuildingSerializer(tasks)
+        return Response(serializer.data)
+    else:
+        tasks = TaskAssign.objects.all()
+        serializer = TaskBuildingSerializer(tasks, many=True)
         return Response(serializer.data)

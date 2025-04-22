@@ -10,30 +10,30 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         area_of_work_list = [
-            "AutoSpool extraction",
-            "Back Drafting",
-            "Caeser II",
-            "Checking",
-            "Connection Design",
-            "Coordination",
-            "Deputation to ISGEC",
-            "Detailing",
-            "Documentation",
-            "Drawing Preparation",
-            "Drawings Preparation",
-            "Estimation",
-            "Hydro test pack Preparation",
-            "Meeting",
-            "Model Correction",
-            "Modeling",
-            "Preliminary GA",
-            "Preliminary Modeling",
-            "Primary Design",
-            "QC",
-            "Review",
-            "Second Level Checking",
-            "Stress Analysis",
-            "Training",
+            ("autospool_extraction", "AutoSpool extraction"),
+            ("back_drafting", "Back Drafting"),
+            ("caeser_II", "Caeser II"),
+            ("checking", "Checking"),
+            ("connection_design", "Connection Design"),
+            ("coordination", "Coordination"),
+            ("ceputation_to_ISGEC", "Deputation to ISGEC"),
+            ("detailing", "Detailing"),
+            ("documentation", "Documentation"),
+            ("drawing_preparation", "Drawing Preparation"),
+            ("drawings_preparation", "Drawings Preparation"),
+            ("estimation", "Estimation"),
+            ("hydro_test_pack_preparation", "Hydro test pack Preparation"),
+            ("meeting", "Meeting"),
+            ("model_correction", "Model Correction"),
+            ("modeling", "Modeling"),
+            ("preliminary_ga", "Preliminary GA"),
+            ("preliminary_modeling", "Preliminary Modeling"),
+            ("primary_design", "Primary Design"),
+            ("qc", "QC"),
+            ("review", "Review"),
+            ("second_level_checking", "Second Level Checking"),
+            ("stress_analysis", "Stress Analysis"),
+            ("training", "Training"),
         ]
 
         roles_list = [
@@ -46,7 +46,9 @@ class Command(BaseCommand):
 
         # Load AreaOfWork
         for name in area_of_work_list:
-            obj, created = AreaOfWork.objects.get_or_create(name=name)
+            obj, created = AreaOfWork.objects.get_or_create(
+                area_name=name[0], name=name[1]
+            )
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Added AreaOfWork: {name}"))
 

@@ -323,6 +323,9 @@ class BiometricData(models.Model):
 
 
 class AreaOfWork(models.Model):
+    area_name = models.CharField(
+        max_length=100, unique=True, primary_key=True, default="qc"
+    )
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -434,8 +437,10 @@ class ProjectAssign(models.Model):
         ],
         default="pending",
     )
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    employee = models.ManyToManyField(Employee, blank=True)
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True
+    )
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -458,12 +463,12 @@ class BuildingAssign(models.Model):
         ],
         default="pending",
     )
-    employee = models.ForeignKey(
-        Employee, on_delete=models.CASCADE, blank=True, null=True
+    employee = models.ManyToManyField(Employee, blank=True)
+    building = models.ForeignKey(
+        Building, on_delete=models.SET_NULL, null=True, blank=True
     )
-    building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True)
     project_assign = models.ForeignKey(
-        ProjectAssign, on_delete=models.SET_NULL, null=True
+        ProjectAssign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def save(self, *args, **kwargs):
@@ -475,7 +480,7 @@ class BuildingAssign(models.Model):
 class TaskAssign(models.Model):
     task_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
-    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True)
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(
         max_length=50,
         choices=[
@@ -492,9 +497,9 @@ class TaskAssign(models.Model):
     comments = models.TextField(blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField()
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ManyToManyField(Employee, blank=True)
     building_assign = models.ForeignKey(
-        BuildingAssign, on_delete=models.SET_NULL, null=True
+        BuildingAssign, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def save(self, *args, **kwargs):
