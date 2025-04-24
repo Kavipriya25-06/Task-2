@@ -156,3 +156,21 @@ def task_building(request, task_assign_id=None):
         tasks = TaskAssign.objects.all()
         serializer = TaskBuildingSerializer(tasks, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET"])
+def task_by_employee(request, employee_id=None):
+    if employee_id:
+        try:
+            tasks = TaskAssign.objects.filter(employee__employee_id=employee_id)
+        except TaskAssign.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = TaskBuildingSerializer(tasks, many=True)
+        return Response(serializer.data)
+    else:
+        tasks = TaskAssign.objects.all()
+        serializer = TaskBuildingSerializer(tasks, many=True)
+        return Response(serializer.data)

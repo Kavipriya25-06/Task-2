@@ -65,6 +65,7 @@ from time_management.project.views import (
     project_and_assign,
     areaofwork_api,
     create_full_project_flow,
+    project_screen,
 )
 from time_management.building.views import (
     building_list_create,
@@ -82,6 +83,7 @@ from time_management.task.views import (
     task_and_assign,
     task_and_assign_test,
     task_building,
+    task_by_employee,
 )
 from time_management.time_sheet.views import timesheet_data_api
 
@@ -134,6 +136,8 @@ urlpatterns = [
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
+    path("project-screen/", project_screen, name="project-detail"),
+    path("project-screen/<str:project_id>/", project_screen, name="project-detail"),
     path(
         "projects-assigned/",
         project_assign_list_create,
@@ -218,6 +222,16 @@ urlpatterns = [
     path(
         "tasks-building/<str:task_assign_id>/",
         task_building,
+        name="tasks-and-buildings",
+    ),
+    path(
+        "tasks-by-employee/",
+        task_by_employee,
+        name="Tasks-and-buildings",
+    ),
+    path(
+        "tasks-by-employee/<str:employee_id>/",
+        task_by_employee,
         name="tasks-and-buildings",
     ),
     path("timesheet/", timesheet_data_api, name="timesheet"),

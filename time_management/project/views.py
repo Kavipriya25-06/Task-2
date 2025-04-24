@@ -17,7 +17,10 @@ from time_management.project.serializers import (
     ProjectAndAssignSerializer,
     AreaOfWorkSerializer,
 )
-from time_management.building.serializers import BuildingAssignSerializer
+from time_management.building.serializers import (
+    BuildingAssignSerializer,
+    BuildingAndProjectSerializer,
+)
 
 
 @api_view(["GET", "POST"])
@@ -278,3 +281,32 @@ def create_full_project_flow(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+
+@api_view(["GET"])
+def project_screen(request, project_id=None):
+    if project_id:
+        try:
+            projects = ProjectAssign.objects.get(project=project_id)
+            assignedProjects = projects.project_assign_id
+            # print(assignedProjects)
+            try:
+                buildings = BuildingAssign.objects.filter(
+                    project_assign=assignedProjects
+                )
+            except BuildingAssign.DoesNotExist:
+                return Response(
+                    {"error": "building not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+        except ProjectAssign.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # serializer = ProjectAndAssignSerializer(projects)
+        serializer = BuildingAndProjectSerializer(buildings, many=True)
+        return Response(serializer.data)
+    else:
+        projects = ProjectAssign.objects.all()
+        serializer = ProjectAndAssignSerializer(projects, many=True)
+        return Response(serializer.data)
