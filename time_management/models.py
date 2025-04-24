@@ -182,7 +182,7 @@ class Hierarchy(models.Model):
 # Leaves Available Table
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.OneToOneField(Employee, on_delete=models.CASCADE)
     sick_leave = models.IntegerField(default=0)
     casual_leave = models.IntegerField(default=0)
     comp_off = models.IntegerField(default=0)

@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from ..models import Task, TaskAssign, Building, BuildingAssign, Project, ProjectAssign
+from ..models import (
+    Task,
+    TaskAssign,
+    Building,
+    BuildingAssign,
+    Project,
+    ProjectAssign,
+    Employee,
+)
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -9,6 +17,10 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class TaskAssignSerializer(serializers.ModelSerializer):
+    employee = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Employee.objects.all()
+    )
+
     class Meta:
         model = TaskAssign
         fields = "__all__"
@@ -95,6 +107,7 @@ class BuildingAndProjectSerializer(serializers.ModelSerializer):
 class TaskBuildingSerializer(serializers.ModelSerializer):
     task = TaskSerializer(read_only=True)
     building_assign = BuildingAndProjectSerializer(read_only=True)
+
     class Meta:
         model = TaskAssign
         fields = [

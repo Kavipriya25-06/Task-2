@@ -8,11 +8,21 @@ from time_management.leaves_available.serializers import LeavesAvailableSerializ
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
-def leaves_available_api(request, leave_avail_id=None):
+def leaves_available_api(request, leave_avail_id=None, employee_id=None):
     if request.method == "GET":
         if leave_avail_id:
             try:
                 obj = LeavesAvailable.objects.get(leave_avail_id=leave_avail_id)
+                serializer = LeavesAvailableSerializer(obj)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except LeavesAvailable.DoesNotExist:
+                return Response(
+                    {"error": "Leave record with leave id not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        elif employee_id:
+            try:
+                obj = LeavesAvailable.objects.get(employee_id=employee_id)
                 serializer = LeavesAvailableSerializer(obj)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except LeavesAvailable.DoesNotExist:

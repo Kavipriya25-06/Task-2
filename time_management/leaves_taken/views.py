@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
-def leaves_taken_api(request, leave_taken_id=None):
+def leaves_taken_api(request, leave_taken_id=None, employee_id=None):
     if request.method == "GET":
         if leave_taken_id:
             try:
@@ -21,6 +21,16 @@ def leaves_taken_api(request, leave_taken_id=None):
             except LeavesTaken.DoesNotExist:
                 return Response(
                     {"error": "Leave record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        elif employee_id:
+            try:
+                obj = LeavesTaken.objects.filter(employee_id=employee_id)
+                serializer = LeavesTakenSerializer(obj, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except LeavesTaken.DoesNotExist:
+                return Response(
+                    {"error": "Employee Leave record not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
         else:
@@ -230,7 +240,7 @@ def leave_request_api(request, manager_id=None):
 
                 # Fetching the leave records for all team leads and employees
                 leave_qs = LeavesTaken.objects.filter(employee__in=all_employees)
- 
+
                 serializer = LeaveRequestSerializer(leave_qs, many=True)
 
                 return Response(serializer.data, status=status.HTTP_200_OK)

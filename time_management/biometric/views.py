@@ -11,12 +11,22 @@ from django.http import JsonResponse
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
-def biometric_data_api(request, biometric_id=None):
+def biometric_data_api(request, biometric_id=None, employee_id=None):
     if request.method == "GET":
         if biometric_id:
             try:
                 obj = BiometricData.objects.get(biometric_id=biometric_id)
                 serializer = BiometricDataSerializer(obj)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except BiometricData.DoesNotExist:
+                return Response(
+                    {"error": "Biometric record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        elif employee_id:
+            try:
+                obj = BiometricData.objects.filter(employee_id=employee_id)
+                serializer = BiometricDataSerializer(obj, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except BiometricData.DoesNotExist:
                 return Response(

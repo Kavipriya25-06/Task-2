@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Building, BuildingAssign, Project, ProjectAssign
+from ..models import Building, BuildingAssign, Project, ProjectAssign, Employee
 
 
 class BuildingSerializer(serializers.ModelSerializer):
@@ -9,6 +9,10 @@ class BuildingSerializer(serializers.ModelSerializer):
 
 
 class BuildingAssignSerializer(serializers.ModelSerializer):
+    employee = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Employee.objects.all()
+    )
+
     class Meta:
         model = BuildingAssign
         fields = "__all__"

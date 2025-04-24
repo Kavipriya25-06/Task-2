@@ -1,14 +1,23 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 
-from ..models import Project, ProjectAssign, AreaOfWork
+from ..models import (
+    Project,
+    ProjectAssign,
+    AreaOfWork,
+    Building,
+    BuildingAssign,
+    Employee,
+)
 from time_management.project.serializers import (
     ProjectSerializer,
     ProjectAssignSerializer,
     ProjectAndAssignSerializer,
     AreaOfWorkSerializer,
 )
+from time_management.building.serializers import BuildingAssignSerializer
 
 
 @api_view(["GET", "POST"])
@@ -69,7 +78,11 @@ def project_assign_list_create(request):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                {"message": "Project assigned", "data": serializer.data},
+                {
+                    "message": "Project assigned",
+                    "data": serializer.data,
+                    "project_assign_id": serializer.data.get("project_assign_id"),
+                },
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -196,3 +209,72 @@ def areaofwork_api(request, id=None):
                 {"error": "AreaOfWork record not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+@api_view(["POST"])
+@transaction.atomic
+def create_full_project_flow(request):
+    try:
+        # 1. Create Project
+        project_data = request.data.get("project")
+        project_serializer = ProjectSerializer(data=project_data)
+        if project_serializer.is_valid():
+            project_instance = project_serializer.save()
+        else:
+            return Response(
+                {
+                    "error": "Project creation failed",
+                    "details": project_serializer.errors,
+                },
+                status=400,
+            )
+
+        # 2. Assign Project (ProjectAssign)
+        assign_data = request.data.get("assign")
+        assign_serializer = ProjectAssignSerializer(
+            data={
+                "project_hours": project_data.get("estimated_hours"),
+                "status": assign_data.get("status", "pending"),
+                "employee": assign_data.get("employee"),
+                "project": project_instance.project_id,
+            }
+        )
+
+        if assign_serializer.is_valid():
+            assign_instance = assign_serializer.save()
+        else:
+            return Response(
+                {
+                    "error": "Project assignment failed",
+                    "details": assign_serializer.errors,
+                },
+                status=400,
+            )
+
+        # 3. Assign Buildings (BuildingAssign)
+        buildings_data = request.data.get("buildings", [])
+        building_assignments = []
+        for b in buildings_data:
+            building_instance = Building.objects.get(building_id=b["building_id"])
+            building_assign = BuildingAssign.objects.create(
+                building_hours=b["building_hours"],
+                status=b.get("status", "pending"),
+                building=building_instance,
+                project_assign=assign_instance,
+            )
+            building_assignments.append(building_assign)
+
+        return Response(
+            {
+                "message": "Project, assignment, and buildings created successfully.",
+                "project_id": project_instance.project_id,
+                "project_assign_id": assign_instance.project_assign_id,
+                "assigned_buildings": [
+                    ba.building_assign_id for ba in building_assignments
+                ],
+            },
+            status=201,
+        )
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
