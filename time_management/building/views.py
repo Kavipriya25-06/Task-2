@@ -9,6 +9,7 @@ from time_management.building.serializers import (
     BuildingAndAssignSerializer,
     BuildingAndProjectSerializer,
 )
+from time_management.project.serializers import BuildingAssignFullSerializer
 
 
 @api_view(["GET", "POST"])
@@ -143,3 +144,20 @@ def building_and_project(request, building_assign_id=None):
         buildings = BuildingAssign.objects.all()
         serializer = BuildingAndProjectSerializer(buildings, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET"])
+def full_building_view(request, building_assign_id=None):
+    if building_assign_id:
+        try:
+            project = BuildingAssign.objects.get(building_assign_id=building_assign_id)
+        except BuildingAssign.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        return Response(
+            {"error": "building id not given"}, status=status.HTTP_404_NOT_FOUND
+        )
+    serializer = BuildingAssignFullSerializer(project)
+    return Response(serializer.data, status=status.HTTP_200_OK)

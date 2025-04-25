@@ -16,6 +16,7 @@ from time_management.project.serializers import (
     ProjectAssignSerializer,
     ProjectAndAssignSerializer,
     AreaOfWorkSerializer,
+    ProjectFullSerializer,
 )
 from time_management.building.serializers import (
     BuildingAssignSerializer,
@@ -310,3 +311,21 @@ def project_screen(request, project_id=None):
         projects = ProjectAssign.objects.all()
         serializer = ProjectAndAssignSerializer(projects, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET"])
+def full_project_view(request, project_id=None):
+    if project_id:
+        try:
+            project = Project.objects.get(project_id=project_id)
+        except Project.DoesNotExist:
+            return Response(
+            {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+    else:
+        return Response(
+            {"error": "Project id not given"}, status=status.HTTP_404_NOT_FOUND
+        )
+    serializer = ProjectFullSerializer(project)
+    return Response(serializer.data, status=status.HTTP_200_OK)
