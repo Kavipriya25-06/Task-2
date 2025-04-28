@@ -82,9 +82,9 @@ class Employee(models.Model):
     profile_picture = models.ImageField(
         upload_to="profile_pics/", null=True, blank=True
     )
-    attachments = models.FileField(
-        upload_to="employee_attachments/", null=True, blank=True
-    )
+    # attachments = models.FileField(
+    #     upload_to="employee_attachments/", null=True, blank=True
+    # )
 
     def save(self, *args, **kwargs):
         if not self.employee_id:
@@ -215,7 +215,7 @@ class LeavesTaken(models.Model):
     duration = models.IntegerField()
     reason = models.TextField()
     resumption_date = models.DateField()
-    attachment = models.FileField(upload_to="leave_attachments/", null=True, blank=True)
+    # attachment = models.FileField(upload_to="leave_attachments/", null=True, blank=True)
 
     approved_by = models.ForeignKey(
         Employee,
@@ -292,7 +292,7 @@ class BiometricData(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     employee_code = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=100)
-    shift = models.CharField(max_length=50)
+    shift = models.CharField(max_length=50, blank=True, null=True)
     date = models.DateField()
     in_time = models.TimeField()
     out_time = models.TimeField()
@@ -414,9 +414,9 @@ class Task(models.Model):
     task_title = models.CharField(max_length=200)
     task_description = models.TextField(blank=True, null=True)
     priority = models.CharField(max_length=50, blank=True, null=True)
-    attachments = models.FileField(
-        upload_to="tasks/attachments/", blank=True, null=True
-    )
+    # attachments = models.FileField(
+    #     upload_to="tasks/attachments/", blank=True, null=True
+    # )
     comments = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
     task_code = models.CharField(max_length=20, blank=True, null=True)
@@ -499,9 +499,9 @@ class TaskAssign(models.Model):
         default="pending",
     )
     priority = models.CharField(max_length=50, blank=True, null=True)
-    attachments = models.FileField(
-        upload_to="tasks/attachments/", blank=True, null=True
-    )
+    # attachments = models.FileField(
+    #     upload_to="tasks/attachments/", blank=True, null=True
+    # )
     comments = models.TextField(blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -524,11 +524,51 @@ class TimeSheet(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     date = models.DateField()
+    approved = models.BooleanField(default=False, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.timesheet_id:
             self.timesheet_id = generate_auto_id(TimeSheet, "TS")
         super().save(*args, **kwargs)
+
+
+# Generic Attachment Model
+class Attachment(models.Model):
+    file = models.FileField(upload_to="attachments/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    # Polymorphic relation to multiple models
+    task = models.ForeignKey(
+        "Task",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="Taskattachments",
+    )
+    task_assign = models.ForeignKey(
+        "TaskAssign",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="TaskAssignattachments",
+    )
+    employee = models.ForeignKey(
+        "Employee",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="Employeeattachments",
+    )
+    leavestaken = models.ForeignKey(
+        "LeavesTaken",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="leaveattachments",
+    )
+
+    def __str__(self):
+        return f"{self.file.name}"
 
 
 ### Older tables

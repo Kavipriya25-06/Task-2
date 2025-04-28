@@ -1,8 +1,13 @@
 from rest_framework import serializers
-from ..models import Employee, Hierarchy, User
+from ..models import Employee, Hierarchy, User, Attachment
+from time_management.attachments.serializers import AttachmentSerializer
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    attachments = AttachmentSerializer(
+        many=True, source="Employeeattachments", read_only=True
+    )
+
     class Meta:
         model = Employee
         fields = "__all__"

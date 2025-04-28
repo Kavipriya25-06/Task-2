@@ -7,10 +7,14 @@ from ..models import (
     Project,
     ProjectAssign,
     Employee,
+    Attachment,
 )
-
+from time_management.attachments.serializers import AttachmentSerializer
 
 class TaskSerializer(serializers.ModelSerializer):
+    attachments = AttachmentSerializer(
+        many=True, source="Taskattachments", read_only=True
+    )
     class Meta:
         model = Task
         fields = "__all__"
@@ -19,6 +23,9 @@ class TaskSerializer(serializers.ModelSerializer):
 class TaskAssignSerializer(serializers.ModelSerializer):
     employee = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Employee.objects.all()
+    )
+    attachments = AttachmentSerializer(
+        many=True, source="TaskAssignattachments", read_only=True
     )
 
     class Meta:

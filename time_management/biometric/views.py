@@ -207,3 +207,27 @@ def weekly_attendance_leave(request, employee_id=None):
             serializer = BiometricDataSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def attendance_admin(request, employee_id=None):
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        employees = emp_under_manager(manager)
+
+        biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        modified_biometric = biometric_qs.filter(modified_by=employee_id)
+
+        serializer = BiometricDataSerializer(modified_biometric, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        serializer = BiometricDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

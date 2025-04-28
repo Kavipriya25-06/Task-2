@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from ..models import LeavesTaken, Employee, Hierarchy
+from ..models import LeavesTaken, Employee, Hierarchy, Attachment
+from time_management.attachments.serializers import AttachmentSerializer
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -19,6 +20,9 @@ class HierarchySerializer(serializers.ModelSerializer):
 
 
 class LeavesTakenSerializer(serializers.ModelSerializer):
+    attachments = AttachmentSerializer(
+        many=True, source="leaveattachments", read_only=True
+    )
     class Meta:
         model = LeavesTaken
         fields = "__all__"

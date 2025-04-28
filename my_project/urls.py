@@ -30,6 +30,14 @@ from time_management.models import (
     Calendar,
     BiometricData,
 )
+from time_management.attachments.views import (
+    attachment_detail,
+    attachment_list_create,
+    attachments_by_employee,
+    attachments_by_leavestaken,
+    attachments_by_task,
+    attachments_by_task_assign,
+)
 from time_management.employee.views import (
     employee_api,
     employee_view_api,
@@ -56,6 +64,7 @@ from time_management.biometric.views import (
     biometric_data_api,
     attendance,
     weekly_attendance,
+    attendance_admin,
 )
 from time_management.project.views import (
     project_list_create,
@@ -133,6 +142,8 @@ urlpatterns = [
     path("biometric-data/by_employee/<str:employee_id>/", biometric_data_api),
     path("attendance/", attendance),
     path("attendance/<str:employee_id>/", attendance),
+    path("attendance-admin/", attendance_admin),
+    path("attendance-admin/<str:employee_id>/", attendance_admin),
     path("weekly-attendance/", weekly_attendance),
     path("weekly-attendance/<str:employee_id>/", weekly_attendance),
     path("projects/", project_list_create, name="project-list-create"),
@@ -246,4 +257,35 @@ urlpatterns = [
     ),
     path("timesheet/", timesheet_data_api, name="timesheet"),
     path("timesheet/<str:timesheet_id>/", timesheet_data_api, name="timesheet"),
+    path(
+        "attachments/",
+        attachment_list_create,
+        name="attachment_list_create",
+    ),
+    path(
+        "attachments/<int:pk>/",
+        attachment_detail,
+        name="attachment_detail",
+    ),
+    # Filtered
+    path(
+        "attachments/task/<str:task_id>/",
+        attachments_by_task,
+        name="attachments_by_task",
+    ),
+    path(
+        "attachments/task-assign/<str:task_assign_id>/",
+        attachments_by_task_assign,
+        name="attachments_by_task_assign",
+    ),
+    path(
+        "attachments/employee/<str:employee_id>/",
+        attachments_by_employee,
+        name="attachments_by_employee",
+    ),
+    path(
+        "attachments/leavestaken/<str:leave_taken_id>/",
+        attachments_by_leavestaken,
+        name="attachments_by_leavestaken",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -14,6 +14,8 @@ from .models import (
     ProjectAssign,
     BuildingAssign,
     TaskAssign,
+    TimeSheet,
+    Attachment,
 )
 
 admin.site.register(Employee)
@@ -31,3 +33,5 @@ admin.site.register(Task)
 admin.site.register(ProjectAssign)
 admin.site.register(BuildingAssign)
 admin.site.register(TaskAssign)
+admin.site.register(TimeSheet)
+admin.site.register(Attachment)
