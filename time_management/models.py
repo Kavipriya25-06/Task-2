@@ -79,12 +79,12 @@ class Employee(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     updated_at = models.DateTimeField(auto_now=True)
 
-    # profile_picture = models.ImageField(
-    #     upload_to="profile_pics/", null=True, blank=True
-    # )
-    # attachments = models.FileField(
-    #     upload_to="employee_attachments/", null=True, blank=True
-    # )
+    profile_picture = models.ImageField(
+        upload_to="profile_pics/", null=True, blank=True
+    )
+    attachments = models.FileField(
+        upload_to="employee_attachments/", null=True, blank=True
+    )
 
     def save(self, *args, **kwargs):
         if not self.employee_id:
@@ -301,6 +301,14 @@ class BiometricData(models.Model):
     total_duration = models.DecimalField(max_digits=5, decimal_places=2)
     status = models.CharField(max_length=50)
     remarks = models.TextField(blank=True, null=True)
+    modified_by = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="manager",
+    )
+    modified_on = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         if not self.biometric_id:
