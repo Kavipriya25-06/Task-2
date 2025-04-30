@@ -76,6 +76,7 @@ from time_management.project.views import (
     create_full_project_flow,
     project_screen,
     full_project_view,
+    project_creator,
 )
 from time_management.building.views import (
     building_list_create,
@@ -179,6 +180,8 @@ urlpatterns = [
         project_and_assign,
         name="project-assign-detail",
     ),
+    path("project-creator/", project_creator),
+    path("project-creator/<str:employee_id>/", project_creator),
     path("area-of-work/", areaofwork_api, name="Area-of-work"),
     path("area-of-work/<int:id>/", areaofwork_api, name="Area-of-work"),
     path("buildings/", building_list_create, name="building-list-create"),

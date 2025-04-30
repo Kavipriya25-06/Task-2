@@ -130,6 +130,16 @@ class User(models.Model):
     )
     # role = models.ManyToManyField(Roles, blank=True)
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ("active", "Active"),
+            ("inactive", "Inactive"),
+            ("resigned", "Resigned"),
+        ],
+        blank=True,
+        null=True,
+    )
 
     def save(self, *args, **kwargs):
         if not self.user_id:
@@ -528,7 +538,16 @@ class TimeSheet(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.timesheet_id:
-            self.timesheet_id = generate_auto_id(TimeSheet, "TS")
+            with transaction.atomic():
+                last = TimeSheet.objects.select_for_update().aggregate(
+                    models.Max("timesheet_id")
+                )["timesheet_id__max"]
+
+                if last:
+                    last_num = int(last.split("_")[1])
+                    self.timesheet_id = f"TS_{last_num + 1:015d}"
+                else:
+                    self.timesheet_id = "TS_000000000000001"
         super().save(*args, **kwargs)
 
 

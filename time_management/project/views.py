@@ -320,8 +320,8 @@ def full_project_view(request, project_id=None):
             project = Project.objects.get(project_id=project_id)
         except Project.DoesNotExist:
             return Response(
-            {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
-                )
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
     else:
         return Response(
@@ -329,3 +329,19 @@ def full_project_view(request, project_id=None):
         )
     serializer = ProjectFullSerializer(project)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def project_creator(request, employee_id=None):
+    if employee_id:
+        try:
+            project = Project.objects.filter(created_by=employee_id)
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        project = Project.objects.all()
+
+    serializer = ProjectSerializer(project, many=True)
+    return Response(serializer.data)

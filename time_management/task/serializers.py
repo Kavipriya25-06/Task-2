@@ -10,11 +10,14 @@ from ..models import (
     Attachment,
 )
 from time_management.attachments.serializers import AttachmentSerializer
+from time_management.project.serializers import EmployeeSerializer
+
 
 class TaskSerializer(serializers.ModelSerializer):
     attachments = AttachmentSerializer(
         many=True, source="Taskattachments", read_only=True
     )
+
     class Meta:
         model = Task
         fields = "__all__"
@@ -114,6 +117,7 @@ class BuildingAndProjectSerializer(serializers.ModelSerializer):
 class TaskBuildingSerializer(serializers.ModelSerializer):
     task = TaskSerializer(read_only=True)
     building_assign = BuildingAndProjectSerializer(read_only=True)
+    employee = EmployeeSerializer(many=True, read_only=True)
 
     class Meta:
         model = TaskAssign

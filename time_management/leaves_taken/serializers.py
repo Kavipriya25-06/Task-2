@@ -23,6 +23,7 @@ class LeavesTakenSerializer(serializers.ModelSerializer):
     attachments = AttachmentSerializer(
         many=True, source="leaveattachments", read_only=True
     )
+
     class Meta:
         model = LeavesTaken
         fields = "__all__"
@@ -33,18 +34,4 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LeavesTaken
-        fields = [
-            "leave_taken_id",
-            "leave_type",
-            "start_date",
-            "end_date",
-            "duration",
-            "reason",
-            "resumption_date",
-            "attachment",
-            "status",
-            "created_at",
-            "updated_at",
-            "approved_by",
-            "employee",
-        ]
+        fields = "__all__"
