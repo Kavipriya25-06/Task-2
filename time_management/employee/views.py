@@ -1,4 +1,5 @@
-from ..models import Employee, Hierarchy
+from django.db.models import Q
+from ..models import Employee, Hierarchy, User
 from time_management.employee.serializers import (
     EmployeeSerializer,
     HierarchySerializer,
@@ -127,6 +128,19 @@ def employee_view_api(request, employee_id=None):
             serializer = EmployeeViewSerializer(employees, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+@api_view(["GET"])
+def unassigned_employee(request):
+
+    user_employee_ids = User.objects.values_list("employee_id", flat=True)
+    # employees = Employee.objects.exclude(employee_id__in=user_employee_ids)
+    employees = Employee.objects.exclude(
+        Q(employee_id__in=user_employee_ids)
+        | Q(employee_email__isnull=True)
+        | Q(employee_email__exact="")
+    )
+    serializer = EmployeeViewSerializer(employees, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
 # @parser_classes([MultiPartParser, FormParser])

@@ -40,6 +40,7 @@ class EmployeeViewSerializer(serializers.ModelSerializer):
             "employee_id",
             "employee_name",
             "employee_code",
+            "employee_email",
             "status",
             "designation",
             "department",

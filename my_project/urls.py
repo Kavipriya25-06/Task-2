@@ -43,6 +43,7 @@ from time_management.employee.views import (
     employee_view_api,
     mntl_view_api,
     emp_under_mngr_view,
+    unassigned_employee,
 )
 from time_management.assignment.views import manager_tl_projects, tl_projects
 from time_management.user.views import user_api, user_details
@@ -112,6 +113,7 @@ urlpatterns = [
     path("employees/<str:employee_id>/", employee_api),
     path("employees-details/", employee_view_api),
     path("employees-details/<str:employee_id>/", employee_view_api),
+    path("unassigned-employees/", unassigned_employee),
     path("emp-details/", emp_under_mngr_view),
     path("emp-details/<str:employee_id>/", emp_under_mngr_view),
     path("teamlead-and-managers/", mntl_view_api, name="managers-and-team-leads"),
