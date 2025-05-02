@@ -97,7 +97,14 @@ from time_management.task.views import (
     task_building,
     task_by_employee,
 )
-from time_management.time_sheet.views import timesheet_data_api
+from time_management.time_sheet.views import (
+    timesheet_data_api,
+    timesheet_under_manager,
+    manager_weekly_timesheet,
+    manager_daily_timesheet,
+    employee_weekly_timesheet,
+    employee_daily_timesheet,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -260,6 +267,36 @@ urlpatterns = [
     ),
     path("timesheet/", timesheet_data_api, name="timesheet"),
     path("timesheet/<str:timesheet_id>/", timesheet_data_api, name="timesheet"),
+    path("timesheet-manager/", timesheet_under_manager, name="timesheet"),
+    path(
+        "timesheet-manager/<str:employee_id>/",
+        timesheet_under_manager,
+        name="timesheet",
+    ),
+    path("timesheet-manager-weekly/", manager_weekly_timesheet, name="timesheet"),
+    path(
+        "timesheet-manager-weekly/<str:employee_id>/",
+        manager_weekly_timesheet,
+        name="timesheet",
+    ),
+    path("timesheet-manager-daily/", manager_daily_timesheet, name="timesheet"),
+    path(
+        "timesheet-manager-daily/<str:employee_id>/",
+        manager_daily_timesheet,
+        name="timesheet",
+    ),
+    path("timesheet-employee-weekly/", employee_weekly_timesheet, name="timesheet"),
+    path(
+        "timesheet-employee-weekly/<str:employee_id>/",
+        employee_weekly_timesheet,
+        name="timesheet",
+    ),
+    path("timesheet-employee-daily/", employee_daily_timesheet, name="timesheet"),
+    path(
+        "timesheet-employee-daily/<str:employee_id>/",
+        employee_daily_timesheet,
+        name="timesheet",
+    ),
     path(
         "attachments/",
         attachment_list_create,

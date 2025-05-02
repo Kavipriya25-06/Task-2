@@ -534,6 +534,7 @@ class TimeSheet(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     date = models.DateField()
+    submitted = models.BooleanField(default=False, null=True, blank=True)
     approved = models.BooleanField(default=False, null=True, blank=True)
 
     def save(self, *args, **kwargs):

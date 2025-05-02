@@ -82,3 +82,216 @@ def timesheet_data_api(request, timesheet_id=None):
                 {"error": "TimeSheetData record not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+@api_view(["GET"])
+def timesheet_under_manager(request, employee_id=None):
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        employees = emp_under_manager(manager)
+
+        timesheet_qs = TimeSheet.objects.filter(employee__in=employees)
+
+        serializer = TimeSheetDataSerializer(timesheet_qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = TimeSheet.objects.all()
+        serializer = TimeSheetDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def manager_weekly_timesheet(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        employees = emp_under_manager(manager)
+
+        timesheet_qs = TimeSheet.objects.filter(employee__in=employees)
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            timesheet_entries = timesheet_qs.filter(date__range=(start, end)).order_by(
+                "date"
+            )
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(timesheet_qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = TimeSheet.objects.all()
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def manager_daily_timesheet(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        employees = emp_under_manager(manager)
+
+        timesheet_qs = TimeSheet.objects.filter(employee__in=employees)
+        if today:
+            # weekday = today.weekday()
+            # start = today - timedelta(days=weekday)
+            # end = start + timedelta(days=6)
+            # timesheet_entries = timesheet_qs.filter(date__range=(start, end)).order_by(
+            #     "date"
+            # )
+            timesheet_entries = timesheet_qs.filter(date=today)
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(timesheet_qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = TimeSheet.objects.all()
+        if today:
+            # weekday = today.weekday()
+            # start = today - timedelta(days=weekday)
+            # end = start + timedelta(days=6)
+            # timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
+            timesheet_entries = timesheet_qs.filter(date=today)
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def employee_weekly_timesheet(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            employee_timesheet = TimeSheet.objects.filter(employee=employee_id)
+        except TimeSheet.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        # employees = emp_under_manager(manager)
+
+        # timesheet_qs = TimeSheet.objects.filter(employee__in=employees)
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            timesheet_entries = employee_timesheet.filter(
+                date__range=(start, end)
+            ).order_by("date")
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(employee_timesheet, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = TimeSheet.objects.all()
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def employee_daily_timesheet(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            # manager = Employee.objects.get(employee_id=employee_id)
+            employee_timesheet = TimeSheet.objects.filter(employee=employee_id)
+        except TimeSheet.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        # employees = emp_under_manager(manager)
+
+        if today:
+            # weekday = today.weekday()
+            # start = today - timedelta(days=weekday)
+            # end = start + timedelta(days=6)
+            # timesheet_entries = employee_timesheet.filter(date__range=(start, end)).order_by(
+            #     "date"
+            # )
+            timesheet_entries = employee_timesheet.filter(date=today)
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(employee_timesheet, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = TimeSheet.objects.all()
+        if today:
+            # weekday = today.weekday()
+            # start = today - timedelta(days=weekday)
+            # end = start + timedelta(days=6)
+            timesheet_entries = objs.filter(date=today)
+
+            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetDataSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
