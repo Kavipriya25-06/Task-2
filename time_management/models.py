@@ -50,12 +50,16 @@ class Employee(models.Model):
     year_of_passing = models.IntegerField(default=0, blank=True, null=True)
 
     previous_company_name = models.CharField(max_length=255, null=True, blank=True)
-    total_experience = models.IntegerField(default=0, blank=True, null=True)  # In years
+    previous_experience = models.IntegerField(
+        default=0, blank=True, null=True
+    )  # In months
     arris_experience = models.IntegerField(
         default=0, blank=True, null=True
-    )  # Experience in current company
+    )  # Experience in current company in months
 
-    total_experience = models.CharField(max_length=100, blank=True, null=True)
+    total_experience = models.IntegerField(
+        default=0, blank=True, null=True
+    )  # in months
     experience_in_years = models.DecimalField(
         max_digits=5, decimal_places=2, blank=True, null=True
     )

@@ -1,7 +1,10 @@
 from rest_framework.viewsets import ModelViewSet
 from ..models import BiometricData, Employee, TimeSheet
 from time_management.biometric.serializers import BiometricDataSerializer
-from time_management.time_sheet.serializers import TimeSheetDataSerializer
+from time_management.time_sheet.serializers import (
+    TimeSheetDataSerializer,
+    TimeSheetTaskSerializer,
+)
 from time_management.hierarchy.serializers import emp_under_manager
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -96,13 +99,13 @@ def timesheet_under_manager(request, employee_id=None):
 
         timesheet_qs = TimeSheet.objects.filter(employee__in=employees)
 
-        serializer = TimeSheetDataSerializer(timesheet_qs, many=True)
+        serializer = TimeSheetTaskSerializer(timesheet_qs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     else:
         objs = TimeSheet.objects.all()
-        serializer = TimeSheetDataSerializer(objs, many=True)
+        serializer = TimeSheetTaskSerializer(objs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -132,9 +135,9 @@ def manager_weekly_timesheet(request, employee_id=None):
                 "date"
             )
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(timesheet_qs, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_qs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -146,9 +149,9 @@ def manager_weekly_timesheet(request, employee_id=None):
             end = start + timedelta(days=6)
             timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(objs, many=True)
+            serializer = TimeSheetTaskSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -180,9 +183,9 @@ def manager_daily_timesheet(request, employee_id=None):
             # )
             timesheet_entries = timesheet_qs.filter(date=today)
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(timesheet_qs, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_qs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -195,9 +198,9 @@ def manager_daily_timesheet(request, employee_id=None):
             # timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
             timesheet_entries = timesheet_qs.filter(date=today)
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(objs, many=True)
+            serializer = TimeSheetTaskSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -228,9 +231,9 @@ def employee_weekly_timesheet(request, employee_id=None):
                 date__range=(start, end)
             ).order_by("date")
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(employee_timesheet, many=True)
+            serializer = TimeSheetTaskSerializer(employee_timesheet, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -242,9 +245,9 @@ def employee_weekly_timesheet(request, employee_id=None):
             end = start + timedelta(days=6)
             timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(objs, many=True)
+            serializer = TimeSheetTaskSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -276,9 +279,9 @@ def employee_daily_timesheet(request, employee_id=None):
             # )
             timesheet_entries = employee_timesheet.filter(date=today)
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(employee_timesheet, many=True)
+            serializer = TimeSheetTaskSerializer(employee_timesheet, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -290,8 +293,8 @@ def employee_daily_timesheet(request, employee_id=None):
             # end = start + timedelta(days=6)
             timesheet_entries = objs.filter(date=today)
 
-            serializer = TimeSheetDataSerializer(timesheet_entries, many=True)
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
         else:
-            serializer = TimeSheetDataSerializer(objs, many=True)
+            serializer = TimeSheetTaskSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)

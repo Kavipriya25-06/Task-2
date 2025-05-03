@@ -131,3 +131,71 @@ class TaskBuildingSerializer(serializers.ModelSerializer):
             "employee",
             "building_assign",
         ]
+
+
+class TaskViewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Task
+        fields = ["task_id", "task_title", "task_code"]
+
+
+class BuildingTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Building
+        fields = ["building_id", "building_title", "building_code"]
+
+
+class ProjectTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ["project_id", "project_title", "project_code"]
+
+
+class ProjectViewSerializer(serializers.ModelSerializer):
+    project = ProjectTaskSerializer(read_only=True)
+
+    class Meta:
+        model = ProjectAssign
+        fields = [
+            "project_assign_id",
+            # "project_hours",
+            # "status",
+            # "employee",
+            "project",
+        ]
+
+
+class BuildingViewSerializer(serializers.ModelSerializer):
+    building = BuildingTaskSerializer(read_only=True)
+    project_assign = ProjectViewSerializer(read_only=True)
+
+    class Meta:
+        model = BuildingAssign
+        fields = [
+            "building_assign_id",
+            # "building_hours",
+            # "status",
+            # "employee",
+            "building",
+            "project_assign",
+        ]
+
+
+class TaskEntrySerializer(serializers.ModelSerializer):
+    task = TaskViewSerializer(read_only=True)
+    building_assign = BuildingViewSerializer(read_only=True)
+    # employee = EmployeeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TaskAssign
+        fields = [
+            "task_assign_id",
+            "task",
+            # "task_hours",
+            # "status",
+            # "start_date",
+            # "end_date",
+            # "employee",
+            "building_assign",
+        ]
