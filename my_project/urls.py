@@ -106,6 +106,7 @@ from time_management.time_sheet.views import (
     manager_daily_timesheet,
     employee_weekly_timesheet,
     employee_daily_timesheet,
+    total_logged_hours,
 )
 
 urlpatterns = [
@@ -300,6 +301,21 @@ urlpatterns = [
     path(
         "timesheet-employee-daily/<str:employee_id>/",
         employee_daily_timesheet,
+        name="timesheet",
+    ),
+    path(
+        "total-hours/project/<str:project_id>/",
+        total_logged_hours,
+        name="timesheet",
+    ),
+    path(
+        "total-hours/building/<str:building_id>/",
+        total_logged_hours,
+        name="timesheet",
+    ),
+    path(
+        "total-hours/task/<str:task_id>/",
+        total_logged_hours,
         name="timesheet",
     ),
     path(

@@ -38,6 +38,8 @@ def biometric_data_api(request, biometric_id=None, employee_id=None):
                     month = today.month
                     print("This month", today.strftime("%m"), month)
                     calendar_entries = obj.filter(date__month=month).order_by("date")
+                else:
+                    calendar_entries = obj
 
                 serializer = BiometricDataSerializer(calendar_entries, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)

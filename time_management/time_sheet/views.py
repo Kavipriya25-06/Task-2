@@ -12,6 +12,7 @@ from rest_framework import status
 from django.shortcuts import render
 from datetime import datetime, timedelta
 from django.http import JsonResponse
+from django.db.models import Sum
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
@@ -298,3 +299,46 @@ def employee_daily_timesheet(request, employee_id=None):
             serializer = TimeSheetTaskSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def total_logged_hours(request, project_id=None, building_id=None, task_id=None):
+
+    total_hours = 0
+    if project_id:
+        total_hours = (
+            TimeSheet.objects.filter(
+                task_assign__building_assign__project_assign__project__project_id=project_id,
+            ).aggregate(total_hours=Sum("task_hours"))["total_hours"]
+            or 0
+        )
+
+    if building_id:
+        total_hours = (
+            TimeSheet.objects.filter(
+                task_assign__building_assign__building__building_id=building_id,
+            ).aggregate(total_hours=Sum("task_hours"))["total_hours"]
+            or 0
+        )
+
+    if task_id:
+        total_hours = (
+            TimeSheet.objects.filter(
+                task_assign__task__task_id=task_id,
+            ).aggregate(
+                total_hours=Sum("task_hours")
+            )["total_hours"]
+            or 0
+        )
+
+    # Filter timesheets by navigating the relationships
+    # total_hours = (
+    #     TimeSheet.objects.filter(
+    #         task_assign__task__task_id=task_id,
+    #         task_assign__building_assign__building__building_id=building_id,
+    #         task_assign__building_assign__project_assign__project__project_id=project_id,
+    #     ).aggregate(total_hours=Sum("task_hours"))["total_hours"]
+    #     or 0
+    # )
+
+    return Response({"total_logged_hours": total_hours})
