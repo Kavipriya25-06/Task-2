@@ -1,15 +1,17 @@
 from rest_framework import serializers
 from ..models import Employee, Hierarchy
 
+
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields = '__all__'
+        fields = "__all__"
+
 
 class HierarchySerializer(serializers.ModelSerializer):
     class Meta:
         model = Hierarchy
-        fields = '__all__'
+        fields = "__all__"
 
 
 #### The Very important helper function to get employee object under a manager upto 2 levels

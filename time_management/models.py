@@ -7,6 +7,7 @@
 
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from datetime import date
 
 
 # Employee Table
@@ -101,6 +102,27 @@ class Employee(models.Model):
                     self.employee_id = f"EMP_{last_num + 1:05d}"
                 else:
                     self.employee_id = "EMP_00001"
+        # --------- ARRIS EXPERIENCE AUTO-CALCULATION ---------
+
+        if self.doj:
+            today = date.today()
+            delta = (today.year - self.doj.year) * 12 + (today.month - self.doj.month)
+            if delta < 0:
+                delta = 0  # Future DOJ safety
+            self.arris_experience = delta
+        else:
+            self.arris_experience = 0
+
+        # --------- TOTAL EXPERIENCE AUTO-CALCULATION ---------
+        self.total_experience = (self.arris_experience or 0) + (
+            self.previous_experience or 0
+        )
+
+        # --------- EXPERIENCE IN YEARS (for display) ---------
+        self.experience_in_years = (
+            round(self.total_experience / 12, 2) if self.total_experience else 0
+        )
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -540,6 +562,7 @@ class TimeSheet(models.Model):
     date = models.DateField()
     submitted = models.BooleanField(default=False, null=True, blank=True)
     approved = models.BooleanField(default=False, null=True, blank=True)
+    rejected = models.BooleanField(default=False, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.timesheet_id:

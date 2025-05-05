@@ -131,8 +131,11 @@ def weekly_attendance(request, employee_id=None):
             return Response({"error": "Employee not found"}, status=404)
 
         employees = emp_under_manager(manager)
+        print("manager", manager)
+        print(employees, "Employees")
 
         biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        print(biometric_qs, "Biometric qs")
         if today:
             weekday = today.weekday()
             start = today - timedelta(days=weekday)
@@ -230,4 +233,3 @@ def attendance_admin(request, employee_id=None):
         objs = BiometricData.objects.all()
         serializer = BiometricDataSerializer(objs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
