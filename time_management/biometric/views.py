@@ -13,6 +13,14 @@ from django.http import JsonResponse
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
 def biometric_data_api(request, biometric_id=None, employee_id=None):
     if request.method == "GET":
+        todaystr = request.query_params.get(
+            "today"
+        )  # <-- Get the date from filter params
+        if todaystr:
+            today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+        else:
+            today = False
+
         if biometric_id:
             try:
                 obj = BiometricData.objects.get(biometric_id=biometric_id)
@@ -26,7 +34,12 @@ def biometric_data_api(request, biometric_id=None, employee_id=None):
         elif employee_id:
             try:
                 obj = BiometricData.objects.filter(employee_id=employee_id)
-                serializer = BiometricDataSerializer(obj, many=True)
+                if today:
+                    month = today.month
+                    print("This month", today.strftime("%m"), month)
+                    calendar_entries = obj.filter(date__month=month).order_by("date")
+
+                serializer = BiometricDataSerializer(calendar_entries, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except BiometricData.DoesNotExist:
                 return Response(
