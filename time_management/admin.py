@@ -8,6 +8,8 @@ from .models import (
     LeavesTaken,
     Calendar,
     BiometricData,
+    AreaOfWork,
+    Discipline,
     Project,
     Building,
     Task,
@@ -28,6 +30,8 @@ admin.site.register(LeavesTaken)
 admin.site.register(Calendar)
 admin.site.register(BiometricData)
 admin.site.register(Project)
+admin.site.register(AreaOfWork)
+admin.site.register(Discipline)
 admin.site.register(Building)
 admin.site.register(Task)
 admin.site.register(ProjectAssign)

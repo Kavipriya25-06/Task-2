@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from time_management.models import (
     AreaOfWork,
     Roles,
+    Discipline,
 )  # adjust if models are in another app
 
 
@@ -36,6 +37,61 @@ class Command(BaseCommand):
             ("training", "Training"),
         ]
 
+        discipline_list = [
+            (
+                99,
+                "Non Billable Projects/Hours",
+            ),
+            (
+                0,
+                "Proposals",
+            ),
+            (
+                1,
+                "Standardization",
+            ),
+            (
+                2,
+                "Deputation",
+            ),
+            (
+                51,
+                "Structural - Detailing",
+            ),
+            (
+                52,
+                "Structural - Design  + Detailing",
+            ),
+            (
+                53,
+                "Structural - Design",
+            ),
+            (
+                54,
+                "Piping Design",
+            ),
+            (
+                55,
+                "Piping Detailing",
+            ),
+            (
+                56,
+                "Mechanical Design",
+            ),
+            (
+                57,
+                "Mechanical Detailing",
+            ),
+            (
+                58,
+                "EIC",
+            ),
+            (
+                59,
+                "Multidiscipline",
+            ),
+        ]
+
         roles_list = [
             "admin",
             "employee",
@@ -51,6 +107,14 @@ class Command(BaseCommand):
             )
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Added AreaOfWork: {name}"))
+
+        # Load Discipline
+        for name in discipline_list:
+            obj, created = Discipline.objects.get_or_create(
+                discipline_code=name[0], name=name[1]
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Added Discipline: {name}"))
 
         # Load Roles
         for role in roles_list:

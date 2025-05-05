@@ -3,6 +3,7 @@ from ..models import (
     Project,
     ProjectAssign,
     AreaOfWork,
+    Discipline,
     Employee,
     BuildingAssign,
     TaskAssign,
@@ -50,6 +51,12 @@ class ProjectAndAssignSerializer(serializers.ModelSerializer):
 class AreaOfWorkSerializer(serializers.ModelSerializer):
     class Meta:
         model = AreaOfWork
+        fields = "__all__"
+
+
+class DisciplineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
         fields = "__all__"
 
 

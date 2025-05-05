@@ -7,6 +7,7 @@ from ..models import (
     Project,
     ProjectAssign,
     AreaOfWork,
+    Discipline,
     Building,
     BuildingAssign,
     Employee,
@@ -16,6 +17,7 @@ from time_management.project.serializers import (
     ProjectAssignSerializer,
     ProjectAndAssignSerializer,
     AreaOfWorkSerializer,
+    DisciplineSerializer,
     ProjectFullSerializer,
 )
 from time_management.building.serializers import (
@@ -211,6 +213,79 @@ def areaofwork_api(request, id=None):
         except AreaOfWork.DoesNotExist:
             return Response(
                 {"error": "AreaOfWork record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+@api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
+def discipline_api(request, id=None):
+    if request.method == "GET":
+        if id:
+            try:
+                obj = Discipline.objects.get(id=id)
+                serializer = DisciplineSerializer(obj)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Discipline.DoesNotExist:
+                return Response(
+                    {"error": "Discipline record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            objs = Discipline.objects.all()
+            serializer = DisciplineSerializer(objs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == "POST":
+        serializer = DisciplineSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Discipline created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method in ["PUT", "PATCH"]:
+        if not id:
+            return Response(
+                {"error": "Discipline ID is required for update"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            obj = Discipline.objects.get(id=id)
+        except Discipline.DoesNotExist:
+            return Response(
+                {"error": "Discipline record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = DisciplineSerializer(
+            obj, data=request.data, partial=(request.method == "PATCH")
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Discipline updated", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == "DELETE":
+        if not id:
+            return Response(
+                {"error": "Discipline ID is required for DELETE"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            obj = Discipline.objects.get(id=id)
+            obj.delete()
+            return Response(
+                {"message": "Discipline deleted successfully"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Discipline.DoesNotExist:
+            return Response(
+                {"error": "Discipline record not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 

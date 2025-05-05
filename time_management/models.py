@@ -376,6 +376,14 @@ class AreaOfWork(models.Model):
         return self.name
 
 
+class Discipline(models.Model):
+    discipline_code = models.IntegerField(unique=True)
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 ### Projects Table
 
 
