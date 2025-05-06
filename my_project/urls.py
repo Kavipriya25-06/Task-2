@@ -67,6 +67,7 @@ from time_management.biometric.views import (
     weekly_attendance,
     attendance_admin,
     biometric_daily,
+    biometric_daily_task,
 )
 from time_management.project.views import (
     project_list_create,
@@ -154,6 +155,7 @@ urlpatterns = [
     path("biometric-data/<str:biometric_id>/", biometric_data_api),
     path("biometric-data/by_employee/<str:employee_id>/", biometric_data_api),
     path("biometric-daily/<str:employee_id>/", biometric_daily),
+    path("biometric-daily-task/<str:employee_id>/", biometric_daily_task),
     path("attendance/", attendance),
     path("attendance/<str:employee_id>/", attendance),
     path("attendance-admin/", attendance_admin),

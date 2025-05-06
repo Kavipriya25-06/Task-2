@@ -1,6 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
 from ..models import BiometricData, Employee
-from time_management.biometric.serializers import BiometricDataSerializer
+from time_management.biometric.serializers import (
+    BiometricDataSerializer,
+    BiometricTaskDataSerializer,
+)
 from time_management.hierarchy.serializers import emp_under_manager
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -272,4 +275,29 @@ def biometric_daily(request, employee_id=None):
     else:
         objs = BiometricData.objects.all()
         serializer = BiometricDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def biometric_daily_task(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        biometric_qs = BiometricData.objects.filter(employee=employee_id)
+        if today:
+            calendar_entries = biometric_qs.filter(date=today)
+        else:
+            calendar_entries = biometric_qs
+
+        serializer = BiometricTaskDataSerializer(calendar_entries, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        serializer = BiometricTaskDataSerializer(objs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
