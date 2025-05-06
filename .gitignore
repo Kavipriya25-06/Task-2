@@ -22,6 +22,7 @@ local_settings.py
 staticfiles/
 static/
 media/
+exports/
 
 # Editor/IDE files
 .vscode/
