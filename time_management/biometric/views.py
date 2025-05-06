@@ -248,3 +248,28 @@ def attendance_admin(request, employee_id=None):
         objs = BiometricData.objects.all()
         serializer = BiometricDataSerializer(objs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def biometric_daily(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        biometric_qs = BiometricData.objects.filter(employee=employee_id)
+        if today:
+            calendar_entries = biometric_qs.filter(date=today)
+        else:
+            calendar_entries = biometric_qs
+
+        serializer = BiometricDataSerializer(calendar_entries, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        serializer = BiometricDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
