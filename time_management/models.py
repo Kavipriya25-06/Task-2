@@ -215,6 +215,29 @@ class Hierarchy(models.Model):
         return f"{self.employee} reports to {self.reporting_to}"
 
 
+class CompOff(models.Model):
+
+    leave_type = models.CharField(
+        max_length=20,
+        choices=[
+            ("full_day", "Full Day"),
+            ("half_day", "Half Day"),
+        ],
+        unique=True
+    )
+    min_hours = models.DecimalField(
+        max_digits=5, decimal_places=2,
+        help_text="Minimum hours required to avoid this leave type"
+    )
+    max_hours = models.DecimalField(
+        max_digits=5, decimal_places=2,
+        help_text="Maximum hours after which this leave type does not apply"
+    )
+
+    def __str__(self):
+        return f"{self.leave_type}: {self.min_hours} - {self.max_hours} hrs"
+
+
 # Leaves Available Table
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)

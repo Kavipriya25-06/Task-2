@@ -18,6 +18,7 @@ from .models import (
     TaskAssign,
     TimeSheet,
     Attachment,
+    CompOff,
 )
 
 admin.site.register(Employee)
@@ -39,3 +40,4 @@ admin.site.register(BuildingAssign)
 admin.site.register(TaskAssign)
 admin.site.register(TimeSheet)
 admin.site.register(Attachment)
+admin.site.register(CompOff)

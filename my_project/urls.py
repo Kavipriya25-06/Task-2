@@ -54,7 +54,7 @@ from time_management.hierarchy.views import (
     org_hierarchy,
     teamleads_under_manager,
 )
-from time_management.leaves_available.views import leaves_available_api
+from time_management.leaves_available.views import leaves_available_api, comp_off_api
 from time_management.leaves_taken.views import (
     leaves_taken_api,
     org_leaves,
@@ -143,6 +143,8 @@ urlpatterns = [
     path("org-hierarchy/<str:emp_id>/", org_hierarchy),
     path("leaves-available/", leaves_available_api),
     path("leaves-available/<str:leave_avail_id>/", leaves_available_api),
+    path("comp-off/", comp_off_api),
+    path("comp-off/<int:id>/", comp_off_api),
     path("leaves-available/by_employee/<str:employee_id>/", leaves_available_api),
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),

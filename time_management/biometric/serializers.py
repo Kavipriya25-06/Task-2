@@ -20,6 +20,7 @@ class CalendarSerializer(serializers.ModelSerializer):
 class BiometricTaskDataSerializer(serializers.ModelSerializer):
     calendar = serializers.SerializerMethodField()
     timesheets = serializers.SerializerMethodField()
+    leave_deduction = serializers.SerializerMethodField()
 
     class Meta:
         model = BiometricData
@@ -41,6 +42,7 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             "modified_by",
             "calendar",
             "timesheets",
+            "leave_deduction",
         ]
 
     def get_calendar(self, obj):
@@ -56,3 +58,12 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             return TimeSheetTaskSerializer(timesheets, many=True).data
         except TimeSheet.DoesNotExist:
             return None
+
+    def get_leave_deduction(self, obj):
+        from time_management.leaves_available.views import get_comp_off
+
+        print("Object", obj)
+        try:
+            return get_comp_off(float(obj.total_duration or 0))
+        except:
+            return 0
