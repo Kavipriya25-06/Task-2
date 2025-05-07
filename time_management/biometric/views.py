@@ -301,3 +301,34 @@ def biometric_daily_task(request, employee_id=None):
         objs = BiometricData.objects.all()
         serializer = BiometricTaskDataSerializer(objs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def biometric_weekly_task(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        biometric_qs = BiometricData.objects.filter(employee=employee_id)
+        if today:
+
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            calendar_entries = biometric_qs.filter(date__range=(start, end)).order_by(
+                "date"
+            )
+        else:
+            calendar_entries = biometric_qs
+
+        serializer = BiometricTaskDataSerializer(calendar_entries, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        serializer = BiometricTaskDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
