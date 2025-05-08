@@ -23,6 +23,7 @@ staticfiles/
 static/
 media/
 exports/
+logs/
 
 # Editor/IDE files
 .vscode/

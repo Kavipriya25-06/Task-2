@@ -126,6 +126,30 @@ def project_assign_detail(request, project_assign_id):
         )
 
 
+@api_view(["PATCH"])
+def project_assign_update(request, project_assign_id):
+    try:
+        project_assign = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+    except ProjectAssign.DoesNotExist:
+        return Response({"error": "Project assignment not found"}, status=404)
+
+    # Update employees (ManyToMany)
+    employees = request.data.get("employee", None)
+    if employees is not None:
+        project_assign.employee.set(employees)
+
+    # Update project_hours and status if provided
+    if "project_hours" in request.data:
+        project_assign.project_hours = request.data.get("project_hours")
+
+    if "status" in request.data:
+        project_assign.status = request.data.get("status")
+
+    project_assign.save()
+
+    return Response({"message": "Project assignment updated successfully."}, status=200)
+
+
 @api_view(["GET"])
 def project_and_assign(request, project_assign_id=None):
     if project_assign_id:

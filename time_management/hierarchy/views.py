@@ -275,6 +275,19 @@ def teamleads_under_manager(request, manager_id):
     return Response(teamlead_data)
 
 
+@api_view(["GET"])
+def get_hierarchy_by_employee(request, employee_id):
+    if employee_id:
+        try:
+            hierarchy = Hierarchy.objects.get(employee__employee_id=employee_id)
+            serializer = HierarchySerializer(hierarchy)
+            return Response(serializer.data, status=200)
+        except Hierarchy.DoesNotExist:
+            return Response({"error": "No hierarchy found"}, status=404)
+    else:
+        return Response({"error": "No employee found"}, status=404)
+
+
 # @api_view(["GET"])
 # def org_hierarchy(request, emp_id=None):
 #     try:

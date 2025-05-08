@@ -52,6 +52,7 @@ from time_management.hierarchy.views import (
     manager_hierarchy,
     teamlead_hierarchy,
     org_hierarchy,
+    get_hierarchy_by_employee,
     teamleads_under_manager,
 )
 from time_management.leaves_available.views import leaves_available_api, comp_off_api
@@ -75,6 +76,7 @@ from time_management.project.views import (
     project_detail,
     project_assign_detail,
     project_assign_list_create,
+    project_assign_update,
     project_and_assign,
     areaofwork_api,
     discipline_api,
@@ -136,6 +138,8 @@ urlpatterns = [
     path("user-details/<str:user_id>/", user_details),
     path("hierarchy/", hierarchy_api),
     path("hierarchy/<str:hierarchy_id>/", hierarchy_api),
+    path("hierarchy/by_employee/", get_hierarchy_by_employee),
+    path("hierarchy/by_employee/<str:employee_id>/", get_hierarchy_by_employee),
     path("manager-hierarchy/", manager_hierarchy),
     path("manager-hierarchy/<str:manager_id>/", manager_hierarchy),
     path("teamlead-hierarchy/", teamlead_hierarchy),
@@ -183,6 +187,11 @@ urlpatterns = [
         "projects-assigned/",
         project_assign_list_create,
         name="project-assign-list-create",
+    ),
+    path(
+        "projects-assign-update/<str:project_assign_id>/",
+        project_assign_update,
+        name="project-assign-detail",
     ),
     path(
         "projects-assigned/<str:project_assign_id>/",
