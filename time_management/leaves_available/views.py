@@ -55,20 +55,19 @@ def leaves_available_api(request, leave_avail_id=None, employee_id=None):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            obj = LeavesAvailable.objects.get(leave_avail_id=leave_avail_id)
-            objs = LeavesAvailable.objects.get(employee_id=employee_id)
+            if leave_avail_id:
+                obj = LeavesAvailable.objects.get(leave_avail_id=leave_avail_id)
+            elif employee_id:
+                obj = LeavesAvailable.objects.get(employee_id=employee_id)
         except LeavesAvailable.DoesNotExist:
             return Response(
                 {"error": "Leave record not found"}, status=status.HTTP_404_NOT_FOUND
             )
-        if leave_avail_id:
-            serializer = LeavesAvailableSerializer(
-                obj, data=request.data, partial=(request.method == "PATCH")
-            )
-        elif employee_id:
-            serializer = LeavesAvailableSerializer(
-                objs, data=request.data, partial=(request.method == "PATCH")
-            )
+
+        serializer = LeavesAvailableSerializer(
+            obj, data=request.data, partial=(request.method == "PATCH")
+        )
+
         if serializer.is_valid():
             serializer.save()
             return Response(
