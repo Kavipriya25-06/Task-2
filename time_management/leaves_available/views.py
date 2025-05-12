@@ -49,7 +49,7 @@ def leaves_available_api(request, leave_avail_id=None, employee_id=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method in ["PUT", "PATCH"]:
-        if not leave_avail_id or employee_id:
+        if not leave_avail_id and not employee_id:
             return Response(
                 {"error": "Leave record ID is required for update"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -63,8 +63,8 @@ def leaves_available_api(request, leave_avail_id=None, employee_id=None):
             )
         if leave_avail_id:
             serializer = LeavesAvailableSerializer(
-            obj, data=request.data, partial=(request.method == "PATCH")
-        )
+                obj, data=request.data, partial=(request.method == "PATCH")
+            )
         elif employee_id:
             serializer = LeavesAvailableSerializer(
                 objs, data=request.data, partial=(request.method == "PATCH")
