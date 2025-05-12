@@ -223,15 +223,17 @@ class CompOff(models.Model):
             ("full_day", "Full Day"),
             ("half_day", "Half Day"),
         ],
-        unique=True
+        unique=True,
     )
     min_hours = models.DecimalField(
-        max_digits=5, decimal_places=2,
-        help_text="Minimum hours required to avoid this leave type"
+        max_digits=5,
+        decimal_places=2,
+        help_text="Minimum hours required to avoid this leave type",
     )
     max_hours = models.DecimalField(
-        max_digits=5, decimal_places=2,
-        help_text="Maximum hours after which this leave type does not apply"
+        max_digits=5,
+        decimal_places=2,
+        help_text="Maximum hours after which this leave type does not apply",
     )
 
     def __str__(self):

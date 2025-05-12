@@ -93,6 +93,7 @@ from time_management.building.views import (
     building_and_assign,
     building_and_project,
     full_building_view,
+    building_assign_update,
 )
 from time_management.task.views import (
     task_list_create,
@@ -224,6 +225,11 @@ urlpatterns = [
     path(
         "buildings-assigned/<str:building_assign_id>/",
         building_assign_detail,
+        name="building-assign-detail",
+    ),
+    path(
+        "buildings-assign-update/",
+        building_assign_update,
         name="building-assign-detail",
     ),
     path(

@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models import Building, BuildingAssign
+from ..models import Building, BuildingAssign, ProjectAssign
 from time_management.building.serializers import (
     BuildingSerializer,
     BuildingAssignSerializer,
@@ -106,6 +106,138 @@ def building_assign_detail(request, building_assign_id):
         return Response(
             {"message": "Building deleted"}, status=status.HTTP_204_NO_CONTENT
         )
+
+
+# @api_view(["PATCH"])
+# def building_assign_update(request, building_assign_id):
+#     try:
+#         building_assign = BuildingAssign.objects.get(
+#             building_assign_id=building_assign_id
+#         )
+#     except BuildingAssign.DoesNotExist:
+#         return Response({"error": "Building assignment not found"}, status=404)
+
+#     employees = request.data.get("employee", None)
+#     building_hours = request.data.get("building_hours", None)
+#     status_update = request.data.get("status", None)
+
+#     # Update employees if provided
+#     if employees is not None:
+#         building_assign.employee.set(employees)
+
+#     # Update building hours
+#     if building_hours is not None:
+#         building_assign.building_hours = building_hours
+
+#     # Update status
+#     if status_update is not None:
+#         building_assign.status = status_update
+
+#     building_assign.save()
+
+#     return Response({"message": "Building assignment updated."}, status=200)
+
+
+# @api_view(["PATCH"])
+# def building_assign_update(request):
+#     updates = request.data  # Expecting a list of dicts
+
+#     if not isinstance(updates, list):
+#         return Response({"error": "Expected a list of updates"}, status=400)
+
+#     updated = []
+
+#     for item in updates:
+#         building_assign_id = item.get("building_assign_id")
+#         building_hours = item.get("building_hours")
+
+#         if not building_assign_id:
+#             continue  # Skip invalid
+
+#         try:
+#             assign = BuildingAssign.objects.get(building_assign_id=building_assign_id)
+
+#             if building_hours is not None:
+#                 assign.building_hours = building_hours
+
+#             # Optional: If you want to update status or employees
+#             status_update = item.get("status", None)
+#             if status_update:
+#                 assign.status = status_update
+
+#             employee_list = item.get("employee", None)
+#             if employee_list is not None:
+#                 assign.employee.set(employee_list)
+
+#             assign.save()
+#             updated.append(building_assign_id)
+
+#         except BuildingAssign.DoesNotExist:
+#             continue  # Skip if not found
+
+#     return Response(
+#         {"message": "Updated buildings", "updated_ids": updated}, status=200
+#     )
+
+
+@api_view(["PATCH"])
+def building_assign_update(request):
+    updates = request.data  # list of dicts
+
+    if not isinstance(updates, list):
+        return Response({"error": "Expected a list of updates"}, status=400)
+
+    updated = []
+    received_ids = []
+    project_assign_id = request.query_params.get("project_assign_id")
+
+    if not project_assign_id:
+        return Response({"error": "project_assign_id required"}, status=400)
+
+    try:
+        project_assign = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+    except ProjectAssign.DoesNotExist:
+        return Response({"error": "Project assign not found"}, status=404)
+
+    for item in updates:
+        building_assign_id = item.get("building_assign_id", None)
+        building_id = item.get("building_id")
+        building_hours = item.get("building_hours", 0)
+        status_update = item.get("status", "pending")
+
+        if building_assign_id:
+            # Update existing
+            try:
+                assign = BuildingAssign.objects.get(
+                    building_assign_id=building_assign_id
+                )
+                assign.building_hours = building_hours
+                assign.status = status_update
+                assign.save()
+                updated.append(building_assign_id)
+                received_ids.append(building_assign_id)
+            except BuildingAssign.DoesNotExist:
+                continue
+        else:
+            # Create new
+            new_assign = BuildingAssign.objects.create(
+                project_assign=project_assign,
+                building_id=building_id,
+                building_hours=building_hours,
+                status=status_update,
+            )
+            updated.append(new_assign.building_assign_id)
+            received_ids.append(new_assign.building_assign_id)
+
+    # Delete removed assignments:
+    existing_assigns = BuildingAssign.objects.filter(project_assign=project_assign)
+    for assign in existing_assigns:
+        if assign.building_assign_id not in received_ids:
+            assign.delete()
+
+    return Response(
+        {"message": "Buildings updated", "processed_ids": updated}, status=200
+    )
 
 
 @api_view(["GET"])

@@ -434,7 +434,22 @@ def full_project_view(request, project_id=None):
 def project_creator(request, employee_id=None):
     if employee_id:
         try:
-            project = Project.objects.filter(created_by=employee_id)
+            # projects = Project.objects.filter(created_by=employee_id)
+            # project_assign = ProjectAssign.objects.filter(
+            #     employee__employee_id=employee_id
+            # )
+            # Projects created by the employee
+            created_projects = Project.objects.filter(
+                created_by__employee_id=employee_id
+            )
+
+            # Projects assigned to the employee
+            assigned_projects = Project.objects.filter(
+                projectassign__employee__employee_id=employee_id
+            )
+
+            # Combine and remove duplicates
+            project = (created_projects | assigned_projects).distinct()
         except Project.DoesNotExist:
             return Response(
                 {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND

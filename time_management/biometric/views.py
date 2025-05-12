@@ -27,7 +27,7 @@ def biometric_data_api(request, biometric_id=None, employee_id=None):
         if biometric_id:
             try:
                 obj = BiometricData.objects.get(biometric_id=biometric_id)
-                serializer = BiometricDataSerializer(obj)
+                serializer = BiometricTaskDataSerializer(obj)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except BiometricData.DoesNotExist:
                 return Response(
@@ -44,7 +44,7 @@ def biometric_data_api(request, biometric_id=None, employee_id=None):
                 else:
                     calendar_entries = obj
 
-                serializer = BiometricDataSerializer(calendar_entries, many=True)
+                serializer = BiometricTaskDataSerializer(calendar_entries, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except BiometricData.DoesNotExist:
                 return Response(
@@ -53,7 +53,7 @@ def biometric_data_api(request, biometric_id=None, employee_id=None):
                 )
         else:
             objs = BiometricData.objects.all()
-            serializer = BiometricDataSerializer(objs, many=True)
+            serializer = BiometricTaskDataSerializer(objs, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     if request.method == "POST":

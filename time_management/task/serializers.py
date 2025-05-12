@@ -38,6 +38,9 @@ class TaskAssignSerializer(serializers.ModelSerializer):
 
 class TaskAndAssignSerializer(serializers.ModelSerializer):
     task = TaskSerializer(read_only=True)
+    attachments = AttachmentSerializer(
+        many=True, source="TaskAssignattachments", read_only=True
+    )
 
     class Meta:
         model = TaskAssign
@@ -50,6 +53,7 @@ class TaskAndAssignSerializer(serializers.ModelSerializer):
             "end_date",
             "employee",
             "building_assign",
+            "attachments",
         ]
 
 
@@ -118,11 +122,15 @@ class TaskBuildingSerializer(serializers.ModelSerializer):
     task = TaskSerializer(read_only=True)
     building_assign = BuildingAndProjectSerializer(read_only=True)
     employee = EmployeeSerializer(many=True, read_only=True)
+    attachments = AttachmentSerializer(
+        many=True, source="TaskAssignattachments", read_only=True
+    )
 
     class Meta:
         model = TaskAssign
         fields = [
             "task_assign_id",
+            "priority",
             "task",
             "task_hours",
             "status",
@@ -130,6 +138,8 @@ class TaskBuildingSerializer(serializers.ModelSerializer):
             "end_date",
             "employee",
             "building_assign",
+            "comments",
+            "attachments",
         ]
 
 
