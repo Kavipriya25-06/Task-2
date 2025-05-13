@@ -427,7 +427,9 @@ class Project(models.Model):
     status = models.BooleanField(default=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     def save(self, *args, **kwargs):
         if not self.project_id:

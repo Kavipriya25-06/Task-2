@@ -2,5 +2,8 @@ from django.apps import AppConfig
 
 
 class TimeManagementConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'time_management'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "time_management"
+
+    def ready(self):
+        import time_management.signals  # ensure signals are loaded

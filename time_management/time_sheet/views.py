@@ -342,3 +342,6 @@ def total_logged_hours(request, project_id=None, building_id=None, task_id=None)
     # )
 
     return Response({"total_logged_hours": total_hours})
+
+
+

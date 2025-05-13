@@ -21,3 +21,10 @@ class TimeSheetTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeSheet
         fields = "__all__"
+
+
+class TimeSheetSummarySerializer(serializers.Serializer):
+    project_id = serializers.CharField()
+    project_title = serializers.CharField()
+    total_project_hours = serializers.DecimalField(max_digits=10, decimal_places=2)
+    buildings = serializers.ListField()
