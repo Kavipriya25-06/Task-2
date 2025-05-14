@@ -209,6 +209,27 @@ class Hierarchy(models.Model):
                     self.hierarchy_id = f"HR_{last_num + 1:05d}"
                 else:
                     self.hierarchy_id = "HR_00001"
+
+        # Sync designation and department from the employee model
+        if self.employee:
+            self.designation = self.employee.designation
+            self.department = self.employee.department
+
+            # Auto-set reporting_to based on employee.reporting_manager field
+            if self.employee.reporting_manager:
+                try:
+                    manager = (
+                        Employee.objects.filter(
+                            employee_id=self.employee.reporting_manager
+                        ).first()
+                        or Employee.objects.filter(
+                            employee_code=self.employee.reporting_manager
+                        ).first()
+                    )
+                    self.reporting_to = manager
+                except Employee.DoesNotExist:
+                    self.reporting_to = None  # fallback if name not found
+
         super().save(*args, **kwargs)
 
     def __str__(self):
