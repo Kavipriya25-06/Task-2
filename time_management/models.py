@@ -75,9 +75,14 @@ class Employee(models.Model):
     account_number = models.CharField(max_length=20, null=True, blank=True)
     ifsc_code = models.CharField(max_length=11, null=True, blank=True)
     bank_name = models.CharField(max_length=100, null=True, blank=True)
+    bank_branch_name = models.CharField(max_length=100, null=True, blank=True)
+    bank_address = models.CharField(max_length=1000, null=True, blank=True)
 
     # Emergency Details
     emergency_contact_name = models.CharField(max_length=255, blank=True, null=True)
+    emergency_contact_relationship = models.CharField(
+        max_length=255, blank=True, null=True
+    )
     emergency_contact_number = models.CharField(max_length=15, blank=True, null=True)
     blood_group = models.CharField(max_length=50, blank=True, null=True)
 
