@@ -160,7 +160,9 @@ class User(models.Model):
         default="employee",
     )
     # role = models.ManyToManyField(Roles, blank=True)
-    employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee_id = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
     status = models.CharField(
         max_length=50,
         choices=[
@@ -192,7 +194,9 @@ class User(models.Model):
 # Hierarchy Table
 class Hierarchy(models.Model):
     hierarchy_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
     designation = models.CharField(max_length=100, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
     reporting_to = models.ForeignKey(
@@ -269,7 +273,9 @@ class CompOff(models.Model):
 # Leaves Available Table
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.OneToOneField(Employee, on_delete=models.CASCADE)
+    employee = models.OneToOneField(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
     sick_leave = models.IntegerField(default=0)
     casual_leave = models.IntegerField(default=0)
     comp_off = models.IntegerField(default=0)
@@ -295,7 +301,9 @@ class LeavesAvailable(models.Model):
 # Leaves Taken Table with Approval Workflow
 class LeavesTaken(models.Model):
     leave_taken_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
     leave_type = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -376,7 +384,9 @@ class Calendar(models.Model):
 
 class BiometricData(models.Model):
     biometric_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
     employee_code = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=100)
     shift = models.CharField(max_length=50, blank=True, null=True)
@@ -454,7 +464,7 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
-        Employee, on_delete=models.CASCADE, blank=True, null=True
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     def save(self, *args, **kwargs):
@@ -495,7 +505,7 @@ class Building(models.Model):
     building_code = models.CharField(max_length=20, blank=True, null=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
-    # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
 
     def save(self, *args, **kwargs):
         if not self.building_id:
@@ -519,7 +529,7 @@ class Task(models.Model):
     task_code = models.CharField(max_length=20, blank=True, null=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
-    # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
 
     def save(self, *args, **kwargs):
         if not self.task_id:
@@ -548,7 +558,7 @@ class ProjectAssign(models.Model):
     )
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
-    # created_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
 
     def save(self, *args, **kwargs):
         if not self.project_assign_id:
@@ -615,7 +625,9 @@ class TaskAssign(models.Model):
 
 class TimeSheet(models.Model):
     timesheet_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
     task_assign = models.ForeignKey(TaskAssign, on_delete=models.SET_NULL, null=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
     start_time = models.TimeField()
@@ -700,7 +712,7 @@ class Attachment(models.Model):
 # # Tasks Table
 # class Task(models.Model):
 #     task_id = models.AutoField(primary_key=True)
-#     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+#     project = models.ForeignKey(Project, on_delete=models.SET_NULL)
 #     task_title = models.CharField(max_length=255)
 #     task_hours = models.IntegerField()
 #     start_date = models.DateField()
@@ -727,8 +739,8 @@ class Attachment(models.Model):
 
 # # Project Assignment Table
 # class ProjectAssignment(models.Model):
-#     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-#     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+#     employee = models.ForeignKey(Employee, on_delete=models.SET_NULL)
+#     project = models.ForeignKey(Project, on_delete=models.SET_NULL)
 
 #     def __str__(self):
 #         return f"{self.employee.employee_name} assigned to {self.project.project_title}"
@@ -736,8 +748,8 @@ class Attachment(models.Model):
 
 # # Task Assignment Table with Status Tracking
 # class TaskAssignment(models.Model):
-#     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-#     task = models.ForeignKey(Task, on_delete=models.CASCADE)
+#     employee = models.ForeignKey(Employee, on_delete=models.SET_NULL)
+#     task = models.ForeignKey(Task, on_delete=models.SET_NULL)
 #     status = models.CharField(
 #         max_length=50,
 #         choices=[
