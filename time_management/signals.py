@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from .models import Employee, LeavesAvailable, Hierarchy
+from .models import Employee, LeavesAvailable, Hierarchy, User
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
 )  # create this in utils.py
@@ -51,3 +51,24 @@ def create_or_update_hierarchy(sender, instance, created, **kwargs):
         hierarchy.reporting_to = manager
 
     hierarchy.save()
+
+
+# 1. Sync Employee.status → User.status
+@receiver(post_save, sender=Employee)
+def sync_employee_status_to_user(sender, instance, **kwargs):
+    try:
+        user = User.objects.get(employee_id=instance)
+        if user.status != instance.status:
+            user.status = instance.status
+            user.save(update_fields=["status"])  # avoid triggering all signals again
+    except User.DoesNotExist:
+        pass
+
+
+# 2. Sync User.status → Employee.status
+@receiver(post_save, sender=User)
+def sync_user_status_to_employee(sender, instance, **kwargs):
+    employee = instance.employee_id
+    if employee.status != instance.status:
+        employee.status = instance.status
+        employee.save(update_fields=["status"])
