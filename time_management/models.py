@@ -109,7 +109,7 @@ class Employee(models.Model):
                     self.employee_id = "EMP_00001"
         # --------- ARRIS EXPERIENCE AUTO-CALCULATION ---------
 
-        if self.doj:
+        if self.doj and isinstance(self.doj, date):
             today = date.today()
             delta = (today.year - self.doj.year) * 12 + (today.month - self.doj.month)
             if delta < 0:
@@ -482,6 +482,10 @@ class Project(models.Model):
                     self.project_id = f"PROJ_{last_num + 1:05d}"
                 else:
                     self.project_id = "PROJ_00001"
+
+        # Recalculate total hours
+        self.total_hours = (self.estimated_hours or 0) + (self.variation_hours or 0)
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -655,12 +659,27 @@ class TimeSheet(models.Model):
         super().save(*args, **kwargs)
 
 
+class Variation(models.Model):
+    date = models.DateField(null=True, blank=True)
+    title = models.CharField(max_length=50)
+    hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
 # Generic Attachment Model
 class Attachment(models.Model):
     file = models.FileField(upload_to="attachments/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     # Polymorphic relation to multiple models
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="Projectattachments",
+    )
     task = models.ForeignKey(
         "Task",
         on_delete=models.SET_NULL,

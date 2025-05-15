@@ -86,6 +86,7 @@ from time_management.project.views import (
     full_project_view,
     project_creator,
 )
+from time_management.variations.views import variation_api
 from time_management.building.views import (
     building_list_create,
     building_detail,
@@ -177,8 +178,8 @@ urlpatterns = [
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
-    path("project-screen/", project_screen, name="project-detail"),
-    path("project-screen/<str:project_id>/", project_screen, name="project-detail"),
+    path("variation/", variation_api, name="variation-detail"),
+    path("variation/<int:id>/", variation_api, name="variation-detail"),
     path("projects-screen/", full_project_view, name="project-detail"),
     path("projects-screen/<str:project_id>/", full_project_view, name="project-detail"),
     path("buildings-screen/", full_building_view, name="project-detail"),

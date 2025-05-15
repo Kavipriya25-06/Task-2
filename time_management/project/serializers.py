@@ -12,12 +12,16 @@ from ..models import (
 )
 
 from time_management.building.serializers import BuildingAndProjectSerializer
+from time_management.attachments.serializers import AttachmentSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     # area_of_work = serializers.PrimaryKeyRelatedField(
     #     queryset=AreaOfWork.objects.all(), many=True
     # )
+    attachments = AttachmentSerializer(
+        many=True, source="Projectattachments", read_only=True
+    )
 
     class Meta:
         model = Project
@@ -142,6 +146,9 @@ class ProjectFullSerializer(serializers.ModelSerializer):
     # )
     created_by = EmployeeSerializer(read_only=True)
     assigns = serializers.SerializerMethodField()
+    attachments = AttachmentSerializer(
+        many=True, source="Projectattachments", read_only=True
+    )
 
     class Meta:
         model = Project
@@ -151,10 +158,11 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "project_type",
             "start_date",
             "estimated_hours",
+            "variation_hours",
+            "total_hours",
+            "consumed_hours",
             "project_description",
-            # "area_of_work",
             "project_code",
-            # "subdivision",
             "discipline_code",
             "discipline",
             "status",
@@ -162,6 +170,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "updated_at",
             "created_by",
             "assigns",
+            "attachments",
         ]
 
     def get_assigns(self, obj):

@@ -1,7 +1,9 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.db.models import Sum
+
 from django.utils import timezone
-from .models import Employee, LeavesAvailable, Hierarchy, User
+from .models import Employee, LeavesAvailable, Hierarchy, User, Variation, TimeSheet
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
 )  # create this in utils.py
@@ -72,3 +74,43 @@ def sync_user_status_to_employee(sender, instance, **kwargs):
     if employee.status != instance.status:
         employee.status = instance.status
         employee.save(update_fields=["status"])
+
+
+@receiver([post_save, post_delete], sender=Variation)
+def update_variation_hours(sender, instance, **kwargs):
+    project = instance.project
+    if project:
+        total_variation = (
+            Variation.objects.filter(project=project).aggregate(Sum("hours"))[
+                "hours__sum"
+            ]
+            or 0
+        )
+        project.variation_hours = total_variation
+        project.save()
+
+
+@receiver([post_save, post_delete], sender=TimeSheet)
+def update_consumed_hours(sender, instance, **kwargs):
+    task_assign = instance.task_assign
+    if not task_assign:
+        return
+
+    building_assign = task_assign.building_assign
+    if not building_assign:
+        return
+
+    project_assign = building_assign.project_assign
+    if not project_assign or not project_assign.project:
+        return
+
+    project = project_assign.project
+    total_consumed = (
+        TimeSheet.objects.filter(
+            task_assign__building_assign__project_assign__project=project
+        ).aggregate(Sum("task_hours"))["task_hours__sum"]
+        or 0
+    )
+
+    project.consumed_hours = total_consumed
+    project.save()

@@ -19,6 +19,7 @@ from .models import (
     TimeSheet,
     Attachment,
     CompOff,
+    Variation,
 )
 
 admin.site.register(Employee)
@@ -41,3 +42,4 @@ admin.site.register(TaskAssign)
 admin.site.register(TimeSheet)
 admin.site.register(Attachment)
 admin.site.register(CompOff)
+admin.site.register(Variation)
