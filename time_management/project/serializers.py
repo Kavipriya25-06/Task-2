@@ -154,7 +154,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "project_description",
             # "area_of_work",
             "project_code",
-            "subdivision",
+            # "subdivision",
             "discipline_code",
             "discipline",
             "status",

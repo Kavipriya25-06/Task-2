@@ -49,15 +49,23 @@ def emp_under_manager(emp_id):
     return all_employees
 
 
-def get_all_subordinates(manager):
+def get_all_subordinates(manager, visited=None):
+
+    if visited is None:
+        visited = set()
+
     subordinates = []
     direct_reports = Hierarchy.objects.filter(reporting_to=manager)
 
     for hierarchy_entry in direct_reports:
         employee = hierarchy_entry.employee
+        if employee.employee_id in visited:
+            continue  # Prevent infinite recursion
+        visited.add(employee.employee_id)
+
         subordinates.append(employee)
         # Recursive call for each direct report
-        subordinates.extend(get_all_subordinates(employee))
+        subordinates.extend(get_all_subordinates(employee, visited))
 
     return subordinates
 
