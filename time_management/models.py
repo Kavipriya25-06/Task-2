@@ -556,7 +556,7 @@ class ProjectAssign(models.Model):
         default="pending",
     )
     employee = models.ManyToManyField(Employee, blank=True)
-    project = models.ForeignKey(
+    project = models.OneToOneField(
         Project, on_delete=models.SET_NULL, null=True, blank=True
     )
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
