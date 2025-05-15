@@ -9,10 +9,12 @@ from ..models import (
     TaskAssign,
     Building,
     Task,
+    Variation,
 )
 
 from time_management.building.serializers import BuildingAndProjectSerializer
 from time_management.attachments.serializers import AttachmentSerializer
+from time_management.variations.serializers import VariationSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -146,6 +148,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
     # )
     created_by = EmployeeSerializer(read_only=True)
     assigns = serializers.SerializerMethodField()
+    variation = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(
         many=True, source="Projectattachments", read_only=True
     )
@@ -171,8 +174,13 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "created_by",
             "assigns",
             "attachments",
+            "variation",
         ]
 
     def get_assigns(self, obj):
         assigns = ProjectAssign.objects.filter(project=obj)
         return ProjectAssignFullSerializer(assigns, many=True).data
+
+    def get_variation(self, obj):
+        variation = Variation.objects.filter(project=obj)
+        return VariationSerializer(variation, many=True).data
