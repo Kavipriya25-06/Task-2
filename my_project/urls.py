@@ -52,6 +52,7 @@ from time_management.hierarchy.views import (
     manager_hierarchy,
     teamlead_hierarchy,
     org_hierarchy,
+    get_emp_all,
     get_hierarchy_by_employee,
     teamleads_under_manager,
 )
@@ -143,6 +144,8 @@ urlpatterns = [
     path("hierarchy/by_employee/<str:employee_id>/", get_hierarchy_by_employee),
     path("manager-hierarchy/", manager_hierarchy),
     path("manager-hierarchy/<str:manager_id>/", manager_hierarchy),
+    path("all-employee-hierarchy/", get_emp_all),
+    path("all-employee-hierarchy/<str:manager_id>/", get_emp_all),
     path("teamlead-hierarchy/", teamlead_hierarchy),
     path("teamlead-hierarchy/<str:teamlead_id>/", teamlead_hierarchy),
     path("org-hierarchy/", org_hierarchy),

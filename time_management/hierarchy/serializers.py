@@ -47,3 +47,25 @@ def emp_under_manager(emp_id):
     all_employees = teamleads_data + employee_list
     ## returning the employee objects
     return all_employees
+
+
+def get_all_subordinates(manager):
+    subordinates = []
+    direct_reports = Hierarchy.objects.filter(reporting_to=manager)
+
+    for hierarchy_entry in direct_reports:
+        employee = hierarchy_entry.employee
+        subordinates.append(employee)
+        # Recursive call for each direct report
+        subordinates.extend(get_all_subordinates(employee))
+
+    return subordinates
+
+
+def get_emp_under_manager(emp_id):
+    try:
+        manager = Employee.objects.get(employee_id=emp_id)
+    except Employee.DoesNotExist:
+        return []
+
+    return get_all_subordinates(manager)

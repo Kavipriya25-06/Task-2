@@ -15,9 +15,9 @@ from time_management.building.serializers import BuildingAndProjectSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    area_of_work = serializers.PrimaryKeyRelatedField(
-        queryset=AreaOfWork.objects.all(), many=True
-    )
+    # area_of_work = serializers.PrimaryKeyRelatedField(
+    #     queryset=AreaOfWork.objects.all(), many=True
+    # )
 
     class Meta:
         model = Project
@@ -137,9 +137,9 @@ class ProjectAssignFullSerializer(serializers.ModelSerializer):
 
 # Full Project Serializer
 class ProjectFullSerializer(serializers.ModelSerializer):
-    area_of_work = serializers.SlugRelatedField(
-        slug_field="area_name", many=True, read_only=True
-    )
+    # area_of_work = serializers.SlugRelatedField(
+    #     slug_field="area_name", many=True, read_only=True
+    # )
     created_by = EmployeeSerializer(read_only=True)
     assigns = serializers.SerializerMethodField()
 
@@ -152,7 +152,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "start_date",
             "estimated_hours",
             "project_description",
-            "area_of_work",
+            # "area_of_work",
             "project_code",
             "subdivision",
             "discipline_code",

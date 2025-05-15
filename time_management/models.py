@@ -450,14 +450,17 @@ class Discipline(models.Model):
 
 class Project(models.Model):
     project_id = models.CharField(max_length=20, primary_key=True, blank=True)
-    project_title = models.CharField(max_length=255)
-    project_type = models.CharField(max_length=100)
-    start_date = models.DateField()
-    estimated_hours = models.DecimalField(max_digits=10, decimal_places=2)
+    project_title = models.CharField(max_length=255, blank=True, null=True)
+    project_type = models.CharField(max_length=100, blank=True, null=True)
+    start_date = models.DateField(null=True, blank=True)
+    estimated_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    variation_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    consumed_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     project_description = models.TextField(blank=True, null=True)
-    area_of_work = models.ManyToManyField(AreaOfWork, blank=True)
+    # area_of_work = models.ManyToManyField(AreaOfWork, blank=True)
     project_code = models.CharField(max_length=100, unique=True)
-    subdivision = models.CharField(max_length=100)
+    # subdivision = models.CharField(max_length=100)
     discipline_code = models.CharField(max_length=100)
     discipline = models.CharField(max_length=100, blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
@@ -610,8 +613,8 @@ class TaskAssign(models.Model):
     #     upload_to="tasks/attachments/", blank=True, null=True
     # )
     comments = models.TextField(blank=True, null=True)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     employee = models.ManyToManyField(Employee, blank=True)
     building_assign = models.ForeignKey(
         BuildingAssign, on_delete=models.SET_NULL, null=True, blank=True
@@ -632,7 +635,7 @@ class TimeSheet(models.Model):
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    date = models.DateField()
+    date = models.DateField(null=True, blank=True)
     submitted = models.BooleanField(default=False, null=True, blank=True)
     approved = models.BooleanField(default=False, null=True, blank=True)
     rejected = models.BooleanField(default=False, null=True, blank=True)

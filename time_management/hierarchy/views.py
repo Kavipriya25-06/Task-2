@@ -3,6 +3,8 @@ from ..models import Employee, Hierarchy, User
 from time_management.hierarchy.serializers import (
     EmployeeSerializer,
     HierarchySerializer,
+    emp_under_manager,
+    get_emp_under_manager,
 )
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -81,6 +83,38 @@ def hierarchy_api(request, hierarchy_id=None):
                 {"error": "Hierarchy record not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+@api_view(["GET"])
+def get_emp_all(request, manager_id=None):
+    try:
+        manager = Employee.objects.get(employee_id=manager_id)
+    except Employee.DoesNotExist:
+        return Response({"error": "Manager not found"}, status=404)
+
+    all_employee = get_emp_under_manager(manager)
+
+    teamleads_data = []
+    direct_employees = []
+
+    for employee in all_employee:
+        teamlead_emp = Employee.objects.get(employee_id=employee)
+        teamleads_data.append(
+            {
+                "teamlead_id": teamlead_emp.employee_id,
+                "teamlead_name": teamlead_emp.employee_name,
+                "teamlead_role": teamlead_emp.designation,
+                "employee_code": teamlead_emp.employee_code,
+            }
+        )
+
+    response = {
+        "manager_id": manager.employee_id,
+        "manager_name": manager.employee_name,
+        "teamleads": teamleads_data,
+        "employees": direct_employees,
+    }
+    return Response(response)
 
 
 @api_view(["GET"])
