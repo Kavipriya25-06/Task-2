@@ -42,7 +42,16 @@ INSTALLED_APPS = [
     "rest_framework",  # Add this for Django REST Framework
     "corsheaders",
     "django_filters",
+    "rest_framework_simplejwt.token_blacklist",
+    "rest_framework.authtoken",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ]
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -99,3 +99,23 @@ def user_details(request, user_id=None):
         users = User.objects.all()
         serializer = UserDetailsSerializer(users, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET"])
+def login_details(request, email=None, password=None):
+    if email:
+        if password:
+            try:
+                user = User.objects.get(email=email)
+                if user.password == password:
+                    auth_user = user
+                    serializer = UserDetailsSerializer(auth_user)
+                    return Response(serializer.data)
+                else:
+                    return Response({"error": "Password is incorrect"})
+            except User.DoesNotExist:
+                return Response({"error": "User not found"})
+        else:
+            return Response({"error": "Please provide password"})
+    else:
+        return Response({"error": "Please provide user and password"})

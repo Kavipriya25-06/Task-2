@@ -46,7 +46,7 @@ from time_management.employee.views import (
     unassigned_employee,
 )
 from time_management.assignment.views import manager_tl_projects, tl_projects
-from time_management.user.views import user_api, user_details
+from time_management.user.views import user_api, user_details, login_details
 from time_management.hierarchy.views import (
     hierarchy_api,
     manager_hierarchy,
@@ -116,6 +116,8 @@ from time_management.time_sheet.views import (
     employee_daily_timesheet,
     total_logged_hours,
 )
+from time_management.views import MyTokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -135,6 +137,9 @@ urlpatterns = [
     path("teamlead-managers-projects/<str:employee_id>/", manager_tl_projects),
     path("teamlead_projects/", tl_projects),
     path("teamlead_projects/<str:employee_id>/", tl_projects),
+    path("login-details/", login_details),
+    path("login-details/<str:email>/", login_details),
+    path("login-details/<str:email>/<str:password>/", login_details),
     path("users/", user_api),
     path("users/<str:user_id>/", user_api),
     path("user-details/", user_details),
@@ -376,4 +381,6 @@ urlpatterns = [
         attachments_by_leavestaken,
         name="attachments_by_leavestaken",
     ),
+    path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
