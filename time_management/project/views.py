@@ -21,6 +21,7 @@ from time_management.project.serializers import (
     ProjectFullSerializer,
 )
 from time_management.building.serializers import (
+    BuildingSerializer,
     BuildingAssignSerializer,
     BuildingAndProjectSerializer,
 )
@@ -359,6 +360,18 @@ def create_full_project_flow(request):
         building_assignments = []
         for b in buildings_data:
             building_instance = Building.objects.get(building_id=b["building_id"])
+            # Step 3a: Create Building if new
+            building_serializer = BuildingSerializer(data=b)
+            if building_serializer.is_valid():
+                building_instance = building_serializer.save()
+            else:
+                return Response(
+                    {
+                        "error": "Building creation failed",
+                        "details": building_serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             building_assign = BuildingAssign.objects.create(
                 building_hours=b["building_hours"],
                 status=b.get("status", "pending"),
