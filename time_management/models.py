@@ -65,7 +65,7 @@ class Employee(models.Model):
         max_digits=5, decimal_places=2, blank=True, null=True
     )
     probation_confirmation_date = models.DateField(null=True, blank=True)
-
+    contract_end_date = models.DateField(null=True, blank=True)
     employee_email = models.EmailField(unique=True, blank=True, null=True)
     reporting_manager = models.CharField(max_length=100, blank=True, null=True)
     resignation_date = models.DateField(null=True, blank=True)
@@ -666,6 +666,7 @@ class Variation(models.Model):
     project = models.ForeignKey(
         Project, on_delete=models.SET_NULL, null=True, blank=True
     )
+
 
 # Generic Attachment Model
 class Attachment(models.Model):
