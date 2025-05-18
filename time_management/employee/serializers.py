@@ -12,6 +12,22 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = "__all__"
 
+        def validate_employee_email(self, value):
+
+            if value and Employee.objects.filter(employee_email=value).exists():
+                if self.instance and self.instance.employee_email == value:
+                    return value  # Allow if it's the same record
+                raise serializers.ValidationError("Email already exists")
+            return value
+        
+        def validate_personal_email(self, value):
+
+            if value and Employee.objects.filter(personal_email=value).exists():
+                if self.instance and self.instance.personal_email == value:
+                    return value  # Allow if it's the same record
+                raise serializers.ValidationError("Email already exists")
+            return value
+
 
 class UserSerializer(serializers.ModelSerializer):
 
