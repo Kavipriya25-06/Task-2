@@ -97,6 +97,8 @@ from time_management.building.views import (
     full_building_view,
     building_assign_update,
     create_building_with_assignment,
+    test_post,
+    building_assign_create,
 )
 from time_management.task.views import (
     task_list_create,
@@ -242,9 +244,8 @@ urlpatterns = [
         building_assign_update,
         name="building-assign-detail",
     ),
-    path(
-        "buildings/create/", create_building_with_assignment, name="building-create-all"
-    ),
+    path("buildings-create/", building_assign_create, name="building-create-all"),
+    path("test-post/", test_post, name="test-create-all"),
     path(
         "buildings-and-assigned/",
         building_and_assign,

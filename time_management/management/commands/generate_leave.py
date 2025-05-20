@@ -1,7 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from time_management.models import Employee, LeavesAvailable  # adjust import
-from time_management.management.commands.utils import calculate_leave_entitlement  # if separated
+from time_management.management.commands.utils import (
+    calculate_leave_entitlement,
+)  # if separated
 
 
 class Command(BaseCommand):
@@ -25,7 +27,7 @@ class Command(BaseCommand):
                 employee=emp,
                 sick_leave=leave_count,
                 casual_leave=leave_count,
-                comp_off=leave_count,
+                comp_off=0,
                 earned_leave=leave_count,
             )
             created_count += 1

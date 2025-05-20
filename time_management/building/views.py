@@ -225,6 +225,72 @@ def full_building_view(request, building_assign_id=None):
 
 
 @api_view(["POST"])
+def test_post(request):
+    return Response({"message": "POST works!"})
+
+
+@api_view(["POST"])
+@transaction.atomic
+def building_assign_create(request):
+    # return Response({"message": "POST works!"})
+    try:
+        # 1. Create Building
+        building_data = request.data.get("building")
+        if not building_data:
+            return Response({"error": "Missing building data"}, status=400)
+
+        building_serializer = BuildingSerializer(data=building_data)
+        if building_serializer.is_valid():
+            building_instance = building_serializer.save()
+        else:
+            return Response(
+                {
+                    "error": "Building creation failed",
+                    "details": building_serializer.errors,
+                },
+                status=400,
+            )
+
+        # 2. Create BuildingAssign
+        assign_data = request.data.get("assign")
+        if not assign_data:
+            return Response({"error": "Missing assignment data"}, status=400)
+
+        assign_serializer = BuildingAssignSerializer(
+            data={
+                "building_hours": assign_data.get("building_hours"),
+                "status": assign_data.get("status", "pending"),
+                "employee": assign_data.get("employee"),
+                "project_assign": assign_data.get("project_assign"),
+                "building": building_instance.building_id,
+            }
+        )
+
+        if assign_serializer.is_valid():
+            assign_instance = assign_serializer.save()
+        else:
+            return Response(
+                {
+                    "error": "Building assignment failed",
+                    "details": assign_serializer.errors,
+                },
+                status=400,
+            )
+
+        return Response(
+            {
+                "message": "Building and assignment created successfully.",
+                "building_id": building_instance.building_id,
+                "building_assign_id": assign_instance.building_assign_id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
 @transaction.atomic
 def create_building_with_assignment(request):
     try:
