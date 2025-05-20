@@ -287,16 +287,16 @@ class LeavesAvailable(models.Model):
         Employee, on_delete=models.SET_NULL, blank=True, null=True
     )
     sick_leave = models.DecimalField(
-        max_digits=6, decimal_places=2, blank=True, null=True, default=0
+        max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
     casual_leave = models.DecimalField(
-        max_digits=6, decimal_places=2, blank=True, null=True, default=0
+        max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
     comp_off = models.DecimalField(
-        max_digits=6, decimal_places=2, blank=True, null=True, default=0
+        max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
     earned_leave = models.DecimalField(
-        max_digits=6, decimal_places=2, blank=True, null=True, default=0
+        max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
 
     def save(self, *args, **kwargs):
