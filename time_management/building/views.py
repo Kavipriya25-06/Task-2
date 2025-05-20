@@ -260,7 +260,7 @@ def building_assign_create(request):
             data={
                 "building_hours": assign_data.get("building_hours"),
                 "status": assign_data.get("status", "pending"),
-                "employee": assign_data.get("employee"),
+                "employee": assign_data.get("employee", []),
                 "project_assign": assign_data.get("project_assign"),
                 "building": building_instance.building_id,
             }

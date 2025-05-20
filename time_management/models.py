@@ -286,10 +286,18 @@ class LeavesAvailable(models.Model):
     employee = models.OneToOneField(
         Employee, on_delete=models.SET_NULL, blank=True, null=True
     )
-    sick_leave = models.IntegerField(default=0)
-    casual_leave = models.IntegerField(default=0)
-    comp_off = models.IntegerField(default=0)
-    earned_leave = models.IntegerField(default=0)
+    sick_leave = models.DecimalField(
+        max_digits=2, decimal_places=2, blank=True, null=True, default=0
+    )
+    casual_leave = models.DecimalField(
+        max_digits=2, decimal_places=2, blank=True, null=True, default=0
+    )
+    comp_off = models.DecimalField(
+        max_digits=2, decimal_places=2, blank=True, null=True, default=0
+    )
+    earned_leave = models.DecimalField(
+        max_digits=2, decimal_places=2, blank=True, null=True, default=0
+    )
 
     def save(self, *args, **kwargs):
         if not self.leave_avail_id:
@@ -317,7 +325,9 @@ class LeavesTaken(models.Model):
     leave_type = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField()
-    duration = models.IntegerField()
+    duration = models.DecimalField(
+        max_digits=2, decimal_places=2, blank=True, null=True, default=0
+    )
     reason = models.TextField()
     resumption_date = models.DateField()
     # attachment = models.FileField(upload_to="leave_attachments/", null=True, blank=True)
