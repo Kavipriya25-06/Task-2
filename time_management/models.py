@@ -44,7 +44,17 @@ class Employee(models.Model):
 
     # Employment details
 
-    employment_type = models.CharField(max_length=50, blank=True, null=True)
+    employment_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("Fulltime", "Full-Time"),
+            ("Probation", "Probation"),
+            ("Internship", "Internship"),
+            ("Contract", "Contract"),
+        ],
+        blank=True,
+        null=True,
+    )
     designation = models.CharField(max_length=100, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
     qualification = models.CharField(max_length=100, blank=True, null=True)
