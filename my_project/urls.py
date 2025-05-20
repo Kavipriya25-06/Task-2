@@ -37,6 +37,7 @@ from time_management.attachments.views import (
     attachments_by_leavestaken,
     attachments_by_task,
     attachments_by_task_assign,
+    attachments_by_project,
 )
 from time_management.employee.views import (
     employee_api,
@@ -385,6 +386,11 @@ urlpatterns = [
         "attachments/leavestaken/<str:leave_taken_id>/",
         attachments_by_leavestaken,
         name="attachments_by_leavestaken",
+    ),
+    path(
+        "attachments/project/<str:project_id>/",
+        attachments_by_project,
+        name="attachments_by_project",
     ),
     path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

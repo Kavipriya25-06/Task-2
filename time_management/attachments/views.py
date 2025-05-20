@@ -101,3 +101,18 @@ def attachments_by_leavestaken(request, leave_taken_id=None):
         attachments = Attachment.objects.all()
         serializer = AttachmentSerializer(attachments, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET"])
+def attachments_by_project(request, project_id=None):
+
+    if project_id:
+
+        attachments = Attachment.objects.filter(project__project_id=project_id)
+        serializer = AttachmentSerializer(attachments, many=True)
+        return Response(serializer.data)
+
+    else:
+        attachments = Attachment.objects.all()
+        serializer = AttachmentSerializer(attachments, many=True)
+        return Response(serializer.data)
