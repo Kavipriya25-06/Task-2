@@ -73,7 +73,7 @@ from time_management.biometric.views import (
     biometric_daily_task,
     biometric_weekly_task,
 )
-from time_management.compoff.views import compoff_request_api
+from time_management.compoff.views import compoff_request_api, compoff_view_api
 from time_management.project.views import (
     project_list_create,
     project_detail,
@@ -167,6 +167,9 @@ urlpatterns = [
     path("comp-off/<int:id>/", comp_off_api),
     path("comp-off-request/", compoff_request_api),
     path("comp-off-request/<str:compoff_request_id>/", compoff_request_api),
+    path("comp-off-view/", compoff_view_api),
+    path("comp-off-view/request/<str:compoff_request_id>/", compoff_view_api),
+    path("comp-off-view/employee/<str:employee_id>/", compoff_view_api),
     path("leaves-available/by_employee/<str:employee_id>/", leaves_available_api),
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),

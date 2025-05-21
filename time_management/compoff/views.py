@@ -1,7 +1,11 @@
 from rest_framework.viewsets import ModelViewSet
 from ..models import Calendar, CompOffRequest, CompOff, Employee, TimeSheet
 from time_management.calendar.serializers import CalendarSerializer
-from time_management.compoff.serializers import CompOffRequestSerializer
+from time_management.compoff.serializers import (
+    CompOffRequestSerializer,
+    CompOffRequestEmployeeSerializer,
+    CompOffRequestTaskSerializer,
+)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -80,3 +84,38 @@ def compoff_request_api(request, compoff_request_id=None):
                 {"error": "CompOffRequest date not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+@api_view(["GET"])
+def compoff_view_api(request, compoff_request_id=None, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if compoff_request_id:
+        try:
+            compoff = CompOffRequest.objects.get(compoff_request_id=compoff_request_id)
+
+        except CompOffRequest.DoesNotExist:
+            return Response(
+                {"error": "compoff not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+    elif employee_id:
+        try:
+            compoffs = CompOffRequest.objects.filter(employee_id=employee_id)
+            if today:
+                compoff = compoffs.filter(date=today)
+            else:
+                compoff = compoffs
+        except CompOffRequest.DoesNotExist:
+            return Response(
+                {"error": "compoff not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        compoff = CompOffRequest.objects.all()
+
+    serializer = CompOffRequestTaskSerializer(compoff, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

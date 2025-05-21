@@ -473,6 +473,19 @@ class LeavesTaken(models.Model):
                     self.leave_taken_id = f"LVTKN_{last_num + 1:05d}"
                 else:
                     self.leave_taken_id = "LVTKN_00001"
+
+        # --- Calculate working days duration ---
+
+        if self.start_date and self.end_date:
+            # Get all calendar entries in range
+            working_days = Calendar.objects.filter(
+                date__gte=self.start_date,
+                date__lte=self.end_date,
+                is_weekend=False,
+                is_holiday=False,
+            ).count()
+            self.duration = working_days
+
         super().save(*args, **kwargs)
 
     def __str__(self):
