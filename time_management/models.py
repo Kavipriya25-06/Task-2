@@ -8,6 +8,12 @@
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from datetime import date
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Sum
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.mail import EmailMessage
 
 
 # Employee Table
@@ -185,6 +191,16 @@ class User(models.Model):
     )
 
     def save(self, *args, **kwargs):
+        # is_new = not self.user_id
+        # previous = None
+        # changed_fields = []
+
+        # if not is_new:
+        #     try:
+        #         previous = User.objects.get(user_id=self.user_id)
+        #     except User.DoesNotExist:
+        #         pass
+
         if not self.user_id:
             with transaction.atomic():
                 last = User.objects.select_for_update().aggregate(
@@ -196,6 +212,45 @@ class User(models.Model):
                 else:
                     self.user_id = "USR_00001"
         super().save(*args, **kwargs)
+
+        # ---- Send Email if it's an update ----
+        # if previous:
+        #     if previous.password != self.password:
+        #         changed_fields.append("password")
+        #     if previous.status != self.status:
+        #         changed_fields.append("status")
+        #     if previous.role != self.role:
+        #         changed_fields.append("role")
+
+        #     if changed_fields:
+        #         subject = "Your user account has been updated"
+        #         changes = ", ".join(changed_fields)
+        #         message = (
+        #             f"Dear {self.email},\n\n"
+        #             f"The following fields in your user account have been changed: {changes}.\n\n"
+        #             "If you did not request these changes, please contact admin support immediately.\n\n"
+        #             "Regards,\nAdmin Team"
+        #         )
+        #         email = EmailMessage(
+        #             subject,
+        #             message,
+        #             settings.DEFAULT_FROM_EMAIL,
+        #             [self.email],
+        #             cc=[settings.ADMIN_EMAIL],  # CC admin
+        #         )
+        #         try:
+        #             email.send()
+        #         except Exception as e:
+        #             print(f"[ERROR] Email not sent: {e}")
+        # subject = "Your user account has been updated"
+        # message = f"Dear user,\n\nYour profile details or access role in the system has been modified.\n\nIf this was not initiated by you, please contact support immediately.\n\nRegards,\nTeam"
+        # recipient_list = [self.email]
+
+        # try:
+        #     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
+        # except Exception as e:
+        #     # Optional: log or handle email send failure
+        #     print(f"Email failed to send: {e}")
 
     def __str__(self):
         return f"{self.email} - {self.employee_id}"
@@ -280,6 +335,61 @@ class CompOff(models.Model):
         return f"{self.leave_type}: {self.min_hours} - {self.max_hours} hrs"
 
 
+# Leaves Taken Table with Approval Workflow
+class CompOffRequest(models.Model):
+    compoff_request_id = models.CharField(max_length=50, primary_key=True, blank=True)
+    employee = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    # leave_type = models.CharField(max_length=100)
+    # start_date = models.DateField()
+    date = models.DateField()
+    duration = models.DecimalField(
+        max_digits=6, decimal_places=2, blank=True, null=True, default=0
+    )
+    reason = models.TextField(blank=True, null=True)
+    expiry_date = models.DateField()
+
+    approved_by = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_compoff",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ("eligible", "Eligible"),
+            ("expired", "Expired"),
+            ("applied", "Applied"),
+            ("availed", "Availed"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ],
+        default="pending",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.compoff_request_id:
+            with transaction.atomic():
+                last = CompOffRequest.objects.select_for_update().aggregate(
+                    models.Max("compoff_request_id")
+                )["compoff_request_id__max"]
+                if last:
+                    last_num = int(last.split("_")[1])
+                    self.compoff_request_id = f"CR_{last_num + 1:05d}"
+                else:
+                    self.compoff_request_id = "CR_00001"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.leave_type} - {self.employee.employee_name}"
+
+
 # Leaves Available Table
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)
@@ -328,7 +438,7 @@ class LeavesTaken(models.Model):
     duration = models.DecimalField(
         max_digits=6, decimal_places=2, blank=True, null=True, default=0
     )
-    reason = models.TextField()
+    reason = models.TextField(blank=True, null=True)
     resumption_date = models.DateField()
     # attachment = models.FileField(upload_to="leave_attachments/", null=True, blank=True)
 
@@ -677,6 +787,44 @@ class TimeSheet(models.Model):
                 else:
                     self.timesheet_id = "TS_000000000000001"
         super().save(*args, **kwargs)
+        # -- CompOff eligibility check after saving --
+        if self.date and self.employee:
+            try:
+                calendar = Calendar.objects.get(date=self.date)
+                if calendar.is_weekend or calendar.is_holiday:
+                    # Check if already exists
+                    if not CompOffRequest.objects.filter(
+                        employee=self.employee, date=self.date
+                    ).exists():
+                        # Sum all task_hours for this employee and date
+
+                        total_hours = (
+                            TimeSheet.objects.filter(
+                                employee=self.employee, date=self.date
+                            ).aggregate(total=Sum("task_hours"))["total"]
+                            or 0
+                        )
+
+                        # Match with comp off thresholds
+                        compoff_entry = CompOff.objects.filter(
+                            min_hours__lte=total_hours, max_hours__gte=total_hours
+                        ).first()
+
+                        if compoff_entry:
+                            duration = (
+                                1.0 if compoff_entry.leave_type == "full_day" else 0.5
+                            )
+                            CompOffRequest.objects.create(
+                                employee=self.employee,
+                                date=self.date,
+                                duration=duration,
+                                reason=f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
+                                expiry_date=self.date + timedelta(days=30),
+                                status="eligible",
+                            )
+            except Calendar.DoesNotExist:
+                # Optional: log warning or skip silently
+                pass
 
 
 class Variation(models.Model):

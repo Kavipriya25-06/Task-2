@@ -120,6 +120,42 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+##### Email
+
+# ADMIN_EMAIL = "suriya.aero360@gmail.com"  # Change to your actual admin email
+
+#### In case of Zoho mail
+
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.zoho.in"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "your_email@yourdomain.com"
+# EMAIL_HOST_PASSWORD = (
+#     "your_zoho_app_password"  # Use app password, not your main password
+# )
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+###### In case of Outlook / office 365
+
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.office365.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "your_email@outlook.com"
+# EMAIL_HOST_PASSWORD = "your_outlook_app_password"  # If 2FA is enabled
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+##### in case of Gmail
+
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "example@gmail.com"
+# EMAIL_HOST_PASSWORD = "password"  # Use App Password
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

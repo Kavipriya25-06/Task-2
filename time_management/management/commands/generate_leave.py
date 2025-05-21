@@ -1,3 +1,5 @@
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from time_management.models import Employee, LeavesAvailable  # adjust import
@@ -18,17 +20,60 @@ class Command(BaseCommand):
                 continue
 
             join_date = emp.doj
-            if not join_date:
+            if not join_date or not emp.employment_type:
                 continue
 
-            leave_count = calculate_leave_entitlement(join_date)
+            # Determine effective employment type
+            effective_type = emp.employment_type
+            if (
+                emp.employment_type == "Probation"
+                and emp.probation_confirmation_date
+                and today >= emp.probation_confirmation_date
+            ):
+                effective_type = "Fulltime"
+                join_date = (
+                    emp.probation_confirmation_date
+                )  # start fulltime benefit from confirmation
+
+            sick_leave = casual_leave = earned_leave = comp_off = 0
+
+            if effective_type == "Fulltime":
+                leave_count = calculate_leave_entitlement(join_date)
+                sick_leave = casual_leave = earned_leave = leave_count
+
+            elif effective_type == "Probation":
+                end_date = emp.probation_confirmation_date
+                if end_date:
+                    months = max(
+                        (end_date.year - join_date.year) * 12
+                        + end_date.month
+                        - join_date.month,
+                        1,
+                    )
+                    casual_leave = months  # 1 per month
+
+            elif effective_type == "Contract":
+                end_date = emp.contract_end_date
+                if end_date:
+                    months = max(
+                        (end_date.year - join_date.year) * 12
+                        + end_date.month
+                        - join_date.month,
+                        1,
+                    )
+                    casual_leave = months  # 1 per month
+
+            elif effective_type == "Internship":
+                pass  # No leave for interns
+
+            # leave_count = calculate_leave_entitlement(join_date)
 
             LeavesAvailable.objects.create(
                 employee=emp,
-                sick_leave=leave_count,
-                casual_leave=leave_count,
-                comp_off=0,
-                earned_leave=leave_count,
+                sick_leave=sick_leave,
+                casual_leave=casual_leave,
+                comp_off=comp_off,
+                earned_leave=earned_leave,
             )
             created_count += 1
 
