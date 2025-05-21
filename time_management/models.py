@@ -387,7 +387,7 @@ class CompOffRequest(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.leave_type} - {self.employee.employee_name}"
+        return f"{self.date} - {self.employee.employee_name}"
 
 
 # Leaves Available Table
