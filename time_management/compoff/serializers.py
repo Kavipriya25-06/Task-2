@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models import Calendar, CompOffRequest, Employee, TimeSheet
+from time_management.time_sheet.serializers import TimeSheetTaskSerializer
 
 
 class CompOffRequestSerializer(serializers.ModelSerializer):
@@ -52,7 +53,7 @@ class CompOffRequestTaskSerializer(serializers.ModelSerializer):
 
     def get_timesheets(self, obj):
         timesheets = TimeSheet.objects.filter(employee=obj.employee, date=obj.date)
-        return TimeSheetSerializer(timesheets, many=True).data
+        return TimeSheetTaskSerializer(timesheets, many=True).data
 
     def get_timesheet_count(self, obj):
         return TimeSheet.objects.filter(employee=obj.employee, date=obj.date).count()

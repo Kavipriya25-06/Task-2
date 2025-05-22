@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
+from time_management.hierarchy.serializers import get_emp_under_manager
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
@@ -106,6 +107,43 @@ def compoff_view_api(request, compoff_request_id=None, employee_id=None):
     elif employee_id:
         try:
             compoffs = CompOffRequest.objects.filter(employee_id=employee_id)
+            if today:
+                compoff = compoffs.filter(date=today)
+            else:
+                compoff = compoffs
+        except CompOffRequest.DoesNotExist:
+            return Response(
+                {"error": "compoff not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        compoff = CompOffRequest.objects.all()
+
+    serializer = CompOffRequestTaskSerializer(compoff, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def compoff_manager_view_api(request, compoff_request_id=None, manager_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if compoff_request_id:
+        try:
+            compoff = CompOffRequest.objects.get(compoff_request_id=compoff_request_id)
+
+        except CompOffRequest.DoesNotExist:
+            return Response(
+                {"error": "compoff not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+    elif manager_id:
+        try:
+            employee_qs = get_emp_under_manager(manager_id)
+
+            compoffs = CompOffRequest.objects.filter(employee__in=employee_qs)
             if today:
                 compoff = compoffs.filter(date=today)
             else:
