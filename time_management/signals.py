@@ -6,29 +6,52 @@ from django.utils import timezone
 from .models import Employee, LeavesAvailable, Hierarchy, User, Variation, TimeSheet
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
+    create_or_update_leaves_for_employee
 )  # create this in utils.py
 
 
+# @receiver(post_save, sender=Employee)
+# def create_leave_record(sender, instance, created, **kwargs):
+#     """
+#     - Create leave record if it doesn't exist
+
+#     """
+
+#     if created:
+#         created = create_or_update_leaves_for_employee(instance)
+    # if created and not LeavesAvailable.objects.filter(employee=instance).exists():
+    #     if instance.doj:
+    #         leave_count = calculate_leave_entitlement(instance.doj)
+    #     else:
+    #         leave_count = 0
+
+    #     LeavesAvailable.objects.create(
+    #         employee=instance,
+    #         sick_leave=leave_count,
+    #         casual_leave=leave_count,
+    #         comp_off=0,
+    #         earned_leave=leave_count,
+    #     )
+
+
 @receiver(post_save, sender=Employee)
-def create_leave_record(sender, instance, created, **kwargs):
-    """
-    - Create leave record if it doesn't exist
+def handle_employee_leave_logic(sender, instance, created, **kwargs):
+    if created:
+        create_or_update_leaves_for_employee(instance)
 
-    """
+    else:
+        try:
+            old_instance = Employee.objects.get(employee_id=instance.employee_id)
+        except Employee.DoesNotExist:
+            return
 
-    if created and not LeavesAvailable.objects.filter(employee=instance).exists():
-        if instance.doj:
-            leave_count = calculate_leave_entitlement(instance.doj)
-        else:
-            leave_count = 0
-
-        LeavesAvailable.objects.create(
-            employee=instance,
-            sick_leave=leave_count,
-            casual_leave=leave_count,
-            comp_off=0,
-            earned_leave=leave_count,
-        )
+        # Check for transition from Probation to Fulltime
+        if (
+            old_instance.employment_type == "Probation"
+            and instance.employment_type == "Fulltime"
+            and instance.probation_confirmation_date
+        ):
+            create_or_update_leaves_for_employee(instance, is_update=True)
 
 
 @receiver(post_save, sender=Employee)
