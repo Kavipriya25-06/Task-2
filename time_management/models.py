@@ -805,36 +805,59 @@ class TimeSheet(models.Model):
             try:
                 calendar = Calendar.objects.get(date=self.date)
                 if calendar.is_weekend or calendar.is_holiday:
-                    # Check if already exists
-                    if not CompOffRequest.objects.filter(
-                        employee=self.employee, date=self.date
-                    ).exists():
-                        # Sum all task_hours for this employee and date
 
-                        total_hours = (
-                            TimeSheet.objects.filter(
-                                employee=self.employee, date=self.date
-                            ).aggregate(total=Sum("task_hours"))["total"]
-                            or 0
+                    # # Check if already exists
+                    # if not CompOffRequest.objects.filter(
+                    #     employee=self.employee, date=self.date
+                    # ).exists():
+                    #     # Sum all task_hours for this employee and date
+
+                    total_hours = (
+                        TimeSheet.objects.filter(
+                            employee=self.employee, date=self.date
+                        ).aggregate(total=Sum("task_hours"))["total"]
+                        or 0
+                    )
+
+                    # Match with comp off thresholds
+                    compoff_entry = CompOff.objects.filter(
+                        min_hours__lte=total_hours, max_hours__gte=total_hours
+                    ).first()
+
+                    if compoff_entry:
+                        duration = (
+                            1.0 if compoff_entry.leave_type == "full_day" else 0.5
+                        )
+                        # Create or update compoff request
+                        # CompOffRequest.objects.create(
+                        #     employee=self.employee,
+                        #     date=self.date,
+                        #     duration=duration,
+                        #     reason=f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
+                        #     expiry_date=self.date + timedelta(days=30),
+                        #     status="eligible",
+                        # )
+                        CompOffRequest.objects.update_or_create(
+                            employee=self.employee,
+                            date=self.date,
+                            defaults={
+                                "duration": duration,
+                                "reason": f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
+                                "expiry_date": self.date + timedelta(days=30),
+                                "status": "eligible",
+                            },
                         )
 
-                        # Match with comp off thresholds
-                        compoff_entry = CompOff.objects.filter(
-                            min_hours__lte=total_hours, max_hours__gte=total_hours
-                        ).first()
+                    else:
+                        # No longer eligible — update existing request if present
+                        CompOffRequest.objects.filter(
+                            employee=self.employee, date=self.date
+                        ).update(
+                            duration=0,
+                            status="expired",
+                            reason="Hours dropped below comp off threshold",
+                        )
 
-                        if compoff_entry:
-                            duration = (
-                                1.0 if compoff_entry.leave_type == "full_day" else 0.5
-                            )
-                            CompOffRequest.objects.create(
-                                employee=self.employee,
-                                date=self.date,
-                                duration=duration,
-                                reason=f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
-                                expiry_date=self.date + timedelta(days=30),
-                                status="eligible",
-                            )
             except Calendar.DoesNotExist:
                 # Optional: log warning or skip silently
                 pass

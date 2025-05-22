@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models import Sum
 from ..models import Calendar, CompOffRequest, Employee, TimeSheet
 from time_management.time_sheet.serializers import TimeSheetTaskSerializer
 
@@ -33,6 +34,7 @@ class CompOffRequestTaskSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer()
     timesheets = serializers.SerializerMethodField()
     timesheet_count = serializers.SerializerMethodField()
+    task_hours_sum = serializers.SerializerMethodField()
 
     class Meta:
         model = CompOffRequest
@@ -49,6 +51,7 @@ class CompOffRequestTaskSerializer(serializers.ModelSerializer):
             "approved_by",
             "timesheets",
             "timesheet_count",
+            "task_hours_sum",
         ]
 
     def get_timesheets(self, obj):
@@ -57,3 +60,12 @@ class CompOffRequestTaskSerializer(serializers.ModelSerializer):
 
     def get_timesheet_count(self, obj):
         return TimeSheet.objects.filter(employee=obj.employee, date=obj.date).count()
+
+    def get_task_hours_sum(self, obj):
+
+        return (
+            TimeSheet.objects.filter(employee=obj.employee, date=obj.date).aggregate(
+                total=Sum("task_hours")
+            )["total"]
+            or 0.0
+        )
