@@ -436,7 +436,7 @@ class LeavesTaken(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     duration = models.DecimalField(
-        max_digits=6, decimal_places=2, blank=True, null=True, default=0
+        max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
     reason = models.TextField(blank=True, null=True)
     resumption_date = models.DateField()
@@ -461,6 +461,10 @@ class LeavesTaken(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     updated_at = models.DateTimeField(auto_now=True)
+    comp_off_date = models.DateField(
+        null=True,
+        blank=True,
+    )
 
     def save(self, *args, **kwargs):
         if not self.leave_taken_id:
@@ -473,18 +477,6 @@ class LeavesTaken(models.Model):
                     self.leave_taken_id = f"LVTKN_{last_num + 1:05d}"
                 else:
                     self.leave_taken_id = "LVTKN_00001"
-
-        # --- Calculate working days duration ---
-
-        if self.start_date and self.end_date:
-            # Get all calendar entries in range
-            working_days = Calendar.objects.filter(
-                date__gte=self.start_date,
-                date__lte=self.end_date,
-                is_weekend=False,
-                is_holiday=False,
-            ).count()
-            self.duration = working_days
 
         super().save(*args, **kwargs)
 
