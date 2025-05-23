@@ -132,7 +132,10 @@ def employee_view_api(request, employee_id=None):
 @api_view(["GET"])
 def unassigned_employee(request):
 
-    user_employee_ids = User.objects.values_list("employee_id", flat=True)
+    user_ids = User.objects.exclude(employee_id__isnull=True)
+    user_employee_ids = user_ids.values_list("employee_id", flat=True)
+    print("Users", user_employee_ids)
+
     # employees = Employee.objects.exclude(employee_id__in=user_employee_ids)
     employees = Employee.objects.exclude(
         Q(employee_id__in=user_employee_ids)
@@ -141,6 +144,7 @@ def unassigned_employee(request):
     )
     serializer = EmployeeViewSerializer(employees, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 # @parser_classes([MultiPartParser, FormParser])
