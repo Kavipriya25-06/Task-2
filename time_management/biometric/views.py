@@ -4,7 +4,10 @@ from time_management.biometric.serializers import (
     BiometricDataSerializer,
     BiometricTaskDataSerializer,
 )
-from time_management.hierarchy.serializers import emp_under_manager
+from time_management.hierarchy.serializers import (
+    emp_under_manager,
+    get_emp_under_manager,
+)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -119,7 +122,7 @@ def attendance(request, employee_id=None):
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=404)
 
-        employees = emp_under_manager(manager)
+        employees = get_emp_under_manager(manager)
 
         biometric_qs = BiometricData.objects.filter(employee__in=employees)
 
@@ -148,7 +151,7 @@ def weekly_attendance(request, employee_id=None):
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=404)
 
-        employees = emp_under_manager(manager)
+        employees = get_emp_under_manager(manager)
         print("manager", manager)
         print(employees, "Employees")
 
@@ -162,9 +165,9 @@ def weekly_attendance(request, employee_id=None):
                 "date"
             )
 
-            serializer = BiometricDataSerializer(calendar_entries, many=True)
+            serializer = BiometricTaskDataSerializer(calendar_entries, many=True)
         else:
-            serializer = BiometricDataSerializer(biometric_qs, many=True)
+            serializer = BiometricTaskDataSerializer(biometric_qs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -176,9 +179,9 @@ def weekly_attendance(request, employee_id=None):
             end = start + timedelta(days=6)
             calendar_entries = objs.filter(date__range=(start, end)).order_by("date")
 
-            serializer = BiometricDataSerializer(calendar_entries, many=True)
+            serializer = BiometricTaskDataSerializer(calendar_entries, many=True)
         else:
-            serializer = BiometricDataSerializer(objs, many=True)
+            serializer = BiometricTaskDataSerializer(objs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -198,7 +201,7 @@ def weekly_attendance_leave(request, employee_id=None):
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=404)
 
-        employees = emp_under_manager(manager)
+        employees = get_emp_under_manager(manager)
 
         biometric_qs = BiometricData.objects.filter(employee__in=employees)
         if today:
@@ -238,7 +241,7 @@ def attendance_admin(request, employee_id=None):
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=404)
 
-        employees = emp_under_manager(manager)
+        employees = get_emp_under_manager(manager)
 
         biometric_qs = BiometricData.objects.filter(employee__in=employees)
         modified_biometric = biometric_qs.filter(modified_by=employee_id)
