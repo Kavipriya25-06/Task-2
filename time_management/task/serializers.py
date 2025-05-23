@@ -22,6 +22,14 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = "__all__"
 
+        def validate_task_code(self, value):
+
+            if value and Task.objects.filter(task_code=value).exists():
+                if self.instance and self.instance.task_code == value:
+                    return value  # Allow if it's the same record
+                raise serializers.ValidationError("Task code already exists")
+            return value
+
 
 class TaskAssignSerializer(serializers.ModelSerializer):
     employee = serializers.PrimaryKeyRelatedField(

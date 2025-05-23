@@ -7,6 +7,14 @@ class BuildingSerializer(serializers.ModelSerializer):
         model = Building
         fields = "__all__"
 
+        def validate_building_code(self, value):
+
+            if value and Building.objects.filter(building_code=value).exists():
+                if self.instance and self.instance.building_code == value:
+                    return value  # Allow if it's the same record
+                raise serializers.ValidationError("Building code already exists")
+            return value
+
 
 class BuildingAssignSerializer(serializers.ModelSerializer):
     employee = serializers.PrimaryKeyRelatedField(

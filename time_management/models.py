@@ -644,7 +644,7 @@ class Building(models.Model):
     building_title = models.CharField(max_length=200)
     building_description = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
-    building_code = models.CharField(max_length=20, blank=True, null=True)
+    building_code = models.CharField(max_length=20, blank=True, null=True, unique=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
@@ -668,7 +668,7 @@ class Task(models.Model):
     # )
     comments = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
-    task_code = models.CharField(max_length=20, blank=True, null=True)
+    task_code = models.CharField(max_length=20, blank=True, null=True, unique=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
