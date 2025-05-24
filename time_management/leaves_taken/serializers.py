@@ -31,6 +31,9 @@ class LeavesTakenSerializer(serializers.ModelSerializer):
 
 class LeaveRequestSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer(read_only=True)
+    attachments = AttachmentSerializer(
+        many=True, source="leaveattachments", read_only=True
+    )
 
     class Meta:
         model = LeavesTaken
