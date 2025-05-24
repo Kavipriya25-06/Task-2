@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
+from time_management.hierarchy.serializers import get_emp_under_manager
 
 
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
@@ -237,9 +238,11 @@ def leave_request_api(request, manager_id=None):
 
                 # Combining teamleads_data and employees_data
                 all_employees = teamleads_data + employees_data
+                new_employees = get_emp_under_manager(manager)
+                new_employees.append(manager)
 
                 # Fetching the leave records for all team leads and employees
-                leave_qs = LeavesTaken.objects.filter(employee__in=all_employees)
+                leave_qs = LeavesTaken.objects.filter(employee__in=new_employees)
 
                 serializer = LeaveRequestSerializer(leave_qs, many=True)
 

@@ -6,7 +6,10 @@ from time_management.employee.serializers import (
     UserSerializer,
     EmployeeViewSerializer,
 )
-from time_management.hierarchy.serializers import emp_under_manager
+from time_management.hierarchy.serializers import (
+    emp_under_manager,
+    get_emp_under_manager,
+)
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -157,7 +160,7 @@ def emp_under_mngr_view(request, employee_id=None):
         if employee_id:
             try:
                 manager = Employee.objects.get(employee_id=employee_id)
-                employees = emp_under_manager(manager)
+                employees = get_emp_under_manager(manager)
                 employee = Employee.objects.filter(employee_id__in=employees)
                 serializer = EmployeeViewSerializer(employee, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
