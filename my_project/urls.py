@@ -65,6 +65,7 @@ from time_management.leaves_taken.views import (
 )
 from time_management.calendar.views import calendar_api
 from time_management.biometric.views import (
+    biometric_view_api,
     biometric_data_api,
     attendance,
     weekly_attendance,
@@ -188,6 +189,8 @@ urlpatterns = [
     path("leave-request/<str:manager_id>/", leave_request_api),
     path("calendar/", calendar_api),
     path("calendar/<str:calendar_id>/", calendar_api),
+    path("biometric-view/", biometric_view_api),
+    path("biometric-view/<str:biometric_id>/", biometric_view_api),
     path("biometric-data/", biometric_data_api),
     path("biometric-data/<str:biometric_id>/", biometric_data_api),
     path("biometric-data/by_employee/<str:employee_id>/", biometric_data_api),
