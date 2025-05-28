@@ -30,7 +30,7 @@ class Employee(models.Model):
     aadhaar_number = models.CharField(max_length=12, blank=True, null=True)
     PAN = models.CharField(max_length=10, blank=True, null=True)
     UAN = models.CharField(max_length=12, blank=True, null=True)
-    pf_number = models.CharField(max_length=20, blank=True, null=True)
+    pf_number = models.CharField(max_length=22, blank=True, null=True)
     esi_number = models.CharField(max_length=20, blank=True, null=True)
     passport_number = models.CharField(max_length=20, blank=True, null=True)
     passport_validity = models.DateField(null=True, blank=True)
