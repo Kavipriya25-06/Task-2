@@ -235,7 +235,7 @@ class User(models.Model):
         #             subject,
         #             message,
         #             settings.DEFAULT_FROM_EMAIL,
-        #             [self.email],
+        #             [settings.ADMIN_EMAIL],  # self.email when in production
         #             cc=[settings.ADMIN_EMAIL],  # CC admin
         #         )
         #         try:

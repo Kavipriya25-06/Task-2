@@ -122,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ##### Email
 
-# ADMIN_EMAIL = "suriya.aero360@gmail.com"  # Change to your actual admin email
+ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
 
 #### In case of Zoho mail
 
@@ -130,10 +130,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # EMAIL_HOST = "smtp.zoho.in"
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "your_email@yourdomain.com"
-# EMAIL_HOST_PASSWORD = (
-#     "your_zoho_app_password"  # Use app password, not your main password
-# )
+# EMAIL_HOST_USER = "suriyaprakash.a@aero360.co.in"  #
+# EMAIL_HOST_PASSWORD = "abcd"  # Use app password, not your main password
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ###### In case of Outlook / office 365
@@ -142,7 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # EMAIL_HOST = "smtp.office365.com"
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "your_email@outlook.com"
+# EMAIL_HOST_USER = "hr@arrisltd.com"
 # EMAIL_HOST_PASSWORD = "your_outlook_app_password"  # If 2FA is enabled
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 

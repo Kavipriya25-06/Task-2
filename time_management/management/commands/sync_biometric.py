@@ -203,9 +203,15 @@ class Command(BaseCommand):
 
         logging.info("---- Biometric API sync started ----")
 
+        # Get yesterday's date
+        yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        # Use it in your API URL
+        api_url = f"http://192.168.0.10:8000/api/attendance/{yesterday}/"
+
         # --- 1️ Fetch JSON data from API ---
         try:
-            api_url = "http://127.0.0.1:8000/api/attendance/today/"
+            # api_url = "http://192.168.0.10:8000/api/attendance/today/"
             response = requests.get(api_url)
             response.raise_for_status()
             biometric_rows = response.json()
@@ -249,8 +255,8 @@ class Command(BaseCommand):
             # --- 4️ Parse datetimes and calculate work hours ---
             try:
                 # Example first_in: "2025-05-08 09:36:02"
-                first_in_dt = datetime.strptime(first_in, "%Y-%m-%d %H:%M:%S")
-                last_out_dt = datetime.strptime(last_out, "%Y-%m-%d %H:%M:%S")
+                first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%SZ")
+                last_out_dt = datetime.strptime(last_out, "%Y-%m-%dT%H:%M:%SZ")
 
                 in_time_obj = first_in_dt.time()
                 out_time_obj = last_out_dt.time()
