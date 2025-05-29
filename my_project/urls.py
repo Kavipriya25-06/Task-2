@@ -92,6 +92,7 @@ from time_management.project.views import (
     project_screen,
     full_project_view,
     project_creator,
+    export_report,
 )
 from time_management.variations.views import variation_api
 from time_management.building.views import (
@@ -243,6 +244,7 @@ urlpatterns = [
     ),
     path("project-creator/", project_creator),
     path("project-creator/<str:employee_id>/", project_creator),
+    path("export-report/", export_report),
     path("area-of-work/", areaofwork_api, name="Area-of-work"),
     path("area-of-work/<int:id>/", areaofwork_api, name="Area-of-work"),
     path("discipline/", discipline_api, name="Discipline"),

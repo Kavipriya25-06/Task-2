@@ -3,6 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 
+import csv
+import io
+from datetime import datetime
+from django.http import HttpResponse
+from django.db import connection
+
+
 from ..models import (
     Project,
     ProjectAssign,
@@ -472,3 +479,62 @@ def project_creator(request, employee_id=None):
 
     serializer = ProjectSerializer(project, many=True)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+def export_report(request):
+    query = """
+        SELECT 
+    ts.date AS `Date`,
+    p.project_code AS `Project ID`,
+    p.project_title AS `Project Name`,
+    b.building_title AS `Sub Division`,
+    e.employee_name AS `Employee Name`,
+    e.employee_code AS `Employee ID`,
+    e.designation AS `Designation`,
+    e.department AS `Department`,
+    t.task_title AS `Area of Work`,  -- from task table
+    v.title AS `Variation`,
+    ROUND(SUM(ts.task_hours), 2) AS `Total Hours`
+FROM time_management_timesheet ts
+JOIN time_management_employee e ON ts.employee_id = e.employee_id
+JOIN time_management_taskassign ta ON ts.task_assign_id = ta.task_assign_id
+LEFT JOIN time_management_task t ON ta.task_id = t.task_id  
+LEFT JOIN time_management_taskassign_employee tae ON ta.task_assign_id = tae.taskassign_id AND tae.employee_id = e.employee_id
+LEFT JOIN time_management_buildingassign ba ON ta.building_assign_id = ba.building_assign_id
+LEFT JOIN time_management_building b ON ba.building_id = b.building_id
+LEFT JOIN time_management_projectassign pa ON ba.project_assign_id = pa.project_assign_id
+LEFT JOIN time_management_projectassign_employee pae ON pa.project_assign_id = pae.projectassign_id AND pae.employee_id = e.employee_id
+LEFT JOIN time_management_project p ON pa.project_id = p.project_id
+LEFT JOIN time_management_variation v ON v.project_id = p.project_id
+GROUP BY 
+    ts.date,
+    p.project_code, p.project_title,
+    b.building_title,
+    e.employee_name, e.employee_code,
+    e.designation, e.department,
+    t.task_title,
+    v.title
+ORDER BY p.project_code, e.employee_name;
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+
+    # Generate timestamped filename
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"projects_report_{now}.csv"
+
+    # Create CSV in memory
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(columns)
+    for row in rows:
+        writer.writerow(row)
+
+    # Prepare HTTP response
+    response = HttpResponse(buffer.getvalue(), content_type="text/csv")
+    response["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
