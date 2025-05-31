@@ -1,9 +1,16 @@
 from rest_framework.viewsets import ModelViewSet
-from ..models import User
+from ..models import User, PasswordResetOTP
 from time_management.user.serializers import UserSerializer, UserDetailsSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.hashers import make_password, check_password
+
+import random
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 
 
 class UserViewSet(ModelViewSet):
@@ -107,7 +114,7 @@ def login_details(request, email=None, password=None):
         if password:
             try:
                 user = User.objects.get(email=email)
-                if user.password == password:
+                if check_password(password, user.password):
                     auth_user = user
                     serializer = UserDetailsSerializer(auth_user)
                     return Response(serializer.data)
@@ -119,3 +126,77 @@ def login_details(request, email=None, password=None):
             return Response({"error": "Please provide password"})
     else:
         return Response({"error": "Please provide user and password"})
+
+
+@api_view(["POST"])
+def send_reset_otp(request):
+    email = request.data.get("email")
+    try:
+        user = User.objects.get(email=email)
+
+        #  Check for recent OTP within last 60 seconds
+
+        recent_otp = (
+            PasswordResetOTP.objects.filter(
+                user=user, created_at__gte=timezone.now() - timedelta(seconds=60)
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+        if recent_otp:
+            return Response(
+                {"error": "You can request a new OTP only once every 60 seconds."},
+                status=429,
+            )
+
+        otp = str(random.randint(100000, 999999))
+        PasswordResetOTP.objects.create(user=user, otp=otp)
+
+        try:
+            send_mail(
+                subject="Your OTP for Password Reset",
+                message=f"Use this OTP to reset your password: \n\n{otp}\n\nThis OTP is valid for 10 minutes.\nRegards, \nAdmin team.",
+                from_email=settings.DEFAULT_FROM_EMAIL,  #  use setting
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            print("OTP sent to your mail")
+            return Response({"message": "OTP sent to your email."})
+
+        except Exception as e:
+            print("OTP send failed!!!!!!!")
+            return Response({"error": f"Failed to send email: {str(e)}"}, status=500)
+
+    except User.DoesNotExist:
+        return Response({"error": "User with this email does not exist."}, status=404)
+
+
+@api_view(["POST"])
+def reset_password(request):
+    email = request.data.get("email")
+    otp = request.data.get("otp")
+    new_password = request.data.get("password")
+
+    try:
+        user = User.objects.get(email=email)
+        otp_obj = PasswordResetOTP.objects.filter(
+            user=user, otp=otp, is_used=False
+        ).last()
+
+        if not otp_obj:
+            return Response({"error": "Invalid or OTP."}, status=400)
+
+        if otp_obj.is_expired():
+            return Response({"error": "OTP expired."}, status=400)
+
+        #  Securely hash the new password
+        user.password = make_password(new_password)
+        user.save()
+
+        otp_obj.is_used = True
+        otp_obj.save()
+
+        return Response({"message": "Password reset successful."})
+    except User.DoesNotExist:
+        return Response({"error": "Invalid email."}, status=404)

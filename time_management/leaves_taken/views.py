@@ -215,29 +215,29 @@ def leave_request_api(request, manager_id=None):
                 manager = Employee.objects.get(employee_id=manager_id)
 
                 # Filtering all employees in the hierarchy table who report to the manager
-                teamleads_qs = Hierarchy.objects.filter(reporting_to=manager)
+                # teamleads_qs = Hierarchy.objects.filter(reporting_to=manager)
 
-                # Initializing the response structure
-                teamleads_data = []
-                employees_data = []
+                # # Initializing the response structure
+                # teamleads_data = []
+                # employees_data = []
 
-                # Iterating through each filtered hierarchy entry to get team leads and their employees
-                for tl_hierarchy in teamleads_qs:
-                    teamlead_emp = (
-                        tl_hierarchy.employee
-                    )  # Getting the employee from hierarchy table
-                    employees_qs = Hierarchy.objects.filter(reporting_to=teamlead_emp)
+                # # Iterating through each filtered hierarchy entry to get team leads and their employees
+                # for tl_hierarchy in teamleads_qs:
+                #     teamlead_emp = (
+                #         tl_hierarchy.employee
+                #     )  # Getting the employee from hierarchy table
+                #     employees_qs = Hierarchy.objects.filter(reporting_to=teamlead_emp)
 
-                    for emp_hierarchy in employees_qs:
-                        employee_emp = (
-                            emp_hierarchy.employee
-                        )  # Getting the employee from hierarchy table
-                        employees_data.append(employee_emp)
+                #     for emp_hierarchy in employees_qs:
+                #         employee_emp = (
+                #             emp_hierarchy.employee
+                #         )  # Getting the employee from hierarchy table
+                #         # employees_data.append(employee_emp)
 
-                    teamleads_data.append(teamlead_emp)
+                    # teamleads_data.append(teamlead_emp)
 
                 # Combining teamleads_data and employees_data
-                all_employees = teamleads_data + employees_data
+                # all_employees = teamleads_data + employees_data
                 new_employees = get_emp_under_manager(manager)
                 new_employees.append(manager)
 

@@ -1,5 +1,9 @@
 from rest_framework import serializers
 from ..models import User, Employee
+from django.contrib.auth.hashers import make_password, check_password
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 
 
 class UserSerializer(serializers.ModelSerializer):

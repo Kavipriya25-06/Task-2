@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-8^)=kl-$82!lnhygjhs8#_p5i1t2(jquh=$1-#%5^!!d4gbqxn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -122,26 +122,27 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ##### Email
 
-ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
+# ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
 
 #### In case of Zoho mail
 
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.zoho.in"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "suriyaprakash.a@aero360.co.in"  #
-# EMAIL_HOST_PASSWORD = "abcd"  # Use app password, not your main password
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.zoho.in"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "suriyaprakash.a@aero360.co.in"  #
+EMAIL_HOST_PASSWORD = "aPbUKE0Es1dc"  # Use app password, not your main password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ###### In case of Outlook / office 365
+####### Production credentials
 
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # EMAIL_HOST = "smtp.office365.com"
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = "hr@arrisltd.com"
-# EMAIL_HOST_PASSWORD = "your_outlook_app_password"  # If 2FA is enabled
+# EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ##### in case of Gmail
@@ -171,6 +172,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

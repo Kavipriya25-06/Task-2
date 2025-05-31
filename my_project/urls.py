@@ -47,7 +47,13 @@ from time_management.employee.views import (
     unassigned_employee,
 )
 from time_management.assignment.views import manager_tl_projects, tl_projects
-from time_management.user.views import user_api, user_details, login_details
+from time_management.user.views import (
+    user_api,
+    user_details,
+    login_details,
+    send_reset_otp,
+    reset_password,
+)
 from time_management.hierarchy.views import (
     hierarchy_api,
     manager_hierarchy,
@@ -155,6 +161,8 @@ urlpatterns = [
     path("users/<str:user_id>/", user_api),
     path("user-details/", user_details),
     path("user-details/<str:user_id>/", user_details),
+    path("send-otp/", send_reset_otp),
+    path("reset-password/", reset_password),
     path("hierarchy/", hierarchy_api),
     path("hierarchy/<str:hierarchy_id>/", hierarchy_api),
     path("hierarchy/by_employee/", get_hierarchy_by_employee),

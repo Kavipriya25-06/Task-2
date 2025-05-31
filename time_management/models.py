@@ -14,6 +14,9 @@ from django.db.models import Sum
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
+import uuid
 
 
 # Employee Table
@@ -211,6 +214,11 @@ class User(models.Model):
                     self.user_id = f"USR_{last_num + 1:05d}"
                 else:
                     self.user_id = "USR_00001"
+
+        # Password hashing
+        if self.password and not self.password.startswith("pbkdf2_"):
+            self.password = make_password(self.password)
+
         super().save(*args, **kwargs)
 
         # ---- Send Email if it's an update ----
@@ -242,18 +250,22 @@ class User(models.Model):
         #             email.send()
         #         except Exception as e:
         #             print(f"[ERROR] Email not sent: {e}")
-        # subject = "Your user account has been updated"
-        # message = f"Dear user,\n\nYour profile details or access role in the system has been modified.\n\nIf this was not initiated by you, please contact support immediately.\n\nRegards,\nTeam"
-        # recipient_list = [self.email]
-
-        # try:
-        #     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
-        # except Exception as e:
-        #     # Optional: log or handle email send failure
-        #     print(f"Email failed to send: {e}")
 
     def __str__(self):
         return f"{self.email} - {self.employee_id}"
+
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_used = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return (timezone.now() - self.created_at).seconds > 600  # 10 minutes
+
+    def is_throttle_limited(self):
+        return (timezone.now() - self.created_at).seconds < 60  # less than 60s ago
 
 
 # Hierarchy Table
