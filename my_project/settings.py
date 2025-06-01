@@ -122,37 +122,39 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ##### Email
 
-# ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
-
 #### In case of Zoho mail
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.zoho.in"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "suriyaprakash.a@aero360.co.in"  #
-EMAIL_HOST_PASSWORD = "aPbUKE0Es1dc"  # Use app password, not your main password
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.zoho.in"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "example@email.com"  #
+# EMAIL_HOST_PASSWORD = "samplepassword"  # Use app password, not your main password
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ###### In case of Outlook / office 365
 ####### Production credentials
 
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.office365.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "hr@arrisltd.com"
-# EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.office365.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "hr@arrisltd.com"
+EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ##### in case of Gmail
+
+# ADMIN_EMAIL = ""  # Change to your actual admin email
 
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # EMAIL_HOST = "smtp.gmail.com"
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "example@gmail.com"
-# EMAIL_HOST_PASSWORD = "password"  # Use App Password
+# EMAIL_HOST_USER = ""
+# EMAIL_HOST_PASSWORD = ""  # Use App Password
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 

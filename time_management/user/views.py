@@ -131,6 +131,8 @@ def login_details(request, email=None, password=None):
 @api_view(["POST"])
 def send_reset_otp(request):
     email = request.data.get("email")
+    if not email:
+        return Response({"error": "Email is required."}, status=400)
     try:
         user = User.objects.get(email=email)
 
@@ -149,6 +151,8 @@ def send_reset_otp(request):
                 {"error": "You can request a new OTP only once every 60 seconds."},
                 status=429,
             )
+        # Invalidate any previous unused OTPs for this user:
+        PasswordResetOTP.objects.filter(user=user, is_used=False).update(is_used=True)
 
         otp = str(random.randint(100000, 999999))
         PasswordResetOTP.objects.create(user=user, otp=otp)
@@ -162,7 +166,7 @@ def send_reset_otp(request):
                 fail_silently=False,
             )
             print("OTP sent to your mail")
-            return Response({"message": "OTP sent to your email."})
+            return Response({"message": "OTP sent to your email."}, status=200)
 
         except Exception as e:
             print("OTP send failed!!!!!!!")
@@ -185,7 +189,7 @@ def reset_password(request):
         ).last()
 
         if not otp_obj:
-            return Response({"error": "Invalid or OTP."}, status=400)
+            return Response({"error": "Invalid OTP."}, status=400)
 
         if otp_obj.is_expired():
             return Response({"error": "OTP expired."}, status=400)
@@ -197,6 +201,6 @@ def reset_password(request):
         otp_obj.is_used = True
         otp_obj.save()
 
-        return Response({"message": "Password reset successful."})
+        return Response({"message": "Password reset successful."}, status=200)
     except User.DoesNotExist:
         return Response({"error": "Invalid email."}, status=404)
