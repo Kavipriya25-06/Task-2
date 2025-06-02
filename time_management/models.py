@@ -194,15 +194,15 @@ class User(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        # is_new = not self.user_id
-        # previous = None
-        # changed_fields = []
+        is_new = not self.user_id
+        previous = None
+        changed_fields = []
 
-        # if not is_new:
-        #     try:
-        #         previous = User.objects.get(user_id=self.user_id)
-        #     except User.DoesNotExist:
-        #         pass
+        if not is_new:
+            try:
+                previous = User.objects.get(user_id=self.user_id)
+            except User.DoesNotExist:
+                pass
 
         if not self.user_id:
             with transaction.atomic():
@@ -222,34 +222,35 @@ class User(models.Model):
         super().save(*args, **kwargs)
 
         # ---- Send Email if it's an update ----
-        # if previous:
-        #     if previous.password != self.password:
-        #         changed_fields.append("password")
-        #     if previous.status != self.status:
-        #         changed_fields.append("status")
-        #     if previous.role != self.role:
-        #         changed_fields.append("role")
+        if previous:
+            if previous.password != self.password:
+                changed_fields.append("password")
+            if previous.status != self.status:
+                changed_fields.append("status")
+            if previous.role != self.role:
+                changed_fields.append("role")
 
-        #     if changed_fields:
-        #         subject = "Your user account has been updated"
-        #         changes = ", ".join(changed_fields)
-        #         message = (
-        #             f"Dear {self.email},\n\n"
-        #             f"The following fields in your user account have been changed: {changes}.\n\n"
-        #             "If you did not request these changes, please contact admin support immediately.\n\n"
-        #             "Regards,\nAdmin Team"
-        #         )
-        #         email = EmailMessage(
-        #             subject,
-        #             message,
-        #             settings.DEFAULT_FROM_EMAIL,
-        #             [settings.ADMIN_EMAIL],  # self.email when in production
-        #             cc=[settings.ADMIN_EMAIL],  # CC admin
-        #         )
-        #         try:
-        #             email.send()
-        #         except Exception as e:
-        #             print(f"[ERROR] Email not sent: {e}")
+            if changed_fields:
+                subject = "Your user account has been updated"
+                changes = ", ".join(changed_fields)
+                message = (
+                    f"Dear {self.email},\n\n"
+                    f"The following fields in your user account have been changed: {changes}.\n\n"
+                    "If you did not request these changes, please contact admin support immediately.\n\n"
+                    "Regards,\nAdmin Team"
+                )
+                email = EmailMessage(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [self.email],  # self.email when in production
+                    cc=[settings.ADMIN_EMAIL],  # CC admin
+                )
+                try:
+                    email.send()
+                    # return
+                except Exception as e:
+                    print(f"[ERROR] Email not sent: {e}")
 
     def __str__(self):
         return f"{self.email} - {self.employee_id}"

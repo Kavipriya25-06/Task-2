@@ -26,6 +26,16 @@ SECRET_KEY = "django-insecure-8^)=kl-$82!lnhygjhs8#_p5i1t2(jquh=$1-#%5^!!d4gbqxn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# IS_PRODUCTION = False  # or False for dev
+
+IS_PRODUCTION = True  # or True for production
+
+if IS_PRODUCTION:
+    database_password = "root"
+else:
+    database_password = "mysql"
+
+
 ALLOWED_HOSTS = ["*"]
 
 
@@ -95,7 +105,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "TMS",
         "USER": "root",
-        "PASSWORD": "mysql",
+        "PASSWORD": database_password,
         "HOST": "localhost",
         "PORT": "3306",
     }
@@ -132,30 +142,32 @@ AUTH_PASSWORD_VALIDATORS = [
 # EMAIL_HOST_PASSWORD = "samplepassword"  # Use app password, not your main password
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-###### In case of Outlook / office 365
+
 ####### Production credentials
 
-ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
+if IS_PRODUCTION:
+    ###### In case of Outlook / office 365
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.office365.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "hr@arrisltd.com"
-EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
+    ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.office365.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = "hr@arrisltd.com"
+    EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
+
+else:
+    ##### in case of Gmail
+
+    ADMIN_EMAIL = "suriya.aero360@gmail.com"
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = "suriya.aero360@gmail.com"
+    EMAIL_HOST_PASSWORD = "avhc rlvq pbsu alni"  # Use App Password
+
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-##### in case of Gmail
-
-# ADMIN_EMAIL = ""  # Change to your actual admin email
-
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = ""
-# EMAIL_HOST_PASSWORD = ""  # Use App Password
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Internationalization
