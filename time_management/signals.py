@@ -6,7 +6,7 @@ from django.utils import timezone
 from .models import Employee, LeavesAvailable, Hierarchy, User, Variation, TimeSheet
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
-    create_or_update_leaves_for_employee
+    create_or_update_leaves_for_employee,
 )  # create this in utils.py
 
 
@@ -19,19 +19,19 @@ from time_management.management.commands.utils import (
 
 #     if created:
 #         created = create_or_update_leaves_for_employee(instance)
-    # if created and not LeavesAvailable.objects.filter(employee=instance).exists():
-    #     if instance.doj:
-    #         leave_count = calculate_leave_entitlement(instance.doj)
-    #     else:
-    #         leave_count = 0
+# if created and not LeavesAvailable.objects.filter(employee=instance).exists():
+#     if instance.doj:
+#         leave_count = calculate_leave_entitlement(instance.doj)
+#     else:
+#         leave_count = 0
 
-    #     LeavesAvailable.objects.create(
-    #         employee=instance,
-    #         sick_leave=leave_count,
-    #         casual_leave=leave_count,
-    #         comp_off=0,
-    #         earned_leave=leave_count,
-    #     )
+#     LeavesAvailable.objects.create(
+#         employee=instance,
+#         sick_leave=leave_count,
+#         casual_leave=leave_count,
+#         comp_off=0,
+#         earned_leave=leave_count,
+#     )
 
 
 @receiver(post_save, sender=Employee)
@@ -130,7 +130,7 @@ def update_consumed_hours(sender, instance, **kwargs):
     project = project_assign.project
     total_consumed = (
         TimeSheet.objects.filter(
-            task_assign__building_assign__project_assign__project=project
+            task_assign__building_assign__project_assign__project=project, approved=True
         ).aggregate(Sum("task_hours"))["task_hours__sum"]
         or 0
     )

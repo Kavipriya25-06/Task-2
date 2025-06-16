@@ -100,6 +100,13 @@ from time_management.project.views import (
     project_creator,
     export_report,
 )
+from time_management.reports.views import (
+    hours_project_view,
+    get_last_project,
+    year_leaves,
+    weekly_hours_project,
+    monthly_hours_project,
+)
 from time_management.variations.views import variation_api
 from time_management.building.views import (
     building_list_create,
@@ -177,6 +184,7 @@ urlpatterns = [
     path("org-hierarchy/<str:emp_id>/", org_hierarchy),
     path("leaves-available/", leaves_available_api),
     path("leaves-available/<str:leave_avail_id>/", leaves_available_api),
+    path("leaves-available/by_employee/<str:employee_id>/", leaves_available_api),
     path("comp-off/", comp_off_api),
     path("comp-off/<int:id>/", comp_off_api),
     path("comp-off-request/", compoff_request_api),
@@ -190,10 +198,10 @@ urlpatterns = [
         compoff_manager_view_api,
     ),
     path("comp-off-manager-view/manager/<str:manager_id>/", compoff_manager_view_api),
-    path("leaves-available/by_employee/<str:employee_id>/", leaves_available_api),
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),
     path("leaves-taken/by_employee/<str:employee_id>/", leaves_taken_api),
+    path("yearly-leaves/", year_leaves),
     path("leave-request/", leave_request_api),
     path("leave-request/<str:manager_id>/", leave_request_api),
     path("calendar/", calendar_api),
@@ -215,6 +223,21 @@ urlpatterns = [
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
+    path("last-project/", get_last_project, name="last-project"),
+    path("project-hours/", hours_project_view, name="project-hours"),
+    path("project-hours/<str:project_id>/", hours_project_view, name="project-hours"),
+    path("weekly-project-hours/", weekly_hours_project, name="project-hours"),
+    path(
+        "weekly-project-hours/<str:project_id>/",
+        weekly_hours_project,
+        name="project-hours",
+    ),
+    path("monthly-project-hours/", monthly_hours_project, name="project-hours"),
+    path(
+        "monthly-project-hours/<str:project_id>/",
+        monthly_hours_project,
+        name="project-hours",
+    ),
     path("variation/", variation_api, name="variation-detail"),
     path("variation/<int:id>/", variation_api, name="variation-detail"),
     path("projects-screen/", full_project_view, name="project-detail"),
