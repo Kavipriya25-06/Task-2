@@ -10,11 +10,29 @@ from ..models import (
     TaskAssign,
     Variation,
     TimeSheet,
+    Employee,
+    LeavesAvailable,
+    LeavesTaken,
 )
 
 from time_management.project.serializers import (
     VariationSerializer,
 )
+
+from time_management.task.serializers import TaskEntrySerializer
+
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = [
+            "employee_id",
+            "employee_name",
+            "employee_code",
+            "doj",
+            "status",
+            "resignation_date",
+        ]
 
 
 class ProjectAndAssignSerializer(serializers.ModelSerializer):
@@ -206,6 +224,59 @@ class ProjectMonthlyHoursSerializer(serializers.ModelSerializer):
                     entry["month"].strftime("%Y-%m") if entry["month"] else "Unknown"
                 ),
                 "hours": float(entry["total"]),
+            }
+            for entry in qs
+        ]
+
+
+class TimeSheetTaskSerializer(serializers.ModelSerializer):
+    task_assign = TaskEntrySerializer(read_only=True)
+    employee = EmployeeSerializer(read_only=True)
+
+    class Meta:
+        model = TimeSheet
+        fields = "__all__"
+
+
+class LeavesAvailableSerializer(serializers.ModelSerializer):
+    employee = EmployeeSerializer(read_only=True)
+
+    class Meta:
+        model = LeavesAvailable
+        fields = "__all__"
+
+
+class EmployeeLOPSerializer(serializers.ModelSerializer):
+
+    lop_by_month = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = [
+            "employee_id",
+            "employee_name",
+            "employee_code",
+            "doj",
+            "status",
+            "resignation_date",
+            "lop_by_month",
+        ]
+
+    def get_lop_by_month(self, obj):
+
+        qs = (
+            LeavesTaken.objects.filter(employee=obj)
+            .annotate(month=TruncMonth("start_date"))
+            .values("month")
+            .annotate(total=Sum("duration"))
+            .order_by("month")
+        )
+        return [
+            {
+                "month": (
+                    entry["month"].strftime("%Y-%m") if entry["month"] else "Unknown"
+                ),
+                "days": float(entry["total"]),
             }
             for entry in qs
         ]

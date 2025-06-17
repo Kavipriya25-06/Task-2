@@ -106,6 +106,9 @@ from time_management.reports.views import (
     year_leaves,
     weekly_hours_project,
     monthly_hours_project,
+    employee_report_week,
+    leaves_available_report,
+    employee_lop_view,
 )
 from time_management.variations.views import variation_api
 from time_management.building.views import (
@@ -202,6 +205,8 @@ urlpatterns = [
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),
     path("leaves-taken/by_employee/<str:employee_id>/", leaves_taken_api),
     path("yearly-leaves/", year_leaves),
+    path("leaves-available-report/", leaves_available_report),
+    path("employee-lop/", employee_lop_view),
     path("leave-request/", leave_request_api),
     path("leave-request/<str:manager_id>/", leave_request_api),
     path("calendar/", calendar_api),
@@ -391,6 +396,12 @@ urlpatterns = [
     path(
         "timesheet-employee-daily/<str:employee_id>/",
         employee_daily_timesheet,
+        name="timesheet",
+    ),
+    path("employee-report-week/", employee_report_week, name="timesheet"),
+    path(
+        "employee-report-week/<str:employee_id>/",
+        employee_report_week,
         name="timesheet",
     ),
     path(

@@ -9,6 +9,7 @@ import io
 from datetime import datetime
 from django.http import HttpResponse
 from django.db import connection
+from datetime import datetime, timedelta
 
 
 from ..models import (
@@ -21,12 +22,17 @@ from ..models import (
     Variation,
     LeavesTaken,
     TimeSheet,
+    LeavesAvailable,
+    Employee,
 )
 
 from time_management.reports.serializers import (
     ProjectHoursSerializer,
     ProjectWeeklyHoursSerializer,
     ProjectMonthlyHoursSerializer,
+    TimeSheetTaskSerializer,
+    LeavesAvailableSerializer,
+    EmployeeLOPSerializer,
 )
 from time_management.project.serializers import ProjectSerializer
 from time_management.leaves_taken.serializers import (
@@ -120,3 +126,81 @@ def year_leaves(request):
             {"error": "Employee Leave record not found"},
             status=status.HTTP_404_NOT_FOUND,
         )
+
+
+@api_view(["GET"])
+def employee_report_week(request, employee_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if employee_id:
+        try:
+            employee_timesheet = TimeSheet.objects.filter(
+                employee=employee_id, approved=True
+            )
+        except TimeSheet.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        # employees = emp_under_manager(manager)
+
+        # timesheet_qs = TimeSheet.objects.filter(employee__in=employees)
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            timesheet_entries = employee_timesheet.filter(
+                date__range=(start, end)
+            ).order_by("date")
+
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetTaskSerializer(employee_timesheet, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = TimeSheet.objects.all()
+        if today:
+            weekday = today.weekday()
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+            timesheet_entries = objs.filter(date__range=(start, end)).order_by("date")
+
+            serializer = TimeSheetTaskSerializer(timesheet_entries, many=True)
+        else:
+            serializer = TimeSheetTaskSerializer(objs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def leaves_available_report(request):
+    if request.method == "GET":
+        try:
+            obj = LeavesAvailable.objects.all()
+            serializer = LeavesAvailableSerializer(obj, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except LeavesAvailable.DoesNotExist:
+            return Response(
+                {"error": "Leave record with leave id not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+@api_view(["GET"])
+# @parser_classes([MultiPartParser, FormParser])
+def employee_lop_view(request):
+    # GET (single or list)
+    if request.method == "GET":
+        try:
+            employees = Employee.objects.all()
+            serializer = EmployeeLOPSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Employee.DoesNotExist:
+            return Response(
+                {"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND
+            )
