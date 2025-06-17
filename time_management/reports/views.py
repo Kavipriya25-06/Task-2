@@ -29,7 +29,10 @@ from time_management.reports.serializers import (
     ProjectMonthlyHoursSerializer,
 )
 from time_management.project.serializers import ProjectSerializer
-from time_management.leaves_taken.serializers import LeavesTakenSerializer
+from time_management.leaves_taken.serializers import (
+    LeavesTakenSerializer,
+    LeaveRequestSerializer,
+)
 
 
 @api_view(["GET"])
@@ -110,7 +113,7 @@ def year_leaves(request):
             )
         else:
             yearly_leaves = LeavesTaken.objects.all()
-        serializer = LeavesTakenSerializer(yearly_leaves, many=True)
+        serializer = LeaveRequestSerializer(yearly_leaves, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except LeavesTaken.DoesNotExist:
         return Response(
