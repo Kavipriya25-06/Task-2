@@ -22,7 +22,7 @@ import uuid
 # Employee Table
 class Employee(models.Model):
     employee_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    employee_code = models.CharField(max_length=30, blank=True, null=True)
+    employee_code = models.CharField(max_length=30, unique=True, blank=True, null=True)
     employee_name = models.CharField(max_length=255, blank=True, null=True)
     fathers_name = models.CharField(max_length=255, blank=True, null=True)
     gender = models.CharField(max_length=40, blank=True, null=True)
@@ -275,7 +275,7 @@ class PasswordResetOTP(models.Model):
 class Hierarchy(models.Model):
     hierarchy_id = models.CharField(max_length=50, primary_key=True, blank=True)
     employee = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, blank=True, null=True
+        Employee, on_delete=models.CASCADE, blank=True, null=True
     )
     designation = models.CharField(max_length=100, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)

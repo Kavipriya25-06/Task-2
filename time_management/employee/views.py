@@ -44,7 +44,16 @@ def employee_api(request, employee_id=None):
                 {"message": "Employee created", "data": serializer.data},
                 status=status.HTTP_201_CREATED,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(
+                {
+                    "error": "Employee creation failed",
+                    "details": serializer.errors,
+                },
+                status=400,
+            )
+
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # PUT (full update)
     if request.method == "PUT":
@@ -67,7 +76,16 @@ def employee_api(request, employee_id=None):
                 {"message": "Employee updated", "data": serializer.data},
                 status=status.HTTP_200_OK,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(
+                {
+                    "error": "Employee update failed",
+                    "details": serializer.errors,
+                },
+                status=400,
+            )
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # PATCH (partial update)
     if request.method == "PATCH":
@@ -90,7 +108,15 @@ def employee_api(request, employee_id=None):
                 {"message": "Employee partially updated", "data": serializer.data},
                 status=status.HTTP_200_OK,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(
+                {
+                    "error": "Employee update failed",
+                    "details": serializer.errors,
+                },
+                status=400,
+            )
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # DELETE
     if request.method == "DELETE":
