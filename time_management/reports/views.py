@@ -30,6 +30,7 @@ from time_management.reports.serializers import (
     ProjectHoursSerializer,
     ProjectWeeklyHoursSerializer,
     ProjectMonthlyHoursSerializer,
+    ProjectYearlyHoursSerializer,
     TimeSheetTaskSerializer,
     LeavesAvailableSerializer,
     EmployeeLOPSerializer,
@@ -91,6 +92,24 @@ def monthly_hours_project(request, project_id=None):
     else:
         project = Project.objects.all()
         serializer = ProjectMonthlyHoursSerializer(project, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def yearly_hours_project(request, project_id=None):
+    if project_id:
+        try:
+            project = Project.objects.get(project_id=project_id)
+            serializer = ProjectYearlyHoursSerializer(project)
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    else:
+        project = Project.objects.all()
+        serializer = ProjectYearlyHoursSerializer(project, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -195,10 +214,13 @@ def leaves_available_report(request):
 # @parser_classes([MultiPartParser, FormParser])
 def employee_lop_view(request):
     # GET (single or list)
+    year = request.query_params.get("year")
     if request.method == "GET":
         try:
             employees = Employee.objects.all()
-            serializer = EmployeeLOPSerializer(employees, many=True)
+            serializer = EmployeeLOPSerializer(
+                employees, many=True, context={"request": request}
+            )
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Employee.DoesNotExist:
             return Response(

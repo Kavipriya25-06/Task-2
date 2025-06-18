@@ -167,7 +167,7 @@ class BuildingTaskSerializer(serializers.ModelSerializer):
 class ProjectTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ["project_id", "project_title", "project_code"]
+        fields = ["project_id", "project_title", "project_code", "discipline_code"]
 
 
 class ProjectViewSerializer(serializers.ModelSerializer):

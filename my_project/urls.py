@@ -106,6 +106,7 @@ from time_management.reports.views import (
     year_leaves,
     weekly_hours_project,
     monthly_hours_project,
+    yearly_hours_project,
     employee_report_week,
     leaves_available_report,
     employee_lop_view,
@@ -241,6 +242,12 @@ urlpatterns = [
     path(
         "monthly-project-hours/<str:project_id>/",
         monthly_hours_project,
+        name="project-hours",
+    ),
+    path("yearly-project-hours/", yearly_hours_project, name="project-hours"),
+    path(
+        "yearly-project-hours/<str:project_id>/",
+        yearly_hours_project,
         name="project-hours",
     ),
     path("variation/", variation_api, name="variation-detail"),

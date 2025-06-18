@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Sum
-from django.db.models.functions import TruncWeek, TruncMonth
+from django.db.models.functions import TruncWeek, TruncMonth, TruncYear
 from ..models import (
     Project,
     ProjectAssign,
@@ -14,6 +14,9 @@ from ..models import (
     LeavesAvailable,
     LeavesTaken,
 )
+from collections import defaultdict
+from datetime import timedelta
+import calendar
 
 from time_management.project.serializers import (
     VariationSerializer,
@@ -190,6 +193,44 @@ class ProjectWeeklyHoursSerializer(serializers.ModelSerializer):
 
 
 # Monthly Project Serializer
+class ProjectYearlyHoursSerializer(serializers.ModelSerializer):
+
+    task_consumed_hours_by_year = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = [
+            "project_id",
+            "project_code",
+            "project_title",
+            "discipline_code",
+            "start_date",
+            "total_hours",
+            "consumed_hours",
+            "task_consumed_hours_by_year",
+        ]
+
+    def get_task_consumed_hours_by_year(self, obj):
+        # Group timesheet entries by week and sum approved hours
+        qs = (
+            TimeSheet.objects.filter(
+                task_assign__building_assign__project_assign__project=obj, approved=True
+            )
+            .annotate(year=TruncYear("date"))
+            .values("year")
+            .annotate(total=Sum("task_hours"))
+            .order_by("year")
+        )
+        return [
+            {
+                "year": (entry["year"].strftime("%Y") if entry["year"] else "Unknown"),
+                "hours": float(entry["total"]),
+            }
+            for entry in qs
+        ]
+
+
+# Monthly Project Serializer
 class ProjectMonthlyHoursSerializer(serializers.ModelSerializer):
 
     task_consumed_hours_by_month = serializers.SerializerMethodField()
@@ -246,6 +287,13 @@ class LeavesAvailableSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+def add_months(month, year, offset):
+    new_month = month + offset
+    new_year = year + (new_month - 1) // 12
+    new_month = ((new_month - 1) % 12) + 1
+    return new_month, new_year
+
+
 class EmployeeLOPSerializer(serializers.ModelSerializer):
 
     lop_by_month = serializers.SerializerMethodField()
@@ -264,19 +312,40 @@ class EmployeeLOPSerializer(serializers.ModelSerializer):
 
     def get_lop_by_month(self, obj):
 
-        qs = (
-            LeavesTaken.objects.filter(employee=obj)
-            .annotate(month=TruncMonth("start_date"))
-            .values("month")
-            .annotate(total=Sum("duration"))
-            .order_by("month")
-        )
+        request = self.context.get("request")
+        filter_year = request.GET.get("year") if request else None
+
+        leaves = LeavesTaken.objects.filter(employee=obj, leave_type="lop")
+        month_buckets = defaultdict(float)
+
+        for leave in leaves:
+            current_date = leave.start_date
+            end_date = leave.end_date or leave.start_date
+            total_days = (end_date - current_date).days + 1
+            duration_per_day = float(leave.duration) / total_days
+
+            while current_date <= end_date:
+                day = current_date.day
+                month = current_date.month
+                year = current_date.year
+
+                if day >= 21:
+                    payroll_month, payroll_year = add_months(month, year, 2)
+                else:
+                    payroll_month, payroll_year = add_months(month, year, 1)
+
+                key = f"{payroll_year}-{str(payroll_month).zfill(2)}"
+
+                # Apply year filter
+                if filter_year and str(payroll_year) != str(filter_year):
+                    current_date += timedelta(days=1)
+                    continue
+
+                month_buckets[key] += duration_per_day
+
+                current_date += timedelta(days=1)
+
         return [
-            {
-                "month": (
-                    entry["month"].strftime("%Y-%m") if entry["month"] else "Unknown"
-                ),
-                "days": float(entry["total"]),
-            }
-            for entry in qs
+            {"month": month, "days": round(days, 2)}
+            for month, days in sorted(month_buckets.items())
         ]
