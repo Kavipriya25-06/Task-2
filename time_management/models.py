@@ -30,7 +30,7 @@ class Employee(models.Model):
     doj = models.DateField(blank=True, null=True)
     contact_number = models.CharField(max_length=10, blank=True, null=True)
     personal_email = models.EmailField(unique=True, blank=True, null=True)
-    aadhaar_number = models.CharField(max_length=12, blank=True, null=True)
+    aadhaar_number = models.CharField(max_length=20, blank=True, null=True)
     PAN = models.CharField(max_length=10, blank=True, null=True)
     UAN = models.CharField(max_length=12, blank=True, null=True)
     pf_number = models.CharField(max_length=22, blank=True, null=True)
@@ -181,8 +181,11 @@ class User(models.Model):
         default="employee",
     )
     # role = models.ManyToManyField(Roles, blank=True)
-    employee_id = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    employee_id = models.OneToOneField(
+        Employee,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     status = models.CharField(
         max_length=50,
@@ -224,7 +227,7 @@ class User(models.Model):
         super().save(*args, **kwargs)
 
         # ---- Send Email if it's an update ----
-        if previous:
+        if previous is not None:
             if previous.password != self.password:
                 changed_fields.append("password")
             if previous.status != self.status:
@@ -540,6 +543,7 @@ class BiometricData(models.Model):
     employee_code = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=100)
     shift = models.CharField(max_length=50, blank=True, null=True)
+    group_id = models.CharField(max_length=50, blank=True, null=True)
     date = models.DateField()
     in_time = models.TimeField()
     out_time = models.TimeField()

@@ -79,6 +79,7 @@ from time_management.biometric.views import (
     biometric_daily,
     biometric_daily_task,
     biometric_weekly_task,
+    bulk_biometric_upload,
 )
 from time_management.compoff.views import (
     compoff_request_api,
@@ -224,6 +225,7 @@ urlpatterns = [
     path("attendance/<str:employee_id>/", attendance),
     path("attendance-admin/", attendance_admin),
     path("attendance-admin/<str:employee_id>/", attendance_admin),
+    path("attendance-upload/", bulk_biometric_upload),
     path("weekly-attendance/", weekly_attendance),
     path("weekly-attendance/<str:employee_id>/", weekly_attendance),
     path("projects/", project_list_create, name="project-list-create"),
