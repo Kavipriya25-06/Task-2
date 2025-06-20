@@ -78,6 +78,7 @@ from time_management.biometric.views import (
     attendance_admin,
     biometric_daily,
     biometric_daily_task,
+    biometric_manager_daily_task,
     biometric_weekly_task,
     bulk_biometric_upload,
 )
@@ -221,6 +222,9 @@ urlpatterns = [
     path("biometric-daily/<str:employee_id>/", biometric_daily),
     path("biometric-daily-task/<str:employee_id>/", biometric_daily_task),
     path("biometric-weekly-task/<str:employee_id>/", biometric_weekly_task),
+    path(
+        "biometric-manager-daily-task/<str:manager_id>/", biometric_manager_daily_task
+    ),
     path("attendance/", attendance),
     path("attendance/<str:employee_id>/", attendance),
     path("attendance-admin/", attendance_admin),

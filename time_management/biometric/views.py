@@ -1,5 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
 import uuid
+from django.db.models import OuterRef, Subquery
 from ..models import BiometricData, Employee, Calendar
 from time_management.biometric.serializers import (
     BiometricDataSerializer,
@@ -385,6 +386,47 @@ def biometric_daily(request, employee_id=None):
     else:
         objs = BiometricData.objects.all()
         serializer = BiometricDataSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def biometric_manager_daily_task(request, manager_id=None):
+
+    todaystr = request.query_params.get("today")  # <-- Get the date from filter params
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+    else:
+        today = False
+
+    if manager_id:
+        employees = get_emp_under_manager(manager_id)
+        # Base queryset filtered by employee list
+        base_qs = BiometricData.objects.filter(employee__in=employees)
+
+        # Subquery to get latest biometric entry per employee for the date
+
+        latest_qs = BiometricData.objects.filter(
+            employee=OuterRef("employee"),
+            date=(
+                OuterRef("date") if today else OuterRef("date")
+            ),  # generalizes the subquery
+        ).order_by("-modified_on")
+
+        biometric_qs = base_qs.filter(pk=Subquery(latest_qs.values("pk")[:1]))
+
+        # biometric_qs = BiometricData.objects.filter(employee__in=employees)
+
+        if today:
+            calendar_entries = biometric_qs.filter(date=today)
+        else:
+            calendar_entries = biometric_qs
+
+        serializer = BiometricTaskDataSerializer(calendar_entries, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    else:
+        objs = BiometricData.objects.all()
+        serializer = BiometricTaskDataSerializer(objs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
