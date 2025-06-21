@@ -546,11 +546,11 @@ class BiometricData(models.Model):
     group_id = models.CharField(max_length=50, blank=True, null=True)
     date = models.DateField()
     in_time = models.TimeField()
-    out_time = models.TimeField()
-    work_duration = models.DecimalField(max_digits=5, decimal_places=2)
-    ot = models.DecimalField("OT", max_digits=5, decimal_places=2)
-    total_duration = models.DecimalField(max_digits=5, decimal_places=2)
-    status = models.CharField(max_length=50)
+    out_time = models.TimeField(blank=True, null=True)
+    work_duration = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    ot = models.DecimalField("OT", max_digits=5, decimal_places=2, default=0)
+    total_duration = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    status = models.CharField(max_length=50, default="Present")
     remarks = models.TextField(blank=True, null=True)
     modified_by = models.ForeignKey(
         Employee,

@@ -207,7 +207,7 @@ class Command(BaseCommand):
         yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
         # Use it in your API URL
-        api_url = f"http://192.168.0.10:8000/api/attendance/{yesterday}/"
+        api_url = f"http://192.168.0.209:8001/api/attendance/{yesterday}/"
 
         # --- 1️ Fetch JSON data from API ---
         try:
@@ -295,7 +295,7 @@ class Command(BaseCommand):
                 )
 
                 if not created:
-                    bio_obj.in_time = in_time_obj
+                    # bio_obj.in_time = in_time_obj
                     bio_obj.out_time = out_time_obj
                     bio_obj.work_duration = round(work_hours, 2)
                     bio_obj.total_duration = round(work_hours, 2)
