@@ -13,6 +13,7 @@ from ..models import (
     Employee,
     LeavesAvailable,
     LeavesTaken,
+    Calendar,
 )
 from collections import defaultdict
 from datetime import timedelta
@@ -35,6 +36,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "doj",
             "status",
             "resignation_date",
+            "department",
         ]
 
 
@@ -192,7 +194,64 @@ class ProjectWeeklyHoursSerializer(serializers.ModelSerializer):
         ]
 
 
-# Monthly Project Serializer
+# weekly Project Serializer
+class ProjectDepartmentWeeklyHoursSerializer(serializers.ModelSerializer):
+
+    task_consumed_hours_by_week = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = [
+            "project_id",
+            "project_code",
+            "project_title",
+            "discipline_code",
+            "start_date",
+            "total_hours",
+            "consumed_hours",
+            "task_consumed_hours_by_week",
+        ]
+
+    def get_task_consumed_hours_by_week(self, obj):
+        # Group timesheet entries by week and sum approved hours
+        request = self.context.get("request")
+        filter_department = self.context.get("department")
+        # print("Department", filter_department)
+        if filter_department:
+            qs = (
+                TimeSheet.objects.filter(
+                    task_assign__building_assign__project_assign__project=obj,
+                    approved=True,
+                    employee__department=filter_department,
+                )
+                .annotate(week=TruncWeek("date"))
+                .values("week")
+                .annotate(total=Sum("task_hours"))
+                .order_by("week")
+            )
+        else:
+            qs = (
+                TimeSheet.objects.filter(
+                    task_assign__building_assign__project_assign__project=obj,
+                    approved=True,
+                )
+                .annotate(week=TruncWeek("date"))
+                .values("week")
+                .annotate(total=Sum("task_hours"))
+                .order_by("week")
+            )
+        return [
+            {
+                "week": (
+                    entry["week"].strftime("%Y-W%U") if entry["week"] else "Unknown"
+                ),
+                "hours": float(entry["total"]),
+            }
+            for entry in qs
+        ]
+
+
+# Yearly Project Serializer
 class ProjectYearlyHoursSerializer(serializers.ModelSerializer):
 
     task_consumed_hours_by_year = serializers.SerializerMethodField()
@@ -307,6 +366,7 @@ class EmployeeLOPSerializer(serializers.ModelSerializer):
             "doj",
             "status",
             "resignation_date",
+            "department",
             "lop_by_month",
         ]
 
@@ -349,3 +409,10 @@ class EmployeeLOPSerializer(serializers.ModelSerializer):
             {"month": month, "days": round(days, 2)}
             for month, days in sorted(month_buckets.items())
         ]
+
+
+# Calendar Serializer
+class CalendarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Calendar
+        fields = "__all__"

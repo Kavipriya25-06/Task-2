@@ -24,6 +24,7 @@ from ..models import (
     TimeSheet,
     LeavesAvailable,
     Employee,
+    Calendar,
 )
 
 from time_management.reports.serializers import (
@@ -34,6 +35,7 @@ from time_management.reports.serializers import (
     TimeSheetTaskSerializer,
     LeavesAvailableSerializer,
     EmployeeLOPSerializer,
+    ProjectDepartmentWeeklyHoursSerializer,
 )
 from time_management.project.serializers import ProjectSerializer
 from time_management.leaves_taken.serializers import (
@@ -74,6 +76,33 @@ def weekly_hours_project(request, project_id=None):
     else:
         project = Project.objects.all()
         serializer = ProjectWeeklyHoursSerializer(project, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def department_weekly_hours_project(request, department=None, project_id=None):
+
+    if department:
+        try:
+            project = Project.objects.all()
+            serializer = ProjectDepartmentWeeklyHoursSerializer(
+                project,
+                many=True,
+                context={"request": request, "department": department},
+            )
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    else:
+        project = Project.objects.all()
+        serializer = ProjectDepartmentWeeklyHoursSerializer(
+            project,
+            many=True,
+            context={"request": request, "department": department},
+        )
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 

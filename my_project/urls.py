@@ -113,6 +113,7 @@ from time_management.reports.views import (
     employee_report_week,
     leaves_available_report,
     employee_lop_view,
+    department_weekly_hours_project,
 )
 from time_management.variations.views import variation_api
 from time_management.building.views import (
@@ -257,6 +258,16 @@ urlpatterns = [
     path(
         "yearly-project-hours/<str:project_id>/",
         yearly_hours_project,
+        name="project-hours",
+    ),
+    path(
+        "department-project-hours/",
+        department_weekly_hours_project,
+        name="project-hours",
+    ),
+    path(
+        "department-project-hours/<str:department>/",
+        department_weekly_hours_project,
         name="project-hours",
     ),
     path("variation/", variation_api, name="variation-detail"),
