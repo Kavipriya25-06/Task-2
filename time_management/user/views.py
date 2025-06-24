@@ -108,24 +108,44 @@ def user_details(request, user_id=None):
         return Response(serializer.data)
 
 
-@api_view(["GET"])
-def login_details(request, email=None, password=None):
-    if email:
-        if password:
-            try:
-                user = User.objects.get(email=email)
-                if check_password(password, user.password):
-                    auth_user = user
-                    serializer = UserDetailsSerializer(auth_user)
-                    return Response(serializer.data)
-                else:
-                    return Response({"error": "Password is incorrect"})
-            except User.DoesNotExist:
-                return Response({"error": "User not found"})
-        else:
-            return Response({"error": "Please provide password"})
-    else:
-        return Response({"error": "Please provide user and password"})
+# @api_view(["GET"])
+# def login_details(request, email=None, password=None):
+#     if email:
+#         if password:
+#             try:
+#                 user = User.objects.get(email=email)
+#                 if check_password(password, user.password):
+#                     auth_user = user
+#                     serializer = UserDetailsSerializer(auth_user)
+#                     return Response(serializer.data)
+#                 else:
+#                     return Response({"error": "Password is incorrect"})
+#             except User.DoesNotExist:
+#                 return Response({"error": "User not found"})
+#         else:
+#             return Response({"error": "Please provide password"})
+#     else:
+#         return Response({"error": "Please provide user and password"})
+
+
+@api_view(["POST"])
+def login_details(request):
+    email = request.data.get("email")
+    password = request.data.get("password")
+
+    if not email or not password:
+        return Response({"error": "Please provide user and password"}, status=400)
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    if not check_password(password, user.password):
+        return Response({"error": "Password is incorrect"}, status=400)
+
+    serializer = UserDetailsSerializer(user)
+    return Response(serializer.data)
 
 
 @api_view(["POST"])
