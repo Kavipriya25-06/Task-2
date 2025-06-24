@@ -15,6 +15,7 @@ env.bak/
 .env
 local_settings.py
 Data_migration_script.py
+trigger_model_save.py
 
 # Django migrations
 */migrations/

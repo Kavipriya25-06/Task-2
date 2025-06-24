@@ -1,9 +1,19 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 from django.utils import timezone
-from .models import Employee, LeavesAvailable, Hierarchy, User, Variation, TimeSheet
+from .models import (
+    Employee,
+    LeavesAvailable,
+    Hierarchy,
+    User,
+    Variation,
+    TimeSheet,
+    LeavesTaken,
+    Project,
+    Calendar,
+)
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
     create_or_update_leaves_for_employee,
@@ -32,6 +42,76 @@ from time_management.management.commands.utils import (
 #         comp_off=0,
 #         earned_leave=leave_count,
 #     )
+
+# LEAVE_PROJECT_MAP = {
+#     "casual_leave": "99002",  # Casual Leave
+#     "sick_leave": "99003",  # Sick Leave
+#     "earned_leave": "99004",  # Earned Leave
+#     "comp_off": "99004a",  # Comp Off
+#     "lop": "99006",  # Loss of Pay (if needed)
+# }
+
+
+# @receiver(post_save, sender=LeavesTaken)
+# def update_leave_project_consumed_hours(sender, instance, created, **kwargs):
+#     leave_type_key = instance.leave_type.strip().lower()
+#     project_code = LEAVE_PROJECT_MAP.get(leave_type_key)
+
+#     if created and project_code:
+#         try:
+#             project = Project.objects.get(project_code=project_code)
+#             increment = (instance.duration or 0) * 8
+#             project.consumed_hours = (project.consumed_hours or 0) + increment
+#             project.save()
+#         except Project.DoesNotExist:
+#             pass
+
+
+# @receiver(post_delete, sender=LeavesTaken)
+# def rollback_leave_project_consumed_hours(sender, instance, **kwargs):
+#     leave_type_key = instance.leave_type.strip().lower()
+#     project_code = LEAVE_PROJECT_MAP.get(leave_type_key)
+
+#     if project_code:
+#         try:
+#             project = Project.objects.get(project_code=project_code)
+#             decrement = (instance.duration or 0) * 8
+#             project.consumed_hours = max(0, (project.consumed_hours or 0) - decrement)
+#             project.save()
+#         except Project.DoesNotExist:
+#             pass
+
+
+# HOLIDAY_PROJECT_CODE = "99009"
+
+
+# @receiver([post_save, post_delete], sender=Calendar)
+# def update_consumed_hours_for_holidays(sender, instance, **kwargs):
+#     """
+#     Recalculates holiday project consumed_hours as:
+#     Sum over all holidays (8 hours x number of employees active on that day).
+#     """
+#     try:
+#         holidays = Calendar.objects.filter(is_holiday=True)
+#         total_hours = 0
+
+#         for holiday in holidays:
+#             holiday_date = holiday.date
+#             # Get employees who were active on that day (joined on or before that day and not yet relieved)
+#             active_employees = Employee.objects.filter(
+#                 Q(doj__lte=holiday_date),
+#                 Q(relieving_date__isnull=True) | Q(relieving_date__gte=holiday_date),
+#                 status="active",
+#             ).count()
+
+#             total_hours += active_employees * 8
+
+#         project = Project.objects.get(project_code=HOLIDAY_PROJECT_CODE)
+#         project.consumed_hours = total_hours
+#         project.save()
+
+#     except Project.DoesNotExist:
+#         pass  # Optionally log
 
 
 @receiver(post_save, sender=Employee)
