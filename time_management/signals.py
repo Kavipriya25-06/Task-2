@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum, Q
+from datetime import timedelta, date
 
 from django.utils import timezone
 from .models import (
@@ -13,6 +14,7 @@ from .models import (
     LeavesTaken,
     Project,
     Calendar,
+    TaskAssign,
 )
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
@@ -112,6 +114,147 @@ from time_management.management.commands.utils import (
 
 #     except Project.DoesNotExist:
 #         pass  # Optionally log
+
+
+HOLIDAY_TASK_ASSIGN_ID = "TKASS_01011"
+
+
+@receiver([post_save, post_delete], sender=Calendar)
+def update_timesheets_for_holiday_calendar_change(sender, instance, **kwargs):
+
+    holiday_date = instance.date
+    if not instance.is_holiday:
+        # Clean up any holiday timesheets on this date
+        TimeSheet.objects.filter(
+            date=instance.date, task_assign__task_assign_id=HOLIDAY_TASK_ASSIGN_ID
+        ).delete()
+        return
+
+    # If it's not a holiday anymore or if the date is in the future, skip creating
+    if not instance.is_holiday or holiday_date > date.today():
+        return
+
+    try:
+        task_assign = TaskAssign.objects.get(task_assign_id=HOLIDAY_TASK_ASSIGN_ID)
+    except TaskAssign.DoesNotExist:
+        print(f"[WARN] TaskAssign {HOLIDAY_TASK_ASSIGN_ID} not found.")
+        return
+
+    # Clean up any stale timesheets before creating fresh ones
+    TimeSheet.objects.filter(date=holiday_date, task_assign=task_assign).delete()
+
+    # Identify active employees on the holiday date
+    active_employees = Employee.objects.filter(
+        Q(doj__lte=instance.date),
+        Q(relieving_date__isnull=True) | Q(relieving_date__gte=instance.date),
+        status="active",
+    )
+
+    for emp in active_employees:
+        # Avoid duplicates
+        if not TimeSheet.objects.filter(
+            employee=emp, date=instance.date, task_assign=task_assign
+        ).exists():
+            TimeSheet.objects.create(
+                employee=emp,
+                date=instance.date,
+                task_assign=task_assign,
+                task_hours=8,
+                start_time=timezone.datetime.strptime("09:00", "%H:%M").time(),
+                end_time=timezone.datetime.strptime("18:00", "%H:%M").time(),
+                submitted=True,
+                approved=True,
+            )
+
+
+LEAVE_PROJECT_MAP = {
+    "casual_leave": "TKASS_01003",  # Casual Leave
+    "sick_leave": "TKASS_01004",  # Sick Leave
+    "earned_leave": "TKASS_01005",  # Earned Leave
+    "comp_off": "TKASS_01006",  # Comp Off
+    "lop": "TKASS_01008",  # Loss of Pay (if needed)
+}
+
+
+@receiver(post_save, sender=LeavesTaken)
+def handle_timesheet_for_approved_leaves(sender, instance, created, **kwargs):
+    leave_type = instance.leave_type.strip().lower()
+    task_assign_id = LEAVE_PROJECT_MAP.get(leave_type)
+
+    if instance.status != "approved" or not task_assign_id:
+        return  # Only act on approval and mapped leave types
+
+    try:
+        task_assign = TaskAssign.objects.get(task_assign_id=task_assign_id)
+    except TaskAssign.DoesNotExist:
+        print(
+            f"[WARN] TaskAssign {task_assign_id} not found for leave type {leave_type}"
+        )
+        return
+
+    start_date = instance.start_date
+    end_date = instance.end_date or start_date
+    employee = instance.employee
+
+    # Always clean up existing time entries for this leave period/type
+    TimeSheet.objects.filter(
+        employee=employee, task_assign=task_assign, date__range=[start_date, end_date]
+    ).delete()
+
+    current_date = start_date
+    while current_date <= end_date:
+        # Check if the date is a weekend or holiday using the Calendar table
+        calendar_data = Calendar.objects.filter(date=current_date).first()
+
+        if calendar_data and (calendar_data.is_weekend or calendar_data.is_holiday):
+            # Skip weekend or holiday dates
+            current_date += timedelta(days=1)
+            continue
+
+        duration = float(instance.duration or 1.0)
+        hours = 4 if duration <= 0.5 else 8  # Half-day support
+
+        if not TimeSheet.objects.filter(
+            employee=employee, date=current_date, task_assign=task_assign
+        ).exists():
+            TimeSheet.objects.create(
+                employee=employee,
+                date=current_date,
+                task_assign=task_assign,
+                task_hours=hours,
+                start_time=timezone.datetime.strptime("09:00", "%H:%M").time(),
+                end_time=(
+                    timezone.datetime.strptime("13:00", "%H:%M").time()
+                    if hours == 4
+                    else timezone.datetime.strptime("18:00", "%H:%M").time()
+                ),
+                submitted=True,
+                approved=True,
+            )
+        current_date += timedelta(days=1)
+
+
+@receiver(post_delete, sender=LeavesTaken)
+def delete_related_timesheets_on_leave_deletion(sender, instance, **kwargs):
+    leave_type = instance.leave_type.strip().lower()
+    task_assign_id = LEAVE_PROJECT_MAP.get(leave_type)
+
+    if not task_assign_id:
+        return
+
+    try:
+        task_assign = TaskAssign.objects.get(task_assign_id=task_assign_id)
+    except TaskAssign.DoesNotExist:
+        return
+
+    start_date = instance.start_date
+    end_date = instance.end_date or start_date
+
+    TimeSheet.objects.filter(
+        employee=instance.employee,
+        task_assign=task_assign,
+        date__range=[start_date, end_date],
+    ).delete()
 
 
 @receiver(post_save, sender=Employee)
