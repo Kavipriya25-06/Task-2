@@ -2,14 +2,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 import csv
 import io
 from datetime import datetime
 from django.http import HttpResponse
 from django.db import connection
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 
 from ..models import (
@@ -36,6 +36,7 @@ from time_management.reports.serializers import (
     LeavesAvailableSerializer,
     EmployeeLOPSerializer,
     ProjectDepartmentWeeklyHoursSerializer,
+    ProjectDepartmentWeeklyStatsSerializer,
 )
 from time_management.project.serializers import ProjectSerializer
 from time_management.leaves_taken.serializers import (
@@ -81,7 +82,32 @@ def weekly_hours_project(request, project_id=None):
 
 
 @api_view(["GET"])
+def weekly_employees(request, department=None):
+
+    year = request.query_params.get("year")
+
+    if not year:
+        year = date.today().year
+        print("year is ", year)
+
+    year = int(year)
+
+    serializer = ProjectDepartmentWeeklyStatsSerializer(
+        Calendar(),  # Dummy instance (since we're using only class-level logic)
+        context={"year": year, "department": department},
+    )
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
 def department_weekly_hours_project(request, department=None, project_id=None):
+
+    year = request.query_params.get("year")
+
+    if not year:
+        year = date.today().year
+        print("year is ", year)
 
     if department:
         try:
@@ -89,7 +115,7 @@ def department_weekly_hours_project(request, department=None, project_id=None):
             serializer = ProjectDepartmentWeeklyHoursSerializer(
                 project,
                 many=True,
-                context={"request": request, "department": department},
+                context={"request": request, "department": department, "year": year},
             )
         except Project.DoesNotExist:
             return Response(
@@ -101,7 +127,7 @@ def department_weekly_hours_project(request, department=None, project_id=None):
         serializer = ProjectDepartmentWeeklyHoursSerializer(
             project,
             many=True,
-            context={"request": request, "department": department},
+            context={"request": request, "department": department, "year": year},
         )
 
     return Response(serializer.data, status=status.HTTP_200_OK)

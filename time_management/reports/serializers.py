@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from django.db.models import Sum
+from django.db.models import Sum, Q
+from datetime import timedelta, date
 from django.db.models.functions import TruncWeek, TruncMonth, TruncYear
 from ..models import (
     Project,
@@ -186,12 +187,80 @@ class ProjectWeeklyHoursSerializer(serializers.ModelSerializer):
         return [
             {
                 "week": (
-                    entry["week"].strftime("%Y-W%U") if entry["week"] else "Unknown"
+                    entry["week"].strftime("%G-W%V") if entry["week"] else "Unknown"
                 ),
                 "hours": float(entry["total"]),
             }
             for entry in qs
         ]
+
+
+class ProjectDepartmentWeeklyStatsSerializer(serializers.ModelSerializer):
+    weekly_stats = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Calendar
+        fields = [
+            "calendar_id",
+            "date",
+            "weekly_stats",  # Combines hours, working days, active employees
+        ]
+
+    def get_weekly_stats(self, obj):
+        filter_department = self.context.get("department")
+        filter_year = self.context.get("year")
+
+        # Step 1: Get all weeks in the year
+        calendar_weeks = (
+            Calendar.objects.filter(year=filter_year)
+            .annotate(week=TruncWeek("date"))
+            .values("week")
+            .order_by("week")
+            .distinct()
+        )
+
+        stats = []
+        for entry in calendar_weeks:
+            week_start = entry["week"]
+            if not week_start:
+                stats.append(
+                    {
+                        "week": "Unknown",
+                        "working_days": 0,
+                        "active_employees": 0,
+                    }
+                )
+                continue
+
+            week_end = week_start + timedelta(days=6)
+
+            # Step 2: Working Days
+            working_days = Calendar.objects.filter(
+                date__range=(week_start, week_end), is_weekend=False
+            ).count()
+
+            # Identify active employees on the week
+            active_employees = Employee.objects.filter(
+                Q(doj__lte=week_start),
+                Q(relieving_date__isnull=True) | Q(relieving_date__gte=week_start),
+                status="active",
+            )
+
+            if filter_department:
+                active_employees = active_employees.filter(department=filter_department)
+
+            active_employee_count = active_employees.count()
+
+            stats.append(
+                {
+                    "week": week_start.strftime("%G-W%V"),
+                    "working_days": working_days,
+                    # "hours": float(total_hours),
+                    "active_employees": active_employee_count,
+                }
+            )
+
+        return stats
 
 
 # weekly Project Serializer
@@ -211,6 +280,109 @@ class ProjectDepartmentWeeklyHoursSerializer(serializers.ModelSerializer):
             "consumed_hours",
             "task_consumed_hours_by_week",
         ]
+
+    # def get_working_days(self, obj):
+    #     filter_department = self.context.get("department")
+    #     filter_year = self.context.get("year")
+
+    #     if filter_year:
+    #         qs = (
+    #             Calendar.objects.filter(year=filter_year)
+    #             .annotate(week=TruncWeek("date"))
+    #             .values("week")
+    #             .order_by("week")
+    #             .distinct()
+    #         )
+    #     else:
+    #         qs = (
+    #             Calendar.objects.filter(year=filter_year)
+    #             .annotate(week=TruncWeek("date"))
+    #             .values("week")
+    #             .order_by("week")
+    #             .distinct()
+    #         )
+
+    #     # Calculate working days per week
+    #     result = []
+    #     for entry in qs:
+    #         week_start = entry["week"]
+    #         if not week_start:
+    #             result.append({"week": "Unknown", "working_days": 0})
+    #             continue
+
+    #         week_end = week_start + timedelta(days=6)
+    #         working_days = Calendar.objects.filter(
+    #             date__range=(week_start, week_end),
+    #             is_weekend=False,
+    #             # is_holiday=False,
+    #         ).count()
+
+    #         result.append(
+    #             {"week": week_start.strftime("%Y-W%U"), "working_days": working_days}
+    #         )
+
+    #     return result
+
+    # def get_working_days(self, obj):
+
+    #     # Group timesheet entries by week and sum approved hours
+    #     request = self.context.get("request")
+    #     filter_department = self.context.get("department")
+    #     # print("Department", filter_department)
+    #     if filter_department:
+    #         qs = (
+    #             TimeSheet.objects.filter(
+    #                 task_assign__building_assign__project_assign__project=obj,
+    #                 approved=True,
+    #                 employee__department=filter_department,
+    #             )
+    #             .annotate(week=TruncWeek("date"))
+    #             .values("week")
+    #             .annotate(total=Sum("task_hours"))
+    #             .order_by("week")
+    #         )
+    #     else:
+    #         qs = (
+    #             TimeSheet.objects.filter(
+    #                 task_assign__building_assign__project_assign__project=obj,
+    #                 approved=True,
+    #             )
+    #             .annotate(week=TruncWeek("date"))
+    #             .values("week")
+    #             .annotate(total=Sum("task_hours"))
+    #             .order_by("week")
+    #         )
+
+    #     # Step 2: For each week, calculate working days
+    #     result = []
+    #     for entry in qs:
+    #         week_start = entry["week"]
+    #         if not week_start:
+    #             result.append(
+    #                 {
+    #                     "week": "Unknown",
+    #                     "hours": float(entry["total"]),
+    #                     "working_days": 0,
+    #                 }
+    #             )
+    #             continue
+
+    #         week_end = week_start + timedelta(days=6)
+    #         working_days = Calendar.objects.filter(
+    #             date__range=(week_start, week_end),
+    #             is_weekend=False,
+    #             is_holiday=False,
+    #         ).count()
+
+    #         result.append(
+    #             {
+    #                 "week": week_start.strftime("%Y-W%U"),
+    #                 "hours": float(entry["total"]),
+    #                 "working_days": working_days,
+    #             }
+    #         )
+
+    #     return result
 
     def get_task_consumed_hours_by_week(self, obj):
         # Group timesheet entries by week and sum approved hours
@@ -243,7 +415,7 @@ class ProjectDepartmentWeeklyHoursSerializer(serializers.ModelSerializer):
         return [
             {
                 "week": (
-                    entry["week"].strftime("%Y-W%U") if entry["week"] else "Unknown"
+                    entry["week"].strftime("%G-W%V") if entry["week"] else "Unknown"
                 ),
                 "hours": float(entry["total"]),
             }
