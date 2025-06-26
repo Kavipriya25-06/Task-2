@@ -5,6 +5,7 @@ from time_management.employee.serializers import (
     HierarchySerializer,
     UserSerializer,
     EmployeeViewSerializer,
+    EmployeeListSerializer,
 )
 from time_management.hierarchy.serializers import (
     emp_under_manager,
@@ -155,6 +156,26 @@ def employee_view_api(request, employee_id=None):
         else:
             employees = Employee.objects.all()
             serializer = EmployeeViewSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+# @parser_classes([MultiPartParser, FormParser])
+def employee_list_api(request, employee_id=None):
+    # GET (single or list)
+    if request.method == "GET":
+        if employee_id:
+            try:
+                employee = Employee.objects.get(employee_id=employee_id)
+                serializer = EmployeeListSerializer(employee)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            employees = Employee.objects.all()
+            serializer = EmployeeListSerializer(employees, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
