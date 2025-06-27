@@ -105,10 +105,8 @@ class Employee(models.Model):
     emergency_contact_number = models.CharField(max_length=15, blank=True, null=True)
     blood_group = models.CharField(max_length=50, blank=True, null=True)
 
-    created_at = models.DateTimeField(
-        auto_now_add=True, blank=True, null=True
-    )  # Timestamp
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    updated_at = models.DateTimeField(auto_now=True)
 
     profile_picture = models.ImageField(
         upload_to="profile_pics/", null=True, blank=True
