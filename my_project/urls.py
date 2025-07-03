@@ -103,6 +103,7 @@ from time_management.project.views import (
     full_project_view,
     project_creator,
     export_report,
+    project_assigned_employee,
 )
 from time_management.reports.views import (
     hours_project_view,
@@ -308,6 +309,16 @@ urlpatterns = [
         "projects-assigned/<str:project_assign_id>/",
         project_assign_detail,
         name="project-assign-detail",
+    ),
+    path(
+        "projects-assigned-employee/",
+        project_assigned_employee,
+        name="project-assigned-employee",
+    ),
+    path(
+        "projects-assigned-employee/<str:project_assign_id>/",
+        project_assigned_employee,
+        name="project-assigned-employee",
     ),
     path(
         "projects-and-assigned/",

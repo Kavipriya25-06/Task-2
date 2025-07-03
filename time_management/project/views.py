@@ -9,6 +9,8 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.db import connection
 
+from time_management.employee.serializers import EmployeeViewSerializer
+
 
 from ..models import (
     Project,
@@ -173,6 +175,25 @@ def project_and_assign(request, project_assign_id=None):
     else:
         projects = ProjectAssign.objects.all()
         serializer = ProjectAndAssignSerializer(projects, many=True)
+        return Response(serializer.data)
+
+
+@api_view(["GET"])
+def project_assigned_employee(request, project_assign_id=None):
+    if project_assign_id:
+        try:
+            projects = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+        except ProjectAssign.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        assigned_employees = projects.employee.all()
+        # projects = ProjectAssign.objects.get(project_assign_id=project_assign_id)
+        serializer = EmployeeViewSerializer(assigned_employees, many=True)
+        return Response(serializer.data)
+    else:
+        all_employees = Employee.objects.all()
+        serializer = EmployeeViewSerializer(all_employees, many=True)
         return Response(serializer.data)
 
 

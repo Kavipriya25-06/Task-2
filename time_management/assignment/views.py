@@ -102,7 +102,7 @@ def manager_tl_projects(request, employee_id=None):
             employee_id=teamlead_emp
         ).first()  # matching the employee id in user table
 
-        if user_qs:
+        if user_qs and user_qs.role == "teamlead":
             # This employee, get their employees
             employees_qs = Hierarchy.objects.filter(reporting_to=teamlead_emp)
             total_employees = employees_qs.count()
@@ -127,6 +127,7 @@ def manager_tl_projects(request, employee_id=None):
                 }
             )
         else:
+            continue
             # This employee is not a teamlead, add to manager's direct employees
             teamleads_data.append(
                 {
