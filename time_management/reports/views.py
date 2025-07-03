@@ -39,6 +39,7 @@ from time_management.reports.serializers import (
     ProjectDepartmentWeeklyStatsSerializer,
 )
 from time_management.project.serializers import ProjectSerializer
+from time_management.building.serializers import BuildingAndAssignSerializer
 from time_management.leaves_taken.serializers import (
     LeavesTakenSerializer,
     LeaveRequestSerializer,
@@ -177,6 +178,32 @@ def get_last_project(request):
             serializer = ProjectSerializer(last_instance)
             return Response(serializer.data)
         except Project.DoesNotExist:
+            return Response(
+                {"error": "project record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+@api_view(["GET"])
+def get_last_building(request, project_id=None):
+    if request.method == "GET":
+        if project_id:
+            try:
+                projectBuildings = BuildingAssign.objects.filter(
+                    project_assign__project=project_id
+                )
+                last_building = projectBuildings.order_by("building_assign_id").last()
+                print("last building", last_building)
+                # last_instance = Project.objects.order_by("project_id").last()
+                serializer = BuildingAndAssignSerializer(last_building)
+                # serializer = ProjectSerializer(last_instance)
+                return Response(serializer.data)
+            except BuildingAssign.DoesNotExist:
+                return Response(
+                    {"error": "project record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
             return Response(
                 {"error": "project record not found"},
                 status=status.HTTP_404_NOT_FOUND,

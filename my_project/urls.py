@@ -108,6 +108,7 @@ from time_management.project.views import (
 from time_management.reports.views import (
     hours_project_view,
     get_last_project,
+    get_last_building,
     year_leaves,
     weekly_hours_project,
     monthly_hours_project,
@@ -245,6 +246,7 @@ urlpatterns = [
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
     path("last-project/", get_last_project, name="last-project"),
+    path("last-building/<str:project_id>/", get_last_building, name="last-building"),
     path("project-hours/", hours_project_view, name="project-hours"),
     path("project-hours/<str:project_id>/", hours_project_view, name="project-hours"),
     path("weekly-project-hours/", weekly_hours_project, name="project-hours"),
