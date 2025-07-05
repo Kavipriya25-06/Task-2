@@ -237,7 +237,7 @@ class User(models.Model):
                 subject = "Your user account has been updated"
                 changes = ", ".join(changed_fields)
                 message = (
-                    f"Dear {self.email},\n\n"
+                    f"Dear {self.employee_id.employee_name},\n\n"
                     f"The following fields in your user account have been changed: {changes}.\n\n"
                     "If you did not request these changes, please contact admin support immediately.\n\n"
                     "Regards,\nAdmin Team"
