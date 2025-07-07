@@ -37,6 +37,7 @@ from time_management.reports.serializers import (
     EmployeeLOPSerializer,
     ProjectDepartmentWeeklyHoursSerializer,
     ProjectDepartmentWeeklyStatsSerializer,
+    LeavesFullAvailableSerializer,
 )
 from time_management.project.serializers import ProjectSerializer
 from time_management.building.serializers import BuildingAndAssignSerializer
@@ -280,10 +281,13 @@ def employee_report_week(request, employee_id=None):
 
 @api_view(["GET"])
 def leaves_available_report(request):
+    year = request.query_params.get("year")
     if request.method == "GET":
         try:
             obj = LeavesAvailable.objects.all()
-            serializer = LeavesAvailableSerializer(obj, many=True)
+            serializer = LeavesFullAvailableSerializer(
+                obj, many=True, context={"request": request, "year": year}
+            )
             return Response(serializer.data, status=status.HTTP_200_OK)
         except LeavesAvailable.DoesNotExist:
             return Response(
@@ -301,7 +305,7 @@ def employee_lop_view(request):
         try:
             employees = Employee.objects.all()
             serializer = EmployeeLOPSerializer(
-                employees, many=True, context={"request": request}
+                employees, many=True, context={"request": request, "year": year}
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Employee.DoesNotExist:

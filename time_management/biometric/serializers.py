@@ -1,7 +1,11 @@
 from rest_framework import serializers
-from ..models import BiometricData, Calendar, TaskAssign, TimeSheet
+from ..models import BiometricData, Calendar, TaskAssign, TimeSheet, LeavesTaken
 from time_management.time_sheet.serializers import (
     TimeSheetTaskSerializer,
+)
+from time_management.leaves_taken.serializers import (
+    LeavesTakenSerializer,
+    LeaveRequestSerializer,
 )
 
 
@@ -19,6 +23,7 @@ class CalendarSerializer(serializers.ModelSerializer):
 
 class BiometricTaskDataSerializer(serializers.ModelSerializer):
     calendar = serializers.SerializerMethodField()
+    leave = serializers.SerializerMethodField()
     timesheets = serializers.SerializerMethodField()
     leave_deduction = serializers.SerializerMethodField()
 
@@ -42,8 +47,18 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             "modified_by",
             "calendar",
             "timesheets",
+            "leave",
             "leave_deduction",
         ]
+
+    def get_leave(self, obj):
+        try:
+            leave = LeavesTaken.objects.filter(
+                employee=obj.employee, start_date__lte=obj.date, end_date__gte=obj.date
+            ).first()
+            return LeavesTakenSerializer(leave).data
+        except Calendar.DoesNotExist:
+            return None
 
     def get_calendar(self, obj):
         try:
