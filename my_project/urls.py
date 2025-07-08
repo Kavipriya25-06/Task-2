@@ -132,6 +132,7 @@ from time_management.building.views import (
     create_building_with_assignment,
     test_post,
     building_assign_create,
+    building_by_employee,
 )
 from time_management.task.views import (
     task_list_create,
@@ -142,6 +143,10 @@ from time_management.task.views import (
     task_and_assign_test,
     task_building,
     task_by_employee,
+    default_task_by_employee,
+    default_tasks,
+    other_tasks,
+    upsert_tasks_assigned,
 )
 from time_management.time_sheet.views import (
     timesheet_data_api,
@@ -378,6 +383,16 @@ urlpatterns = [
         building_and_project,
         name="building-and-project",
     ),
+    path(
+        "buildings-by-employee/",
+        building_by_employee,
+        name="Tasks-and-buildings",
+    ),
+    path(
+        "buildings-by-employee/<str:employee_id>/",
+        building_by_employee,
+        name="tasks-and-buildings",
+    ),
     path("tasks/", task_list_create, name="task-list-create"),
     path("tasks/<str:task_id>/", task_detail, name="task-detail"),
     path(
@@ -419,6 +434,31 @@ urlpatterns = [
         "tasks-by-employee/<str:employee_id>/",
         task_by_employee,
         name="tasks-and-buildings",
+    ),
+    path(
+        "default-tasks/",
+        default_tasks,
+        name="Tasks-and-buildings",
+    ),
+    path(
+        "default-tasks/<str:employee_id>/",
+        default_tasks,
+        name="tasks-and-buildings",
+    ),
+    path(
+        "other-tasks/",
+        other_tasks,
+        name="Tasks-and-buildings",
+    ),
+    path(
+        "default-tasks-by-employee/",
+        default_task_by_employee,
+        name="Tasks-and-buildings",
+    ),
+    path(
+        "upsert-tasks/",
+        upsert_tasks_assigned,
+        name="Tasks-and-buildings",
     ),
     path("timesheet/", timesheet_data_api, name="timesheet"),
     path("timesheet/<str:timesheet_id>/", timesheet_data_api, name="timesheet"),
