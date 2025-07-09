@@ -455,7 +455,10 @@ class LeavesTaken(models.Model):
         max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
     reason = models.TextField(blank=True, null=True)
-    resumption_date = models.DateField()
+    resumption_date = models.DateField(
+        null=True,
+        blank=True,
+    )
     # attachment = models.FileField(upload_to="leave_attachments/", null=True, blank=True)
 
     approved_by = models.ForeignKey(
