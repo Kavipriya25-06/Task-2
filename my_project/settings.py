@@ -103,7 +103,7 @@ CORS_ALLOW_CREDENTIALS = True
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "TMS",
+        "NAME": "DTMS",
         "USER": "root",
         "PASSWORD": database_password,
         "HOST": "localhost",
