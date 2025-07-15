@@ -65,6 +65,7 @@ class Employee(models.Model):
         null=True,
     )
     designation = models.CharField(max_length=100, blank=True, null=True)
+    source_of_hire = models.CharField(max_length=100, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
     qualification = models.CharField(max_length=100, blank=True, null=True)
     year_of_passing = models.IntegerField(default=0, blank=True, null=True)
@@ -153,6 +154,27 @@ class Employee(models.Model):
         return self.employee_id
 
 
+class Modifications(models.Model):
+
+    employee = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
+    modified_by = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modified",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee} updated by {self.modified_by or 0} at {self.created_at or 0}"
+
+
 ### roles table
 
 
@@ -161,6 +183,13 @@ class Roles(models.Model):
 
     def __str__(self):
         return self.role
+
+
+class Designation(models.Model):
+    designation = models.CharField(max_length=200, unique=True)
+
+    def __str__(self):
+        return self.designation
 
 
 class User(models.Model):
@@ -270,6 +299,74 @@ class PasswordResetOTP(models.Model):
 
     def is_throttle_limited(self):
         return (timezone.now() - self.created_at).seconds < 60  # less than 60s ago
+
+
+class Assets(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    model = models.CharField(max_length=50, blank=True)
+    type = models.CharField(max_length=50, blank=True)
+    serialnumber = models.CharField(max_length=50, blank=True)
+    given_date = models.DateField(blank=True, null=True)
+    return_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.employee} owns {self.type}"
+
+
+class WorkExperience(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=50, blank=True, null=True)
+    company_role = models.CharField(max_length=50, blank=True, null=True)
+    relevance = models.BooleanField(default=False, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.employee} worked at {self.company_name}"
+
+
+class LanguagesKnown(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    language = models.CharField(max_length=50, blank=True, null=True)
+    read = models.CharField(
+        max_length=50,
+        choices=[
+            ("Native", "Native"),
+            ("Fluent", "Fluent"),
+            ("Proficient", "Proficient"),
+            ("Basic", "Basic"),
+            ("Conversational", "Conversational"),
+        ],
+        blank=True,
+        null=True,
+    )
+    write = models.CharField(
+        max_length=50,
+        choices=[
+            ("Native", "Native"),
+            ("Fluent", "Fluent"),
+            ("Proficient", "Proficient"),
+            ("Basic", "Basic"),
+            ("Conversational", "Conversational"),
+        ],
+        blank=True,
+        null=True,
+    )
+    speak = models.CharField(
+        max_length=50,
+        choices=[
+            ("Native", "Native"),
+            ("Fluent", "Fluent"),
+            ("Proficient", "Proficient"),
+            ("Basic", "Basic"),
+            ("Conversational", "Conversational"),
+        ],
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self):
+        return f"{self.employee} knows {self.language}"
 
 
 # Hierarchy Table
@@ -605,6 +702,8 @@ class Project(models.Model):
     project_title = models.CharField(max_length=255, blank=True, null=True)
     project_type = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    completed_status = models.BooleanField(default=False, blank=True, null=True)
     estimated_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     variation_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -662,6 +761,9 @@ class Building(models.Model):
     building_description = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
     building_code = models.CharField(max_length=21, blank=True, null=True)
+    start_date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    completed_status = models.BooleanField(default=False, blank=True, null=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
@@ -680,6 +782,9 @@ class Task(models.Model):
     task_title = models.CharField(max_length=200)
     task_description = models.TextField(blank=True, null=True)
     priority = models.CharField(max_length=50, blank=True, null=True)
+    start_date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    completed_status = models.BooleanField(default=False, blank=True, null=True)
     # attachments = models.FileField(
     #     upload_to="tasks/attachments/", blank=True, null=True
     # )
@@ -921,6 +1026,41 @@ class Attachment(models.Model):
         null=True,
         blank=True,
         related_name="leaveattachments",
+    )
+
+    def __str__(self):
+        return f"{self.file.name}"
+
+
+# Generic Attachment Model
+class EmployeeAttachment(models.Model):
+    file = models.FileField(upload_to="attachments/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    document_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("PAN", "PAN"),
+            ("Aadhaar", "Aadhaar"),
+            ("bank", "Bank Details"),
+            ("Degree", "Degree certificate"),
+            ("marksheets", "Marksheets"),
+            ("resume", "Resume"),
+            ("empletter", "Signed employment letter"),
+            ("relievingletter", "Last company relieving letter"),
+            ("payslip", "Last company Payslip"),
+            ("idproof", "ID Proof"),
+        ],
+        blank=True,
+        null=True,
+    )
+
+    employee = models.ForeignKey(
+        "Employee",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="Employeedetailsattachments",
     )
 
     def __str__(self):
