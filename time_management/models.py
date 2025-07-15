@@ -181,7 +181,7 @@ class User(models.Model):
     # role = models.ManyToManyField(Roles, blank=True)
     employee_id = models.OneToOneField(
         Employee,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
     )
@@ -688,7 +688,7 @@ class Task(models.Model):
     # )
     comments = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
-    task_code = models.CharField(max_length=21, blank=True, null=True, unique=True)
+    task_code = models.CharField(max_length=21, unique=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
@@ -716,7 +716,7 @@ class ProjectAssign(models.Model):
     )
     employee = models.ManyToManyField(Employee, blank=True)
     project = models.OneToOneField(
-        Project, on_delete=models.SET_NULL, null=True, blank=True
+        Project, on_delete=models.CASCADE, null=True, blank=True
     )
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
@@ -742,7 +742,7 @@ class BuildingAssign(models.Model):
     )
     employee = models.ManyToManyField(Employee, blank=True)
     building = models.ForeignKey(
-        Building, on_delete=models.SET_NULL, null=True, blank=True
+        Building, on_delete=models.CASCADE, null=True, blank=True
     )
     project_assign = models.ForeignKey(
         ProjectAssign, on_delete=models.SET_NULL, null=True, blank=True
@@ -757,7 +757,7 @@ class BuildingAssign(models.Model):
 class TaskAssign(models.Model):
     task_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
-    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(
         max_length=50,
         choices=[
@@ -790,7 +790,7 @@ class TimeSheet(models.Model):
     employee = models.ForeignKey(
         Employee, on_delete=models.SET_NULL, blank=True, null=True
     )
-    task_assign = models.ForeignKey(TaskAssign, on_delete=models.SET_NULL, null=True)
+    task_assign = models.ForeignKey(TaskAssign, on_delete=models.CASCADE, null=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)

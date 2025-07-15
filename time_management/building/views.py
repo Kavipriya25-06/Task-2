@@ -383,6 +383,52 @@ def building_by_employee(request, employee_id=None):
         return Response(serializer.data)
 
 
+@api_view(["GET"])
+def default_building(request):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99005",
+        "99007",
+        "99008",
+        "1",
+        "1a",
+        "2001000",
+    ]
+
+    buildings = Building.objects.filter(
+        buildingassign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
+    serializer = BuildingSerializer(buildings, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+def other_building(request):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99002",
+        "99003",
+        "99004",
+        "99004a",
+        "99005",
+        "99006",
+        "99007",
+        "99008",
+        "99009",
+        "1",
+        "1a",
+        "2001000",
+    ]
+
+    buildings = Building.objects.exclude(
+        buildingassign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
+    serializer = BuildingSerializer(buildings, many=True)
+    return Response(serializer.data)
+
+
 #####
 #####
 #####

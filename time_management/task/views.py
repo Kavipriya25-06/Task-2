@@ -229,7 +229,11 @@ def default_tasks(request, employee_id=None):
 
     # Extract Task objects
     task_ids = default_tasks.values_list("task__task_id", flat=True)
-    tasks = Task.objects.filter(task_id__in=task_ids).distinct()
+    # tasks = Task.objects.filter(task_id__in=task_ids).distinct()
+
+    tasks = Task.objects.filter(
+        taskassign__building_assign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
 
     print("Other tasks", tasks)
 
@@ -255,18 +259,22 @@ def other_tasks(request, employee_id=None):
         "1a",
         "2001000",
     ]
-    other_tasks_assigned = TaskAssign.objects.exclude(
-        building_assign__project_assign__project__project_code__in=default_project_codes
-    )
+    # other_tasks_assigned = TaskAssign.objects.exclude(
+    #     building_assign__project_assign__project__project_code__in=default_project_codes
+    # )
 
-    for task in other_tasks_assigned:
-        other_tasks = task.task
+    # for task in other_tasks_assigned:
+    #     other_tasks = task.task
 
-        print("Other tasks", other_tasks)
+    #     print("Other tasks", other_tasks)
 
-    # Extract Task objects
-    task_ids = other_tasks_assigned.values_list("task__task_id", flat=True)
-    tasks = Task.objects.filter(task_id__in=task_ids).distinct()
+    # # Extract Task objects
+    # task_ids = other_tasks_assigned.values_list("task__task_id", flat=True)
+    # tasks = Task.objects.filter(task_id__in=task_ids).distinct()
+
+    tasks = Task.objects.exclude(
+        taskassign__building_assign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
 
     print("Other tasks", tasks)
 

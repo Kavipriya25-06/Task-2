@@ -133,6 +133,8 @@ from time_management.building.views import (
     test_post,
     building_assign_create,
     building_by_employee,
+    default_building,
+    other_building,
 )
 from time_management.task.views import (
     task_list_create,
@@ -392,6 +394,16 @@ urlpatterns = [
         "buildings-by-employee/<str:employee_id>/",
         building_by_employee,
         name="tasks-and-buildings",
+    ),
+    path(
+        "default-buildings/",
+        default_building,
+        name="default-buildings",
+    ),
+    path(
+        "other-buildings/",
+        other_building,
+        name="other-buildings",
     ),
     path("tasks/", task_list_create, name="task-list-create"),
     path("tasks/<str:task_id>/", task_detail, name="task-detail"),
