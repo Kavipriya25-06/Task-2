@@ -163,11 +163,12 @@ from time_management.time_sheet.views import (
     employee_daily_timesheet,
     total_logged_hours,
 )
-from time_management.views import MyTokenObtainPairView
+from time_management.views import MyTokenObtainPairView, run_biometric_sync
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("sync-biometric/", run_biometric_sync, name="sync-biometric"),
     path("employees/", employee_api),
     path("employees/<str:employee_id>/", employee_api),
     path("employees-details/", employee_view_api),
