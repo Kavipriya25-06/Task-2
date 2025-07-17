@@ -368,7 +368,10 @@ def building_by_employee(request, employee_id=None):
     # print("Default project", default_tasks)
     if employee_id:
         try:
-            tasks = BuildingAssign.objects.filter(employee__employee_id=employee_id)
+            tasks = BuildingAssign.objects.filter(
+                employee__employee_id=employee_id,
+                project_assign__project__status=True,
+            )
             all_tasks = default_tasks | tasks
         except BuildingAssign.DoesNotExist:
             return Response(
