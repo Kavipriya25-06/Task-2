@@ -154,7 +154,7 @@ if IS_PRODUCTION:
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = "hr@arrisltd.com"
-    EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
+    EMAIL_HOST_PASSWORD = "waf yohx olig ljor"  # If 2FA is enabled
 
 else:
     ##### in case of Gmail
