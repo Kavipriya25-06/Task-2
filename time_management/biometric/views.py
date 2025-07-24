@@ -264,6 +264,8 @@ def weekly_attendance(request, employee_id=None):
         print(employees, "Employees")
 
         biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        manager_biometric_qs = BiometricData.objects.filter(employee=manager)
+        biometric_qs = biometric_qs | manager_biometric_qs
         print(biometric_qs, "Biometric qs")
         if today:
             weekday = today.weekday()
