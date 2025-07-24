@@ -3,6 +3,13 @@ from django.contrib import admin
 from .models import (
     User,
     Employee,
+    Modifications,
+    Designation,
+    Assets,
+    Dependant,
+    Education,
+    WorkExperience,
+    LanguagesKnown,
     Hierarchy,
     LeavesAvailable,
     LeavesTaken,
@@ -18,6 +25,8 @@ from .models import (
     TaskAssign,
     TimeSheet,
     Attachment,
+    EmployeeAttachment,
+    CompanyPolicy,
     CompOff,
     Variation,
     CompOffRequest,
@@ -45,3 +54,12 @@ admin.site.register(Attachment)
 admin.site.register(CompOff)
 admin.site.register(CompOffRequest)
 admin.site.register(Variation)
+admin.site.register(Modifications)
+admin.site.register(Designation)
+admin.site.register(Assets)
+admin.site.register(Dependant)
+admin.site.register(Education)
+admin.site.register(WorkExperience)
+admin.site.register(LanguagesKnown)
+admin.site.register(EmployeeAttachment)
+admin.site.register(CompanyPolicy)

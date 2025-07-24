@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ..models import Employee, Hierarchy, User, Attachment
 from time_management.attachments.serializers import AttachmentSerializer
+from time_management.employee_attachment.serializers import EmployeeAttachmentSerializer
 
 
 class EmployeeSerializer(serializers.ModelSerializer):

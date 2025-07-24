@@ -151,6 +151,18 @@ from time_management.time_sheet.views import (
     employee_daily_timesheet,
     total_logged_hours,
 )
+
+from time_management.modifications.views import modifications_api
+from time_management.designation.views import designation_api
+from time_management.assets.views import assets_api
+from time_management.dependant.views import dependant_api
+from time_management.education.views import education_api
+from time_management.workexperience.views import work_experience_api
+from time_management.languagesknown.views import languages_known_api
+from time_management.employee_attachment.views import employee_attachment_api
+from time_management.company_policy.views import company_policy_api
+
+
 from time_management.views import MyTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -507,6 +519,24 @@ urlpatterns = [
         attachments_by_project,
         name="attachments_by_project",
     ),
+    path("modifications/", modifications_api),
+    path("modifications/<int:id>/", modifications_api),
+    path("designation/", designation_api),
+    path("designation/<int:id>/", designation_api),
+    path("assets/", assets_api),
+    path("assets/<int:id>/", assets_api),
+    path("dependant/", dependant_api),
+    path("dependant/<int:id>/", dependant_api),
+    path("education/", education_api),
+    path("education/<int:id>/", education_api),
+    path("work-experience/", work_experience_api),
+    path("work-experience/<int:id>/", work_experience_api),
+    path("languages-known/", languages_known_api),
+    path("languages-known/<int:id>/", languages_known_api),
+    path("employee-attachment/", employee_attachment_api),
+    path("employee-attachment/<int:id>/", employee_attachment_api),
+    path("company-policy/", company_policy_api),
+    path("company-policy/<int:id>/", company_policy_api),
     path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
