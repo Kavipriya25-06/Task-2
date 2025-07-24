@@ -298,6 +298,18 @@ def create_or_update_hierarchy(sender, instance, created, **kwargs):
         )
         hierarchy.reporting_to = manager
 
+    # Auto-resolve reporting_to
+    if instance.second_reporting_manager:
+        manager = (
+            Employee.objects.filter(
+                employee_id=instance.second_reporting_manager
+            ).first()
+            or Employee.objects.filter(
+                employee_code=instance.second_reporting_manager
+            ).first()
+        )
+        hierarchy.second_reporting_to = manager
+
     hierarchy.save()
 
 

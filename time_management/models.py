@@ -24,11 +24,15 @@ class Employee(models.Model):
     employee_id = models.CharField(max_length=50, primary_key=True, blank=True)
     employee_code = models.CharField(max_length=30, unique=True, blank=True, null=True)
     employee_name = models.CharField(max_length=255, blank=True, null=True)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
     fathers_name = models.CharField(max_length=255, blank=True, null=True)
     gender = models.CharField(max_length=40, blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
+    age = models.IntegerField(default=0, blank=True, null=True)
     doj = models.DateField(blank=True, null=True)
     contact_number = models.CharField(max_length=10, blank=True, null=True)
+    identification_marks = models.TextField(blank=True, null=True)
+    wedding_date = models.DateField(blank=True, null=True)
     personal_email = models.EmailField(unique=True, blank=True, null=True)
     aadhaar_number = models.CharField(max_length=20, blank=True, null=True)
     PAN = models.CharField(max_length=10, blank=True, null=True)
@@ -37,6 +41,9 @@ class Employee(models.Model):
     esi_number = models.CharField(max_length=20, blank=True, null=True)
     passport_number = models.CharField(max_length=20, blank=True, null=True)
     passport_validity = models.DateField(null=True, blank=True)
+    onboarding_status = models.DecimalField(
+        max_digits=5, decimal_places=2, blank=True, null=True
+    )
     status = models.CharField(
         max_length=50,
         choices=[
@@ -48,6 +55,7 @@ class Employee(models.Model):
         null=True,
     )
     remarks = models.TextField(blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
     permanent_address = models.TextField(blank=True, null=True)
     local_address = models.TextField(blank=True, null=True)
 
@@ -74,7 +82,7 @@ class Employee(models.Model):
     previous_experience = models.IntegerField(
         default=0, blank=True, null=True
     )  # In months
-    arris_experience = models.IntegerField(
+    aero360_experience = models.IntegerField(
         default=0, blank=True, null=True
     )  # Experience in current company in months
 
@@ -88,8 +96,12 @@ class Employee(models.Model):
     contract_end_date = models.DateField(null=True, blank=True)
     employee_email = models.EmailField(unique=True, blank=True, null=True)
     reporting_manager = models.CharField(max_length=100, blank=True, null=True)
+    second_reporting_manager = models.CharField(max_length=100, blank=True, null=True)
     resignation_date = models.DateField(null=True, blank=True)
     relieving_date = models.DateField(null=True, blank=True)
+    seating_location = models.CharField(max_length=100, blank=True, null=True)
+    work_phone = models.CharField(max_length=100, blank=True, null=True)
+    extension = models.CharField(max_length=100, blank=True, null=True)
 
     # Bank Details
     account_number = models.CharField(max_length=20, null=True, blank=True)
@@ -157,7 +169,7 @@ class Employee(models.Model):
 class Modifications(models.Model):
 
     employee = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, blank=True, null=True
+        Employee, on_delete=models.CASCADE, blank=True, null=True
     )
 
     modified_by = models.ForeignKey(
@@ -210,7 +222,7 @@ class User(models.Model):
     # role = models.ManyToManyField(Roles, blank=True)
     employee_id = models.OneToOneField(
         Employee,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
     )
@@ -266,7 +278,7 @@ class User(models.Model):
                 subject = "Your user account has been updated"
                 changes = ", ".join(changed_fields)
                 message = (
-                    f"Dear {self.email},\n\n"
+                    f"Dear {self.employee_id.employee_name},\n\n"
                     f"The following fields in your user account have been changed: {changes}.\n\n"
                     "If you did not request these changes, please contact admin support immediately.\n\n"
                     "Regards,\nAdmin Team"
@@ -285,7 +297,9 @@ class User(models.Model):
                     print(f"[ERROR] Email not sent: {e}")
 
     def __str__(self):
-        return f"{self.email} - {self.employee_id}"
+        return (
+            f"{self.employee_id.employee_name or 0} - {self.email} - {self.employee_id}"
+        )
 
 
 class PasswordResetOTP(models.Model):
@@ -311,6 +325,31 @@ class Assets(models.Model):
 
     def __str__(self):
         return f"{self.employee} owns {self.type}"
+
+
+class Dependant(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50, blank=True, null=True)
+    relationship = models.CharField(max_length=50, blank=True, null=True)
+    # relevance = models.BooleanField(default=False, blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    age = models.IntegerField(default=0, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.employee} dependant {self.name}"
+
+
+class Education(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    institution_name = models.CharField(max_length=50, blank=True, null=True)
+    degree = models.CharField(max_length=50, blank=True, null=True)
+    specialization = models.CharField(max_length=50, blank=True, null=True)
+    # relevance = models.BooleanField(default=False, blank=True, null=True)
+    # start_date = models.DateField(blank=True, null=True)
+    date_of_completion = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.employee} studied at {self.institution_name}"
 
 
 class WorkExperience(models.Model):
@@ -384,6 +423,13 @@ class Hierarchy(models.Model):
         blank=True,
         related_name="reports",
     )
+    second_reporting_to = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="second_reports",
+    )
 
     def save(self, *args, **kwargs):
         if not self.hierarchy_id:
@@ -452,7 +498,7 @@ class CompOff(models.Model):
 class CompOffRequest(models.Model):
     compoff_request_id = models.CharField(max_length=50, primary_key=True, blank=True)
     employee = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, blank=True, null=True
+        Employee, on_delete=models.CASCADE, blank=True, null=True
     )
     # leave_type = models.CharField(max_length=100)
     # start_date = models.DateField()
@@ -461,7 +507,7 @@ class CompOffRequest(models.Model):
         max_digits=6, decimal_places=2, blank=True, null=True, default=0
     )
     reason = models.TextField(blank=True, null=True)
-    expiry_date = models.DateField()
+    expiry_date = models.DateField(blank=True, null=True)
 
     approved_by = models.ForeignKey(
         Employee,
@@ -507,7 +553,7 @@ class CompOffRequest(models.Model):
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)
     employee = models.OneToOneField(
-        Employee, on_delete=models.SET_NULL, blank=True, null=True
+        Employee, on_delete=models.CASCADE, blank=True, null=True
     )
     sick_leave = models.DecimalField(
         max_digits=6, decimal_places=1, blank=True, null=True, default=0
@@ -552,7 +598,10 @@ class LeavesTaken(models.Model):
         max_digits=6, decimal_places=1, blank=True, null=True, default=0
     )
     reason = models.TextField(blank=True, null=True)
-    resumption_date = models.DateField()
+    resumption_date = models.DateField(
+        null=True,
+        blank=True,
+    )
     # attachment = models.FileField(upload_to="leave_attachments/", null=True, blank=True)
 
     approved_by = models.ForeignKey(
@@ -633,7 +682,7 @@ class Calendar(models.Model):
 class BiometricData(models.Model):
     biometric_id = models.CharField(max_length=50, primary_key=True, blank=True)
     employee = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, blank=True, null=True
+        Employee, on_delete=models.CASCADE, blank=True, null=True
     )
     employee_code = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=100)
@@ -790,7 +839,7 @@ class Task(models.Model):
     # )
     comments = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True, blank=True, null=True)
-    task_code = models.CharField(max_length=21, blank=True, null=True, unique=True)
+    task_code = models.CharField(max_length=21, unique=True)
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
     # created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL)
@@ -818,7 +867,7 @@ class ProjectAssign(models.Model):
     )
     employee = models.ManyToManyField(Employee, blank=True)
     project = models.OneToOneField(
-        Project, on_delete=models.SET_NULL, null=True, blank=True
+        Project, on_delete=models.CASCADE, null=True, blank=True
     )
     # created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
     # updated_at = models.DateTimeField(auto_now=True)
@@ -844,7 +893,7 @@ class BuildingAssign(models.Model):
     )
     employee = models.ManyToManyField(Employee, blank=True)
     building = models.ForeignKey(
-        Building, on_delete=models.SET_NULL, null=True, blank=True
+        Building, on_delete=models.CASCADE, null=True, blank=True
     )
     project_assign = models.ForeignKey(
         ProjectAssign, on_delete=models.SET_NULL, null=True, blank=True
@@ -859,7 +908,7 @@ class BuildingAssign(models.Model):
 class TaskAssign(models.Model):
     task_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
-    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(
         max_length=50,
         choices=[
@@ -894,8 +943,8 @@ class TimeSheet(models.Model):
     )
     task_assign = models.ForeignKey(TaskAssign, on_delete=models.SET_NULL, null=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
     date = models.DateField(null=True, blank=True)
     submitted = models.BooleanField(default=False, null=True, blank=True)
     approved = models.BooleanField(default=False, null=True, blank=True)
@@ -982,7 +1031,7 @@ class Variation(models.Model):
     title = models.CharField(max_length=50)
     hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     project = models.ForeignKey(
-        Project, on_delete=models.SET_NULL, null=True, blank=True
+        Project, on_delete=models.CASCADE, null=True, blank=True
     )
 
 
@@ -1061,6 +1110,29 @@ class EmployeeAttachment(models.Model):
         null=True,
         blank=True,
         related_name="Employeedetailsattachments",
+    )
+
+    def __str__(self):
+        return f"{self.file.name}"
+
+
+# Generic Attachment Model
+class CompanyPolicy(models.Model):
+    file = models.FileField(upload_to="attachments/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    document_name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
+    uploaded_by = models.ForeignKey(
+        "Employee",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="CompanyPolicy",
     )
 
     def __str__(self):
