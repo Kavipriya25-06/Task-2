@@ -167,6 +167,7 @@ class EmployeeAllSerializer(serializers.ModelSerializer):
             "contact_number",
             "identification_marks",
             "wedding_date",
+            "marital_status",
             "personal_email",
             "aadhaar_number",
             "PAN",

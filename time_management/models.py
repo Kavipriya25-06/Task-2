@@ -33,6 +33,18 @@ class Employee(models.Model):
     contact_number = models.CharField(max_length=10, blank=True, null=True)
     identification_marks = models.TextField(blank=True, null=True)
     wedding_date = models.DateField(blank=True, null=True)
+    marital_status = models.CharField(
+        max_length=50,
+        choices=[
+            ("Single", "Single"),
+            ("Married", "Married"),
+            ("Divorced", "Divorced"),
+            ("Widowed", "Widowed"),
+            ("Separated", "Separated"),
+        ],
+        blank=True,
+        null=True,
+    )
     personal_email = models.EmailField(unique=True, blank=True, null=True)
     aadhaar_number = models.CharField(max_length=20, blank=True, null=True)
     PAN = models.CharField(max_length=10, blank=True, null=True)
@@ -146,12 +158,12 @@ class Employee(models.Model):
             delta = (today.year - self.doj.year) * 12 + (today.month - self.doj.month)
             if delta < 0:
                 delta = 0  # Future DOJ safety
-            self.arris_experience = delta
+            self.aero360_experience = delta
         else:
-            self.arris_experience = 0
+            self.aero360_experience = 0
 
         # --------- TOTAL EXPERIENCE AUTO-CALCULATION ---------
-        self.total_experience = (self.arris_experience or 0) + (
+        self.total_experience = (self.aero360_experience or 0) + (
             self.previous_experience or 0
         )
 
