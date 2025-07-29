@@ -160,6 +160,8 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "project_title",
             "project_type",
             "start_date",
+            "due_date",
+            "completed_status",
             "estimated_hours",
             "variation_hours",
             "total_hours",
