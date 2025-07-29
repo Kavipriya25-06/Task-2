@@ -3,8 +3,11 @@ from ..models import Employee, Hierarchy, User
 from time_management.hierarchy.serializers import (
     EmployeeSerializer,
     HierarchySerializer,
+    EmployeeChartSerializer,
+    HierarchyChartSerializer,
     emp_under_manager,
     get_emp_under_manager,
+    build_tree,
 )
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -327,6 +330,110 @@ def get_hierarchy_by_employee(request, employee_id):
             return Response({"error": "No hierarchy found"}, status=404)
     else:
         return Response({"error": "No employee found"}, status=404)
+
+
+# @api_view(["GET"])
+# def manager_chart(request):
+#     employees = Employee.objects.all()
+#     tree = {}
+
+#     # Build tree structure { manager_id: [subordinates] }
+#     for emp in employees:
+#         manager_id = emp.reporting_manager
+#         if not manager_id:
+#             continue
+#         if manager_id not in tree:
+#             tree[manager_id] = []
+#         tree[manager_id].append(
+#             {
+#                 "id": emp.employee_id,
+#                 "name": emp.employee_name,
+#                 "designation": emp.designation,
+#                 "department": emp.department,
+#                 "profile_picture": (
+#                     emp.profile_picture.url if emp.profile_picture else None
+#                 ),
+#             }
+#         )
+
+#     return Response(tree)
+
+
+@api_view(["GET"])
+def manager_chart(request):
+    employees = Employee.objects.all()
+
+    # Map of manager_id → list of subordinates
+    employees_map = {}
+    for emp in employees:
+        if emp.reporting_manager:
+            employees_map.setdefault(emp.reporting_manager, []).append(emp)
+
+    # Build tree starting at each manager (with subordinates)
+    managers_data = {}
+    for manager_id, subordinates in employees_map.items():
+        try:
+            manager = Employee.objects.get(employee_id=manager_id)
+        except Employee.DoesNotExist:
+            continue
+
+        managers_data[manager_id] = {
+            "manager": {
+                "id": manager.employee_id,
+                "name": manager.employee_name,
+                "designation": manager.designation,
+                "profile_picture": (
+                    manager.profile_picture.url if manager.profile_picture else None
+                ),
+            },
+            "children": [
+                {
+                    "id": emp.employee_id,
+                    "name": emp.employee_name,
+                    "designation": emp.designation,
+                    "profile_picture": (
+                        emp.profile_picture.url if emp.profile_picture else None
+                    ),
+                    "children": build_tree(emp.employee_id, employees_map),
+                }
+                for emp in subordinates
+            ],
+        }
+
+    return Response(managers_data)
+
+
+@api_view(["GET"])
+def department_chart(request):
+    employees = Employee.objects.all()
+    departments = {}
+
+    # Map: manager_id → [subordinates]
+    employees_map = {}
+    for emp in employees:
+        if emp.reporting_manager:
+            employees_map.setdefault(emp.reporting_manager, []).append(emp)
+
+    # Find top-level employees in each department (no manager or manager in another dept)
+    for emp in employees:
+        dept = emp.department or "Unassigned"
+        if dept not in departments:
+            departments[dept] = []
+
+        if not emp.reporting_manager:  # top-level node
+            departments[dept].append(
+                {
+                    "id": emp.employee_id,
+                    "name": emp.employee_name,
+                    "designation": emp.designation,
+                    "profile_picture": (
+                        emp.profile_picture.url if emp.profile_picture else None
+                    ),
+                    "children": build_tree(emp.employee_id, employees_map),
+                }
+            )
+
+    return Response(departments)
 
 
 # @api_view(["GET"])

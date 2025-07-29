@@ -66,6 +66,8 @@ from time_management.hierarchy.views import (
     get_emp_all,
     get_hierarchy_by_employee,
     teamleads_under_manager,
+    department_chart,
+    manager_chart,
 )
 from time_management.leaves_available.views import leaves_available_api, comp_off_api
 from time_management.leaves_taken.views import (
@@ -202,6 +204,8 @@ urlpatterns = [
     path("send-otp/", send_reset_otp),
     path("reset-password/", reset_password),
     path("hierarchy/", hierarchy_api),
+    path("orgchart/department/", department_chart),
+    path("orgchart/manager/", manager_chart),
     path("hierarchy/<str:hierarchy_id>/", hierarchy_api),
     path("hierarchy/by_employee/", get_hierarchy_by_employee),
     path("hierarchy/by_employee/<str:employee_id>/", get_hierarchy_by_employee),

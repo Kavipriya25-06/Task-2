@@ -77,3 +77,45 @@ def get_emp_under_manager(emp_id):
         return []
 
     return get_all_subordinates(manager)
+
+
+class EmployeeChartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = [
+            "employee_id",
+            "employee_name",
+            "designation",
+            "department",
+            "reporting_manager",
+            "second_reporting_manager",
+            "profile_picture",
+        ]
+
+
+class HierarchyChartSerializer(serializers.ModelSerializer):
+    employee = EmployeeChartSerializer()
+    reporting_to = EmployeeChartSerializer()
+    second_reporting_to = EmployeeChartSerializer()
+
+    class Meta:
+        model = Hierarchy
+        fields = ["hierarchy_id", "employee", "reporting_to", "second_reporting_to"]
+
+
+# utils.py
+def build_tree(manager_id, employees_map):
+    children = []
+    for emp in employees_map.get(manager_id, []):
+        children.append(
+            {
+                "id": emp.employee_id,
+                "name": emp.employee_name,
+                "designation": emp.designation,
+                "profile_picture": (
+                    emp.profile_picture.url if emp.profile_picture else None
+                ),
+                "children": build_tree(emp.employee_id, employees_map),
+            }
+        )
+    return children
