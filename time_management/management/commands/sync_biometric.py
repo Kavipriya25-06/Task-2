@@ -207,7 +207,9 @@ class Command(BaseCommand):
         yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
         # Use it in your API URL
-        api_url = f"http://192.168.0.209:8001/api/attendance/{yesterday}/"
+        api_url = (
+            f"http://192.168.0.132:9000/api/dtms-event-summary/{yesterday}/"
+        )
 
         # --- 1️ Fetch JSON data from API ---
         try:
@@ -232,10 +234,10 @@ class Command(BaseCommand):
 
         # --- 2️ Process each row ---
         for row in biometric_rows:
-            user_id = row.get("UserId")
+            user_id = row.get("EmpCode")
             record_date = row.get("Date")
-            first_in = row.get("First_In")
-            last_out = row.get("Last_Out")
+            first_in = row.get("FirstIn")
+            last_out = row.get("LastOut")
 
             try:
                 employee = Employee.objects.get(employee_code=str(user_id))
@@ -254,9 +256,9 @@ class Command(BaseCommand):
 
             # --- 4️ Parse datetimes and calculate work hours ---
             try:
-                # Example first_in: "2025-05-08 09:36:02"
-                first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%SZ")
-                last_out_dt = datetime.strptime(last_out, "%Y-%m-%dT%H:%M:%SZ")
+                # Example first_in: "2025-07-30T18:45:56"
+                first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%S")
+                last_out_dt = datetime.strptime(last_out, "%Y-%m-%dT%H:%M:%S")
 
                 in_time_obj = first_in_dt.time()
                 out_time_obj = last_out_dt.time()

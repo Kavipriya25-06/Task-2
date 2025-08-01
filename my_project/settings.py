@@ -31,7 +31,7 @@ IS_PRODUCTION = False  # or False for dev
 # IS_PRODUCTION = True  # or True for production
 
 if IS_PRODUCTION:
-    database_password = "root"
+    database_password = "mysql"
 else:
     database_password = "mysql"
 
@@ -130,31 +130,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-##### Email
-
-#### In case of Zoho mail
-
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.zoho.in"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "example@email.com"  #
-# EMAIL_HOST_PASSWORD = "samplepassword"  # Use app password, not your main password
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-
 ####### Production credentials
 
 if IS_PRODUCTION:
-    ###### In case of Outlook / office 365
+    #### In case of Zoho mail
 
-    ADMIN_EMAIL = "hr@arrisltd.com"  # Change to your actual admin email
+    ADMIN_EMAIL = "sme@aero360.co.in"
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp.office365.com"
+    EMAIL_HOST = "smtp.zoho.com"
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = "hr@arrisltd.com"
-    EMAIL_HOST_PASSWORD = "snij reaw kbfy oiey"  # If 2FA is enabled
+    EMAIL_HOST_USER = "sme@aero360.co.in"  #
+    EMAIL_HOST_PASSWORD = "xYJg8x6JStCd"  # Use app password, not your main password
+    ALL_EMAIL = "all@aero360.co.in"
 
 else:
     ##### in case of Gmail
@@ -166,9 +154,10 @@ else:
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = "suriya.aero360@gmail.com"
     EMAIL_HOST_PASSWORD = "avhc rlvq pbsu alni"  # Use App Password
+    ALL_EMAIL = "suriyaprakash.a@aero360.co.in"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
+DEFAULT_ALL_EMAIL = ALL_EMAIL
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
