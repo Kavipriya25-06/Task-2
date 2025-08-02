@@ -14,7 +14,10 @@ from ..models import (
 )
 from time_management.attachments.serializers import AttachmentSerializer
 from time_management.employee_attachment.serializers import EmployeeAttachmentSerializer
-from time_management.modifications.serializers import ModificationsSerializer
+from time_management.modifications.serializers import (
+    ModificationsSerializer,
+    ModificationsEmployeeSerializer,
+)
 from time_management.languagesknown.serializers import LanguagesKnownSerializer
 from time_management.education.serializers import EducationSerializer
 from time_management.dependant.serializers import DependantSerializer
@@ -231,7 +234,7 @@ class EmployeeAllSerializer(serializers.ModelSerializer):
             modifications = Modifications.objects.filter(
                 employee=obj.employee_id
             ).first()
-            return ModificationsSerializer(modifications).data
+            return ModificationsEmployeeSerializer(modifications).data
         except Modifications.DoesNotExist:
             return None
 
@@ -240,7 +243,7 @@ class EmployeeAllSerializer(serializers.ModelSerializer):
             modifications = Modifications.objects.filter(
                 employee=obj.employee_id
             ).last()
-            return ModificationsSerializer(modifications).data
+            return ModificationsEmployeeSerializer(modifications).data
         except Modifications.DoesNotExist:
             return None
 
