@@ -704,7 +704,7 @@ class Task(models.Model):
 
 class ProjectAssign(models.Model):
     project_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    project_hours = models.DecimalField(max_digits=6, decimal_places=2)
+    project_hours = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=50,
         choices=[
@@ -730,7 +730,7 @@ class ProjectAssign(models.Model):
 
 class BuildingAssign(models.Model):
     building_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    building_hours = models.DecimalField(max_digits=6, decimal_places=2)
+    building_hours = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=50,
         choices=[
@@ -756,7 +756,7 @@ class BuildingAssign(models.Model):
 
 class TaskAssign(models.Model):
     task_assign_id = models.CharField(max_length=50, primary_key=True, blank=True)
-    task_hours = models.DecimalField(max_digits=6, decimal_places=2)
+    task_hours = models.DecimalField(max_digits=10, decimal_places=2)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(
         max_length=50,
