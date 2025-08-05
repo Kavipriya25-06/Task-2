@@ -855,7 +855,7 @@ class TimeSheet(models.Model):
                             defaults={
                                 "duration": duration,
                                 "reason": f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
-                                "expiry_date": self.date + timedelta(days=30),
+                                "expiry_date": self.date + timedelta(days=180),
                                 "status": "eligible",
                             },
                         )
