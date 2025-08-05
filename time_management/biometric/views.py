@@ -492,6 +492,8 @@ def biometric_weekly_task(request, employee_id=None):
 def bulk_biometric_upload(request):
     data = request.data
 
+    include_holidays = data["holiday"] or False
+
     # Generate unique group_id
     group_id = generate_group_id(data["employee"])
 
@@ -508,7 +510,11 @@ def bulk_biometric_upload(request):
         # Check if the date is a weekend or holiday using the Calendar table
         calendar_data = Calendar.objects.filter(date=current_date).first()
 
-        if calendar_data and (calendar_data.is_weekend or calendar_data.is_holiday):
+        if (
+            not include_holidays
+            and calendar_data
+            and (calendar_data.is_weekend or calendar_data.is_holiday)
+        ):
             # Skip weekend or holiday dates
             current_date += timedelta(days=1)
             continue
