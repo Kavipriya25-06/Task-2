@@ -492,7 +492,9 @@ def biometric_weekly_task(request, employee_id=None):
 def bulk_biometric_upload(request):
     data = request.data
 
-    include_holidays = data["holiday"] or False
+    include_holidays = (
+        data["holiday"] if isinstance(data.get("holiday"), bool) else False
+    )
 
     # Generate unique group_id
     group_id = generate_group_id(data["employee"])
