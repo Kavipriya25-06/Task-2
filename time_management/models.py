@@ -403,7 +403,9 @@ class CompOffRequest(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.date} - {self.employee.employee_name}"
+        return (
+            f"{self.date} - {self.employee.employee_name if self.employee else 'None'}"
+        )
 
 
 # Leaves Available Table
