@@ -439,7 +439,7 @@ class LeavesAvailable(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Leaves for {self.employee.employee_name or self.leave_avail_id}"
+        return f"Leaves for {self.employee.employee_name if self.employee else 'None'}"
 
 
 # Leaves Taken Table with Approval Workflow
