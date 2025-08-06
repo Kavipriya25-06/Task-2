@@ -500,7 +500,7 @@ class LeavesTaken(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.leave_type} - {self.employee.employee_name}"
+        return f"{self.leave_type} - {self.employee.employee_name if self.employee else 'None'}"
 
 
 class Calendar(models.Model):
