@@ -143,6 +143,8 @@ if IS_PRODUCTION:
     EMAIL_HOST_USER = "sme@aero360.co.in"  #
     EMAIL_HOST_PASSWORD = "xYJg8x6JStCd"  # Use app password, not your main password
     ALL_EMAIL = "all@aero360.co.in"
+    DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:9001/api"
+    # "http://148.135.138.195:9001/api/dtms_event_time/2025-08-07/"
 
 else:
     ##### in case of Gmail
@@ -155,9 +157,12 @@ else:
     EMAIL_HOST_USER = "suriya.aero360@gmail.com"
     EMAIL_HOST_PASSWORD = "avhc rlvq pbsu alni"  # Use App Password
     ALL_EMAIL = "suriyaprakash.a@aero360.co.in"
+    DEFAULT_BIOMETRIC_URL = "http://192.168.0.132:9000/api"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_ALL_EMAIL = ALL_EMAIL
+
+DEFAULT_BIOMETRIC_URL = DEFAULT_BIOMETRIC_URL
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

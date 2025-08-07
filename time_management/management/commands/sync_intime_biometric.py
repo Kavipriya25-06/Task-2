@@ -1,11 +1,16 @@
+# time_management/management/commands/sync_intime_biometric.py
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from time_management.models import Employee, BiometricData
+from my_project.settings import DEFAULT_BIOMETRIC_URL
 
 import requests
 from datetime import datetime, timedelta, date
 import logging
 import os
+
+from django.db.models import Q
 
 
 class Command(BaseCommand):
@@ -15,7 +20,8 @@ class Command(BaseCommand):
         self.stdout.write("Starting biometric data sync (API)...")
 
         # --- Setup logging with monthly rotation ---
-        log_dir = os.path.join(os.path.dirname(__file__), "../../../logs/")
+        # log_dir = os.path.join(os.path.dirname(__file__), "../../../logs/")
+        log_dir = "/tmp/biometric_logs"
         os.makedirs(log_dir, exist_ok=True)
         log_month = date.today().strftime("%Y-%m")
         log_file = os.path.join(log_dir, f"biometric_sync_{log_month}.log")
@@ -33,7 +39,7 @@ class Command(BaseCommand):
         today_str = date.today().strftime("%Y-%m-%d")
 
         # Use it in your API URL
-        api_url = f"http://192.168.0.132:9000/api/dtms-event-summary/{today_str}/"
+        api_url = f"{DEFAULT_BIOMETRIC_URL}/dtms-event-summary/{today_str}/"
 
         # --- 1️ Fetch JSON data from API ---
         try:
@@ -80,7 +86,7 @@ class Command(BaseCommand):
 
             # --- 4️ Parse datetimes and calculate work hours ---
             try:
-                # Example first_in: "2025-07-30T18:45:56"
+                # Example first_in: "2025-05-08 09:36:02"
                 first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%S")
 
                 in_time_obj = first_in_dt.time()
@@ -95,25 +101,45 @@ class Command(BaseCommand):
 
             # --- 5️ Create or update BiometricData ---
             with transaction.atomic():
-                bio_obj, created = BiometricData.objects.get_or_create(
-                    employee=employee,
-                    date=record_date,
-                    defaults={
-                        "employee_code": employee.employee_code,
-                        "employee_name": employee.employee_name,
-                        "in_time": in_time_obj,
-                        "status": "Present",
-                        "remarks": "",
-                        "modified_by": None,
-                    },
-                )
+                # bio_obj, created = BiometricData.objects.get_or_create(
+                #     employee=employee,
+                #     date=record_date,
+                #     defaults={
+                #         "employee_code": employee.employee_code,
+                #         "employee_name": employee.employee_name,
+                #         "in_time": in_time_obj,
+                #         "status": "Present",
+                #         "remarks": "",
+                #         "modified_by": None,
+                #     },
+                # )
 
-                if not created:
+                # if not created:
+                qs = BiometricData.objects.filter(employee=employee, date=record_date)
+                count = qs.count()
+
+                if count > 1:
+                    warning_msg = f"Multiple records for Employee={user_id}, Date={record_date}. Skipping."
+                    self.stdout.write(self.style.WARNING(warning_msg))
+                    logging.warning(warning_msg)
+                    continue
+                elif count == 1:
+                    bio_obj = qs.first()
                     bio_obj.in_time = in_time_obj
                     bio_obj.status = "Present"
                     bio_obj.save()
                     updated_count += 1
                 else:
+                    BiometricData.objects.create(
+                        employee=employee,
+                        date=record_date,
+                        employee_code=employee.employee_code,
+                        employee_name=employee.employee_name,
+                        in_time=in_time_obj,
+                        status="Present",
+                        remarks="",
+                        modified_by=None,
+                    )
                     created_count += 1
 
         summary = f"Sync complete. Created: {created_count}, Updated: {updated_count}"
