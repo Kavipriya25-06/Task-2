@@ -1,4 +1,4 @@
-#
+#  time_management/management/commands/sync_monthly_biometric.py
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -17,7 +17,8 @@ class Command(BaseCommand):
         self.stdout.write("Starting biometric data sync (API)...")
 
         # ---  Setup logging with monthly rotation ---
-        log_dir = os.path.join(os.path.dirname(__file__), "../../../logs/")
+        # log_dir = os.path.join(os.path.dirname(__file__), "../../../logs/")
+        log_dir = "/tmp/biometric_logs"
         os.makedirs(log_dir, exist_ok=True)
         log_month = date.today().strftime("%Y-%m")
         log_file = os.path.join(log_dir, f"biometric_sync_{log_month}.log")
@@ -119,33 +120,88 @@ class Command(BaseCommand):
 
                 # --- 5 Create or update BiometricData ---
                 with transaction.atomic():
-                    bio_obj, created = BiometricData.objects.get_or_create(
-                        employee=employee,
-                        date=record_date,
-                        defaults={
-                            "employee_code": employee.employee_code,
-                            "employee_name": employee.employee_name,
-                            "in_time": in_time_obj,
-                            "out_time": out_time_obj,
-                            "work_duration": round(work_hours, 2),
-                            "ot": 0,
-                            "total_duration": round(work_hours, 2),
-                            "status": "Present",
-                            "remarks": "",
-                            "modified_by": None,
-                        },
-                    )
+                    # bio_obj, created = BiometricData.objects.get_or_create(
+                    #     employee=employee,
+                    #     date=record_date,
+                    #     defaults={
+                    #         "employee_code": employee.employee_code,
+                    #         "employee_name": employee.employee_name,
+                    #         "in_time": in_time_obj,
+                    #         "out_time": out_time_obj,
+                    #         "work_duration": round(work_hours, 2),
+                    #         "ot": 0,
+                    #         "total_duration": round(work_hours, 2),
+                    #         "status": "Present",
+                    #         "remarks": "",
+                    #         "modified_by": None,
+                    #     },
+                    # )
 
-                    if not created:
-                        # bio_obj.in_time = in_time_obj
-                        bio_obj.out_time = out_time_obj
-                        bio_obj.work_duration = round(work_hours, 2)
-                        bio_obj.total_duration = round(work_hours, 2)
-                        bio_obj.status = "Present"
-                        bio_obj.save()
-                        updated_count += 1
-                    else:
+                    # if not created:
+                    #     # bio_obj.in_time = in_time_obj
+                    #     bio_obj.out_time = out_time_obj
+                    #     bio_obj.work_duration = round(work_hours, 2)
+                    #     bio_obj.total_duration = round(work_hours, 2)
+                    #     bio_obj.status = "Present"
+                    #     bio_obj.save()
+                    #     updated_count += 1
+                    # else:
+                    #     created_count += 1
+
+                    qs = BiometricData.objects.filter(
+                        employee=employee, date=record_date
+                    )
+                    count = qs.count()
+
+                    if count == 0:
+                        # Create new record
+                        BiometricData.objects.create(
+                            employee=employee,
+                            date=record_date,
+                            employee_code=employee.employee_code,
+                            employee_name=employee.employee_name,
+                            in_time=in_time_obj,
+                            out_time=out_time_obj,
+                            work_duration=round(work_hours, 2),
+                            ot=0,
+                            total_duration=round(work_hours, 2),
+                            status="Present",
+                            remarks="",
+                            modified_by=None,
+                        )
                         created_count += 1
+
+                    else:
+                        # Pick the latest modified record
+                        # Get the latest record based on modified_on (fallback to id)
+                        latest_record = qs.order_by("-modified_on").first()
+
+                        # Delete all other duplicates
+                        # qs.exclude(pk=latest_record.pk).delete()
+
+                        if count > 1 and latest_record.modified_by:
+                            # Skip if latest was manually modified
+                            warning_msg = (
+                                f"Multiple records for Employee={user_id}, Date={record_date}. "
+                                f"Latest record modified manually. Skipping update."
+                            )
+                            self.stdout.write(self.style.WARNING(warning_msg))
+                            logging.warning(warning_msg)
+                            continue
+                        # else:
+                        # Clean duplicates except latest
+                        # qs.exclude(pk=latest_record.pk).delete()
+                        # continue
+
+                        # Update latest record
+                        latest_record.in_time = in_time_obj
+                        latest_record.out_time = out_time_obj
+                        latest_record.work_duration = round(work_hours, 2)
+                        latest_record.total_duration = round(work_hours, 2)
+                        latest_record.ot = 0
+                        latest_record.status = "Present"
+                        latest_record.save()
+                        updated_count += 1
 
             total_created += created_count
             total_updated += updated_count

@@ -171,6 +171,7 @@
 #         logging.info(summary)
 #         logging.info("---- Biometric sync ended ----\n")
 
+# time_management/management/commands/sync_biometric.py
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -181,6 +182,8 @@ from datetime import datetime, timedelta, date
 import logging
 import os
 
+from django.db.models import Q
+
 
 class Command(BaseCommand):
     help = "Sync biometric attendance data from external API"
@@ -189,7 +192,8 @@ class Command(BaseCommand):
         self.stdout.write("Starting biometric data sync (API)...")
 
         # --- 🔎 Setup logging with monthly rotation ---
-        log_dir = os.path.join(os.path.dirname(__file__), "../../../logs/")
+        # log_dir = os.path.join(os.path.dirname(__file__), "../../../logs/")
+        log_dir = "/tmp/biometric_logs"
         os.makedirs(log_dir, exist_ok=True)
         log_month = date.today().strftime("%Y-%m")
         log_file = os.path.join(log_dir, f"biometric_sync_{log_month}.log")
@@ -277,25 +281,37 @@ class Command(BaseCommand):
 
             # --- 5️ Create or update BiometricData ---
             with transaction.atomic():
-                bio_obj, created = BiometricData.objects.get_or_create(
-                    employee=employee,
-                    date=record_date,
-                    defaults={
-                        "employee_code": employee.employee_code,
-                        "employee_name": employee.employee_name,
-                        "in_time": in_time_obj,
-                        "out_time": out_time_obj,
-                        "work_duration": round(work_hours, 2),
-                        "ot": 0,
-                        "total_duration": round(work_hours, 2),
-                        "status": "Present",
-                        "remarks": "",
-                        "modified_by": None,
-                    },
-                )
+                # bio_obj, created = BiometricData.objects.get_or_create(
+                #     employee=employee,
+                #     date=record_date,
+                #     defaults={
+                #         "employee_code": employee.employee_code,
+                #         "employee_name": employee.employee_name,
+                #         "in_time": in_time_obj,
+                #         "out_time": out_time_obj,
+                #         "work_duration": round(work_hours, 2),
+                #         "ot": 0,
+                #         "total_duration": round(work_hours, 2),
+                #         "status": "Present",
+                #         "remarks": "",
+                #         "modified_by": None,
+                #     },
+                # )
 
-                if not created:
-                    # bio_obj.in_time = in_time_obj
+                # if not created:
+                #     # bio_obj.in_time = in_time_obj
+                qs = BiometricData.objects.filter(employee=employee, date=record_date)
+                count = qs.count()
+
+                if count > 1:
+                    warning_msg = f"Multiple records for Employee={user_id}, Date={record_date}. Skipping."
+                    self.stdout.write(self.style.WARNING(warning_msg))
+                    logging.warning(warning_msg)
+                    continue  # move to next record
+
+                elif count == 1:
+                    # Update existing
+                    bio_obj = qs.first()
                     bio_obj.out_time = out_time_obj
                     bio_obj.work_duration = round(work_hours, 2)
                     bio_obj.total_duration = round(work_hours, 2)
@@ -303,6 +319,21 @@ class Command(BaseCommand):
                     bio_obj.save()
                     updated_count += 1
                 else:
+                    # Create new
+                    BiometricData.objects.create(
+                        employee=employee,
+                        date=record_date,
+                        employee_code=employee.employee_code,
+                        employee_name=employee.employee_name,
+                        in_time=in_time_obj,
+                        out_time=out_time_obj,
+                        work_duration=round(work_hours, 2),
+                        ot=0,
+                        total_duration=round(work_hours, 2),
+                        status="Present",
+                        remarks="",
+                        modified_by=None,
+                    )
                     created_count += 1
 
         summary = f"Sync complete. Created: {created_count}, Updated: {updated_count}"
