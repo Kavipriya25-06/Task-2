@@ -99,8 +99,8 @@ class Command(BaseCommand):
                 # --- 4 Parse datetimes and calculate work hours ---
                 try:
                     # Example first_in: "2025-05-08 09:36:02"
-                    first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%SZ")
-                    last_out_dt = datetime.strptime(last_out, "%Y-%m-%dT%H:%M:%SZ")
+                    first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%S")
+                    last_out_dt = datetime.strptime(last_out, "%Y-%m-%dT%H:%M:%S")
 
                     in_time_obj = first_in_dt.time()
                     out_time_obj = last_out_dt.time()
