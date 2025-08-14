@@ -981,7 +981,11 @@ class TimeSheet(models.Model):
         if self.date and self.employee:
             try:
                 calendar = Calendar.objects.get(date=self.date)
-                if calendar.is_weekend or calendar.is_holiday:
+                if (
+                    # calendar.is_weekend or
+                    calendar.is_holiday
+                    or calendar.day_of_week == 6
+                ):
 
                     # # Check if already exists
                     # if not CompOffRequest.objects.filter(
