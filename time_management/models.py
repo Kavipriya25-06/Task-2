@@ -17,6 +17,8 @@ from django.core.mail import EmailMessage
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 import uuid
+from django.core.validators import MinValueValidator
+from decimal import Decimal
 
 
 # Employee Table
@@ -176,6 +178,74 @@ class Employee(models.Model):
 
     def __str__(self):
         return self.employee_id
+
+
+# salary model
+
+class SalaryBreakdown(models.Model):
+    employee = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, related_name="salary_breakdowns"
+    )
+    month = models.PositiveSmallIntegerField()  # 1-12
+    year = models.PositiveIntegerField()
+
+    # Earnings
+    basic_salary = models.DecimalField(
+        max_digits=20, decimal_places=2, validators=[MinValueValidator(Decimal("0.00"))]
+    )
+    special_allowance = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0.00
+    )
+    hra = models.DecimalField(
+        "House Rent Allowance", max_digits=20, decimal_places=2, default=0.00
+    )
+    conveyance = models.DecimalField(
+        "Conveyance Allowance", max_digits=20, decimal_places=2, default=0.00
+    )
+    medical = models.DecimalField(
+        "Medical Allowance", max_digits=20, decimal_places=2, default=0.00
+    )
+
+    professional_tax = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0.00
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("employee", "month", "year")
+
+    def fixed_gross(self):
+        return (
+            self.basic_salary
+            + self.special_allowance
+            + self.hra
+            + self.conveyance
+            + self.medical
+        )
+
+    # Employee contributions
+    def employee_pf(self):
+        return self.basic_salary * Decimal("0.12")
+
+    def employee_esi(self):
+        return self.fixed_gross() * Decimal("0.0075")
+
+    def total_deductions(self):
+        return self.employee_pf() + self.employee_esi() + self.professional_tax
+
+    def net_salary(self):
+        return self.fixed_gross() - self.total_deductions()
+
+    # Employer contributions
+    def employer_pf(self):
+        return self.basic_salary * Decimal("0.12")
+
+    def employer_esi(self):
+        return self.fixed_gross() * Decimal("0.0325")
+
+    def ctc(self):
+        return self.fixed_gross() + self.employer_pf() + self.employer_esi()
 
 
 class Modifications(models.Model):
@@ -504,6 +574,29 @@ class CompOff(models.Model):
 
     def __str__(self):
         return f"{self.leave_type}: {self.min_hours} - {self.max_hours} hrs"
+
+
+class CompOffExpiry(models.Model):
+
+    days_to_expire = models.IntegerField(default=30, blank=True, null=True)
+    name = models.CharField(
+        max_length=50,
+        choices=[
+            ("expiry", "Expiry Date"),
+        ],
+        default="expiry",
+        unique=True,
+    )
+
+    def __str__(self):
+        return f"{self.name}: {self.days_to_expire}"
+
+
+def get_compoff_expiry_days():
+    try:
+        return CompOffExpiry.objects.get(name="expiry").days_to_expire or 30
+    except CompOffExpiry.DoesNotExist:
+        return 30  # default fallback
 
 
 # Leaves Taken Table with Approval Workflow
@@ -1018,13 +1111,15 @@ class TimeSheet(models.Model):
                         #     expiry_date=self.date + timedelta(days=30),
                         #     status="eligible",
                         # )
+                        expiry_days = get_compoff_expiry_days()
                         CompOffRequest.objects.update_or_create(
                             employee=self.employee,
                             date=self.date,
                             defaults={
                                 "duration": duration,
                                 "reason": f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
-                                "expiry_date": self.date + timedelta(days=180),
+                                # "expiry_date": self.date + timedelta(days=180),
+                                "expiry_date": self.date + timedelta(days=expiry_days),
                                 "status": "eligible",
                             },
                         )
