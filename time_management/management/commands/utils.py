@@ -8,7 +8,8 @@ def calculate_leave_entitlement(join_date: date) -> int:
     """
     month = join_date.month
     interval = (month - 1) // 2  # Jan–Feb = 0, Mar–Apr = 1, ..., Nov–Dec = 5
-    return max(6 - interval, 1)  # Never less than 1
+    return max(6.5 - (join_date.month * 0.5), 0.5)
+    # return max(6 - interval, 1)  # Never less than 1
 
 
 def create_or_update_leaves_for_employee(emp, is_update=False):
@@ -37,7 +38,7 @@ def create_or_update_leaves_for_employee(emp, is_update=False):
         # When fulltime confirmed from probation
         join_date = emp.probation_confirmation_date
 
-    sick_leave = casual_leave = earned_leave = comp_off = 0
+    sick_leave = casual_leave = earned_leave = 0
 
     if effective_type == "Fulltime":
         leave_count = calculate_leave_entitlement(join_date)
@@ -78,6 +79,6 @@ def create_or_update_leaves_for_employee(emp, is_update=False):
     leave_obj.sick_leave = sick_leave
     leave_obj.casual_leave = casual_leave
     leave_obj.earned_leave = earned_leave
-    leave_obj.comp_off = comp_off
+    # leave_obj.comp_off = comp_off
     leave_obj.save()
     return True

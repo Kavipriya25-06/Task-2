@@ -189,3 +189,138 @@ def task_by_employee(request, employee_id=None):
         tasks = TaskAssign.objects.all()
         serializer = TaskBuildingSerializer(tasks, many=True)
         return Response(serializer.data)
+
+
+@api_view(["GET"])
+def default_task_by_employee(request, employee_id=None):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99005",
+        "99007",
+        "99008",
+        "1",
+        "1a",
+        "2001000",
+    ]
+    default_tasks = TaskAssign.objects.filter(
+        building_assign__project_assign__project__project_code__in=default_project_codes
+    )
+
+    serializer = TaskBuildingSerializer(default_tasks, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+def default_tasks(request, employee_id=None):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99005",
+        "99007",
+        "99008",
+        "1",
+        "1a",
+        "2001000",
+    ]
+    default_tasks = TaskAssign.objects.filter(
+        building_assign__project_assign__project__project_code__in=default_project_codes
+    )
+
+    # Extract Task objects
+    task_ids = default_tasks.values_list("task__task_id", flat=True)
+    # tasks = Task.objects.filter(task_id__in=task_ids).distinct()
+
+    tasks = Task.objects.filter(
+        taskassign__building_assign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
+
+    print("Other tasks", tasks)
+
+    serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+def other_tasks(request, employee_id=None):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99002",
+        "99003",
+        "99004",
+        "99004a",
+        "99005",
+        "99006",
+        "99007",
+        "99008",
+        "99009",
+        "1",
+        "1a",
+        "2001000",
+    ]
+    # other_tasks_assigned = TaskAssign.objects.exclude(
+    #     building_assign__project_assign__project__project_code__in=default_project_codes
+    # )
+
+    # for task in other_tasks_assigned:
+    #     other_tasks = task.task
+
+    #     print("Other tasks", other_tasks)
+
+    # # Extract Task objects
+    # task_ids = other_tasks_assigned.values_list("task__task_id", flat=True)
+    # tasks = Task.objects.filter(task_id__in=task_ids).distinct()
+
+    tasks = Task.objects.exclude(
+        taskassign__building_assign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
+
+    print("Other tasks", tasks)
+
+    serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data)
+
+
+# views.py
+@api_view(["POST"])
+def upsert_tasks_assigned(request):
+    data = request.data
+    task = data.get("task")
+    data_hours = float(data.get("task_hours", 0))
+    building_assign = data.get("building_assign")
+    employee_ids = data.get("employee", [])
+
+    instance = TaskAssign.objects.filter(
+        task_id=task, building_assign_id=building_assign
+    ).first()
+
+    # Convert single ID to list
+    if not isinstance(employee_ids, list):
+        employee_ids = [employee_ids]
+
+    if instance:
+        data_without_employee = data.copy()
+        data_without_employee.pop("employee", None)
+        data_without_employee.pop("task_hours", None)
+        serializer = TaskAssignSerializer(
+            instance, data=data_without_employee, partial=True
+        )
+    else:
+        serializer = TaskAssignSerializer(data=data)
+
+    if serializer.is_valid():
+        task_obj = serializer.save()
+        existing_ids = set(task_obj.employee.values_list("employee_id", flat=True))
+        new_ids = set(employee_ids)
+        to_add = list(new_ids - existing_ids)
+        print("Existing", existing_ids)
+        print("new ids", new_ids)
+        print("to add", to_add)
+        task_obj.task_hours = float(task_obj.task_hours or 0) + data_hours
+        task_obj.save()
+        # task_obj.employee.add(*employee_ids)  # set M2M employee field
+        if to_add:
+            task_obj.employee.add(*to_add)
+        return Response(TaskAssignSerializer(task_obj).data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

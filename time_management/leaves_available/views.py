@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from time_management.leaves_available.serializers import (
     LeavesAvailableSerializer,
+    LeavesAvailableWithLOPSerializer,
     CompOffSerializer,
 )
 
@@ -191,3 +192,21 @@ def get_comp_off(hours_worked):
 
     # If none matched → no deduction
     return 0.0
+
+
+@api_view(["GET"])
+def leaves_available_with_lop(request, employee_id=None):
+    year = request.query_params.get("year")
+    if request.method == "GET":
+        if employee_id:
+            try:
+                obj = LeavesAvailable.objects.get(employee_id=employee_id)
+                serializer = LeavesAvailableWithLOPSerializer(
+                    obj, context={"request": request, "year": year}
+                )
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except LeavesAvailable.DoesNotExist:
+                return Response(
+                    {"error": "Leave record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )

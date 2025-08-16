@@ -32,6 +32,7 @@ from django.conf.urls.static import static
 #     Calendar,
 #     BiometricData,
 # )
+# ---------- views imports (merged, unique names only) ----------
 from time_management.attachments.views import (
     attachment_detail,
     attachment_list_create,
@@ -70,7 +71,11 @@ from time_management.hierarchy.views import (
     department_chart,
     manager_chart,
 )
-from time_management.leaves_available.views import leaves_available_api, comp_off_api
+from time_management.leaves_available.views import (
+    leaves_available_api,
+    comp_off_api,
+    leaves_available_with_lop,
+)
 from time_management.leaves_taken.views import (
     leaves_taken_api,
     org_leaves,
@@ -113,6 +118,7 @@ from time_management.project.views import (
 from time_management.reports.views import (
     hours_project_view,
     get_last_project,
+    get_last_building,
     year_leaves,
     weekly_hours_project,
     monthly_hours_project,
@@ -136,6 +142,9 @@ from time_management.building.views import (
     create_building_with_assignment,
     test_post,
     building_assign_create,
+    building_by_employee,
+    default_building,
+    other_building,
 )
 from time_management.task.views import (
     task_list_create,
@@ -146,6 +155,10 @@ from time_management.task.views import (
     task_and_assign_test,
     task_building,
     task_by_employee,
+    default_task_by_employee,
+    default_tasks,
+    other_tasks,
+    upsert_tasks_assigned,
 )
 from time_management.time_sheet.views import (
     timesheet_data_api,
@@ -171,8 +184,10 @@ from time_management.company_policy.views import company_policy_api
 from time_management.views import MyTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView
 
+# ---------- urlpatterns (single, deduplicated list) ----------
 urlpatterns = [
     # path("admin/", admin.site.urls),
+    # Employees & related
     path("employees/", employee_api),
     path("employees/<str:employee_id>/", employee_api),
     path("employees-details/", employee_view_api),
@@ -182,19 +197,19 @@ urlpatterns = [
     path("employees-all-details/", employee_all_details_api),
     path("employees-all-details/<str:employee_id>/", employee_all_details_api),
     path("unassigned-employees/", unassigned_employee),
+    # Employee helper endpoints
     path("emp-details/", emp_under_mngr_view),
     path("emp-details/<str:employee_id>/", emp_under_mngr_view),
     path("additional-resource/", additional_resource_view),
     path("additional-resource/<str:employee_id>/", additional_resource_view),
+    # Managers & team leads
     path("teamlead-and-managers/", mntl_view_api, name="managers-and-team-leads"),
     path("teamlead-and-managers/<str:employee_id>/", mntl_view_api),
-    path(
-        "teamlead-managers-projects/",
-        manager_tl_projects,
-    ),
+    path("teamlead-managers-projects/", manager_tl_projects),
     path("teamlead-managers-projects/<str:employee_id>/", manager_tl_projects),
     path("teamlead_projects/", tl_projects),
     path("teamlead_projects/<str:employee_id>/", tl_projects),
+    # Auth / users
     path("login-details/", login_details),
     path("login-details/<str:email>/", login_details),
     path("login-details/<str:email>/<str:password>/", login_details),
@@ -204,9 +219,8 @@ urlpatterns = [
     path("user-details/<str:user_id>/", user_details),
     path("send-otp/", send_reset_otp),
     path("reset-password/", reset_password),
+    # Hierarchy / org chart
     path("hierarchy/", hierarchy_api),
-    path("orgchart/department/", department_chart),
-    path("orgchart/manager/", manager_chart),
     path("hierarchy/<str:hierarchy_id>/", hierarchy_api),
     path("hierarchy/by_employee/", get_hierarchy_by_employee),
     path("hierarchy/by_employee/<str:employee_id>/", get_hierarchy_by_employee),
@@ -218,9 +232,14 @@ urlpatterns = [
     path("teamlead-hierarchy/<str:teamlead_id>/", teamlead_hierarchy),
     path("org-hierarchy/", org_hierarchy),
     path("org-hierarchy/<str:emp_id>/", org_hierarchy),
+    path("orgchart/department/", department_chart),
+    path("orgchart/manager/", manager_chart),
+    path("hierarchy/by_employee/<str:employee_id>/", get_hierarchy_by_employee),
+    # Leaves & comp-off
     path("leaves-available/", leaves_available_api),
     path("leaves-available/<str:leave_avail_id>/", leaves_available_api),
     path("leaves-available/by_employee/<str:employee_id>/", leaves_available_api),
+    path("leaves-available-lop/<str:employee_id>/", leaves_available_with_lop),
     path("comp-off/", comp_off_api),
     path("comp-off/<int:id>/", comp_off_api),
     path("comp-off-request/", compoff_request_api),
@@ -234,6 +253,7 @@ urlpatterns = [
         compoff_manager_view_api,
     ),
     path("comp-off-manager-view/manager/<str:manager_id>/", compoff_manager_view_api),
+    # Leaves taken / requests / reports
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),
     path("leaves-taken/by_employee/<str:employee_id>/", leaves_taken_api),
@@ -242,8 +262,10 @@ urlpatterns = [
     path("employee-lop/", employee_lop_view),
     path("leave-request/", leave_request_api),
     path("leave-request/<str:manager_id>/", leave_request_api),
+    # Calendar
     path("calendar/", calendar_api),
     path("calendar/<str:calendar_id>/", calendar_api),
+    # Biometric / attendance
     path("biometric-view/", biometric_view_api),
     path("biometric-view/<str:biometric_id>/", biometric_view_api),
     path("biometric-data/", biometric_data_api),
@@ -262,10 +284,12 @@ urlpatterns = [
     path("attendance-upload/", bulk_biometric_upload),
     path("weekly-attendance/", weekly_attendance),
     path("weekly-attendance/<str:employee_id>/", weekly_attendance),
+    # Projects / assignments / reports
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),
     path("last-project/", get_last_project, name="last-project"),
+    path("last-building/<str:project_id>/", get_last_building, name="last-building"),
     path("project-hours/", hours_project_view, name="project-hours"),
     path("project-hours/<str:project_id>/", hours_project_view, name="project-hours"),
     path("weekly-project-hours/", weekly_hours_project, name="project-hours"),
@@ -296,16 +320,8 @@ urlpatterns = [
         department_weekly_hours_project,
         name="project-hours",
     ),
-    path(
-        "weekly-employees/",
-        weekly_employees,
-        name="project-hours",
-    ),
-    path(
-        "weekly-employees/<str:department>/",
-        weekly_employees,
-        name="project-hours",
-    ),
+    path("weekly-employees/", weekly_employees, name="project-hours"),
+    path("weekly-employees/<str:department>/", weekly_employees, name="project-hours"),
     path("variation/", variation_api, name="variation-detail"),
     path("variation/<int:id>/", variation_api, name="variation-detail"),
     path("projects-screen/", full_project_view, name="project-detail"),
@@ -342,9 +358,7 @@ urlpatterns = [
         name="project-assigned-employee",
     ),
     path(
-        "projects-and-assigned/",
-        project_and_assign,
-        name="project-assign-list-create",
+        "projects-and-assigned/", project_and_assign, name="project-assign-list-create"
     ),
     path(
         "projects-and-assigned/<str:project_assign_id>/",
@@ -358,6 +372,7 @@ urlpatterns = [
     path("area-of-work/<int:id>/", areaofwork_api, name="Area-of-work"),
     path("discipline/", discipline_api, name="Discipline"),
     path("discipline/<int:id>/", discipline_api, name="Discipline"),
+    # Buildings
     path("buildings/", building_list_create, name="building-list-create"),
     path("buildings/<str:building_id>/", building_detail, name="building-detail"),
     path(
@@ -377,68 +392,63 @@ urlpatterns = [
     ),
     path("buildings-create/", building_assign_create, name="building-create-all"),
     path("test-post/", test_post, name="test-create-all"),
-    path(
-        "buildings-and-assigned/",
-        building_and_assign,
-        name="building-and-assign",
-    ),
+    path("buildings-and-assigned/", building_and_assign, name="building-and-assign"),
     path(
         "buildings-and-assigned/<str:building_assign_id>/",
         building_and_assign,
         name="building-and-assign",
     ),
-    path(
-        "buildings-and-projects/",
-        building_and_project,
-        name="building-and-project",
-    ),
+    path("buildings-and-projects/", building_and_project, name="building-and-project"),
     path(
         "buildings-and-projects/<str:building_assign_id>/",
         building_and_project,
         name="building-and-project",
     ),
+    path("buildings-by-employee/", building_by_employee, name="Tasks-and-buildings"),
+    path(
+        "buildings-by-employee/<str:employee_id>/",
+        building_by_employee,
+        name="tasks-and-buildings",
+    ),
+    path("default-buildings/", default_building, name="default-buildings"),
+    path("other-buildings/", other_building, name="other-buildings"),
+    # Tasks
     path("tasks/", task_list_create, name="task-list-create"),
     path("tasks/<str:task_id>/", task_detail, name="task-detail"),
-    path(
-        "tasks-assigned/",
-        task_assign_list_create,
-        name="task-assign-list-create",
-    ),
+    path("tasks-assigned/", task_assign_list_create, name="task-assign-list-create"),
     path(
         "tasks-assigned/<str:task_assign_id>/",
         task_assign_detail,
         name="task-assign-detail",
     ),
-    path(
-        "tasks-and-assigned/",
-        task_and_assign,
-        name="task-assign-list-create",
-    ),
+    path("tasks-and-assigned/", task_and_assign, name="task-assign-list-create"),
     path(
         "tasks-and-assigned/<str:task_assign_id>/",
         task_and_assign,
         name="task-assign-detail",
     ),
-    path(
-        "tasks-building/",
-        task_building,
-        name="Tasks-and-buildings",
-    ),
+    path("tasks-building/", task_building, name="Tasks-and-buildings"),
     path(
         "tasks-building/<str:task_assign_id>/",
         task_building,
         name="tasks-and-buildings",
     ),
-    path(
-        "tasks-by-employee/",
-        task_by_employee,
-        name="Tasks-and-buildings",
-    ),
+    path("tasks-by-employee/", task_by_employee, name="Tasks-and-buildings"),
     path(
         "tasks-by-employee/<str:employee_id>/",
         task_by_employee,
         name="tasks-and-buildings",
     ),
+    path("default-tasks/", default_tasks, name="Tasks-and-buildings"),
+    path("default-tasks/<str:employee_id>/", default_tasks, name="tasks-and-buildings"),
+    path("other-tasks/", other_tasks, name="Tasks-and-buildings"),
+    path(
+        "default-tasks-by-employee/",
+        default_task_by_employee,
+        name="Tasks-and-buildings",
+    ),
+    path("upsert-tasks/", upsert_tasks_assigned, name="Tasks-and-buildings"),
+    # Timesheet
     path("timesheet/", timesheet_data_api, name="timesheet"),
     path("timesheet/<str:timesheet_id>/", timesheet_data_api, name="timesheet"),
     path("timesheet-manager/", timesheet_under_manager, name="timesheet"),
@@ -477,32 +487,14 @@ urlpatterns = [
         employee_report_week,
         name="timesheet",
     ),
+    path("total-hours/project/<str:project_id>/", total_logged_hours, name="timesheet"),
     path(
-        "total-hours/project/<str:project_id>/",
-        total_logged_hours,
-        name="timesheet",
+        "total-hours/building/<str:building_id>/", total_logged_hours, name="timesheet"
     ),
-    path(
-        "total-hours/building/<str:building_id>/",
-        total_logged_hours,
-        name="timesheet",
-    ),
-    path(
-        "total-hours/task/<str:task_id>/",
-        total_logged_hours,
-        name="timesheet",
-    ),
-    path(
-        "attachments/",
-        attachment_list_create,
-        name="attachment_list_create",
-    ),
-    path(
-        "attachments/<int:pk>/",
-        attachment_detail,
-        name="attachment_detail",
-    ),
-    # Filtered
+    path("total-hours/task/<str:task_id>/", total_logged_hours, name="timesheet"),
+    # Attachments
+    path("attachments/", attachment_list_create, name="attachment_list_create"),
+    path("attachments/<int:pk>/", attachment_detail, name="attachment_detail"),
     path(
         "attachments/task/<str:task_id>/",
         attachments_by_task,
@@ -528,6 +520,7 @@ urlpatterns = [
         attachments_by_project,
         name="attachments_by_project",
     ),
+    # Misc: modifications, designation, assets, dependant, education, work-experience, languages-known, employee-attachment, company-policy
     path("modifications/", modifications_api),
     path("modifications/<int:id>/", modifications_api),
     path("designation/", designation_api),
@@ -546,6 +539,7 @@ urlpatterns = [
     path("employee-attachment/<int:id>/", employee_attachment_api),
     path("company-policy/", company_policy_api),
     path("company-policy/<int:id>/", company_policy_api),
+    # JWT tokens (commented out in original)
     # path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     # path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

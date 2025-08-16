@@ -264,6 +264,8 @@ def weekly_attendance(request, employee_id=None):
         print(employees, "Employees")
 
         biometric_qs = BiometricData.objects.filter(employee__in=employees)
+        manager_biometric_qs = BiometricData.objects.filter(employee=manager)
+        biometric_qs = biometric_qs | manager_biometric_qs
         print(biometric_qs, "Biometric qs")
         if today:
             weekday = today.weekday()
@@ -490,6 +492,10 @@ def biometric_weekly_task(request, employee_id=None):
 def bulk_biometric_upload(request):
     data = request.data
 
+    include_holidays = (
+        data["holiday"] if isinstance(data.get("holiday"), bool) else False
+    )
+
     # Generate unique group_id
     group_id = generate_group_id(data["employee"])
 
@@ -506,7 +512,11 @@ def bulk_biometric_upload(request):
         # Check if the date is a weekend or holiday using the Calendar table
         calendar_data = Calendar.objects.filter(date=current_date).first()
 
-        if calendar_data and (calendar_data.is_weekend or calendar_data.is_holiday):
+        if (
+            not include_holidays
+            and calendar_data
+            and (calendar_data.is_weekend or calendar_data.is_holiday)
+        ):
             # Skip weekend or holiday dates
             current_date += timedelta(days=1)
             continue

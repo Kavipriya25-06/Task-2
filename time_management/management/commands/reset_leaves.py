@@ -18,9 +18,9 @@ class Command(BaseCommand):
                 emp = leave.employee
                 print("employee type", emp.employment_type)
                 if emp and emp.employment_type == "Fulltime":
-                    leave.sick_leave = 6
+                    leave.sick_leave += 6
                     leave.casual_leave = 6
-                    leave.comp_off = 0
+                    # leave.comp_off = 0
                     leave.earned_leave += 6  # carry forward + new
                     leave.save()
             self.stdout.write(

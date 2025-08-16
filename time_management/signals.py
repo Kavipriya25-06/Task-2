@@ -1,4 +1,6 @@
-from django.db.models.signals import post_save, post_delete, pre_save
+
+from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
+
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.db.models import Sum, Q
@@ -259,24 +261,60 @@ def delete_related_timesheets_on_leave_deletion(sender, instance, **kwargs):
     ).delete()
 
 
+@receiver(pre_save, sender=Employee)
+def track_important_field_changes(sender, instance, **kwargs):
+    try:
+        old = Employee.objects.get(pk=instance.pk)
+        instance._doj_changed = old.doj != instance.doj
+        instance._probation_confirmation_changed = (
+            old.probation_confirmation_date != instance.probation_confirmation_date
+        )
+        instance._contract_end_changed = (
+            old.contract_end_date != instance.contract_end_date
+        )
+        instance._employment_type_changed = (
+            old.employment_type != instance.employment_type
+        )
+    except Employee.DoesNotExist:
+        instance._doj_changed = True
+        instance._probation_confirmation_changed = True
+        instance._contract_end_changed = True
+        instance._employment_type_changed = True
+
+
 @receiver(post_save, sender=Employee)
 def handle_employee_leave_logic(sender, instance, created, **kwargs):
     if created:
         create_or_update_leaves_for_employee(instance)
-
     else:
-        try:
-            old_instance = Employee.objects.get(employee_id=instance.employee_id)
-        except Employee.DoesNotExist:
-            return
-
-        # Check for transition from Probation to Fulltime
+        # Recalculate only if relevant fields changed
         if (
-            old_instance.employment_type == "Probation"
-            and instance.employment_type == "Fulltime"
-            and instance.probation_confirmation_date
+            getattr(instance, "_doj_changed", False)
+            or getattr(instance, "_probation_confirmation_changed", False)
+            or getattr(instance, "_contract_end_changed", False)
+            or getattr(instance, "_employment_type_changed", False)
         ):
             create_or_update_leaves_for_employee(instance, is_update=True)
+
+
+# @receiver(post_save, sender=Employee)
+# def handle_employee_leave_logic(sender, instance, created, **kwargs):
+#     if created:
+#         create_or_update_leaves_for_employee(instance)
+
+#     else:
+#         try:
+#             old_instance = Employee.objects.get(employee_id=instance.employee_id)
+#         except Employee.DoesNotExist:
+#             return
+
+#         # Check for transition from Probation to Fulltime
+#         if (
+#             old_instance.employment_type == "Probation"
+#             and instance.employment_type == "Fulltime"
+#             and instance.probation_confirmation_date
+#         ):
+#             create_or_update_leaves_for_employee(instance, is_update=True)
 
 
 @receiver(post_save, sender=Employee)

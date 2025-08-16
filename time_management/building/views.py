@@ -350,6 +350,88 @@ def create_building_with_assignment(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(["GET"])
+def building_by_employee(request, employee_id=None):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99005",
+        "99007",
+        "99008",
+        "1",
+        "1a",
+        "2001000",
+    ]
+    default_tasks = BuildingAssign.objects.filter(
+        project_assign__project__project_code__in=default_project_codes
+    )
+    # print("Default project", default_tasks)
+    if employee_id:
+        try:
+            tasks = BuildingAssign.objects.filter(
+                employee__employee_id=employee_id,
+                project_assign__project__status=True,
+            )
+            all_tasks = default_tasks | tasks
+        except BuildingAssign.DoesNotExist:
+            return Response(
+                {"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BuildingAndProjectSerializer(all_tasks, many=True)
+        return Response(serializer.data)
+    else:
+        tasks = BuildingAssign.objects.all()
+        serializer = BuildingAndProjectSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+
+@api_view(["GET"])
+def default_building(request):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99005",
+        "99007",
+        "99008",
+        "1",
+        "1a",
+        "2001000",
+    ]
+
+    buildings = Building.objects.filter(
+        buildingassign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
+    serializer = BuildingSerializer(buildings, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+def other_building(request):
+    default_project_codes = [
+        "99000",
+        "99001",
+        "99002",
+        "99003",
+        "99004",
+        "99004a",
+        "99005",
+        "99006",
+        "99007",
+        "99008",
+        "99009",
+        "1",
+        "1a",
+        "2001000",
+    ]
+
+    buildings = Building.objects.exclude(
+        buildingassign__project_assign__project__project_code__in=default_project_codes
+    ).distinct()
+    serializer = BuildingSerializer(buildings, many=True)
+    return Response(serializer.data)
+
+
 #####
 #####
 #####

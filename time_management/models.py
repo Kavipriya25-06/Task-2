@@ -955,7 +955,7 @@ class TimeSheet(models.Model):
     employee = models.ForeignKey(
         Employee, on_delete=models.SET_NULL, blank=True, null=True
     )
-    task_assign = models.ForeignKey(TaskAssign, on_delete=models.SET_NULL, null=True)
+    task_assign = models.ForeignKey(TaskAssign, on_delete=models.CASCADE, null=True)
     task_hours = models.DecimalField(max_digits=6, decimal_places=2)
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
@@ -1024,7 +1024,7 @@ class TimeSheet(models.Model):
                             defaults={
                                 "duration": duration,
                                 "reason": f"Worked on {'Weekend' if calendar.is_weekend else 'Holiday'}",
-                                "expiry_date": self.date + timedelta(days=30),
+                                "expiry_date": self.date + timedelta(days=180),
                                 "status": "eligible",
                             },
                         )

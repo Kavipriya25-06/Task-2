@@ -3,7 +3,9 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from time_management.models import Employee, BiometricData
+
 from my_project.settings import DEFAULT_BIOMETRIC_URL
+
 
 import requests
 from datetime import datetime, timedelta, date
@@ -51,6 +53,7 @@ class Command(BaseCommand):
         ):
             date_str = single_date.strftime("%Y-%m-%d")
             api_url = f"{DEFAULT_BIOMETRIC_URL}/dtms-event-summary/{date_str}/"
+
             self.stdout.write(f"Fetching data for {date_str}")
             logging.info(f"Fetching data for {date_str}")
             # --- 1 Fetch JSON data from API ---
@@ -81,6 +84,7 @@ class Command(BaseCommand):
                 first_in = row.get("FirstIn")
                 last_out = row.get("LastOut")
 
+
                 try:
                     employee = Employee.objects.get(employee_code=str(user_id))
                 except Employee.DoesNotExist:
@@ -99,8 +103,10 @@ class Command(BaseCommand):
                 # --- 4 Parse datetimes and calculate work hours ---
                 try:
                     # Example first_in: "2025-05-08 09:36:02"
+
                     first_in_dt = datetime.strptime(first_in, "%Y-%m-%dT%H:%M:%S")
                     last_out_dt = datetime.strptime(last_out, "%Y-%m-%dT%H:%M:%S")
+
 
                     in_time_obj = first_in_dt.time()
                     out_time_obj = last_out_dt.time()
