@@ -1,4 +1,3 @@
-
 from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 
 from django.dispatch import receiver
@@ -414,43 +413,43 @@ def update_consumed_hours(sender, instance, **kwargs):
     project.save()
 
 
-@receiver(pre_save, sender=Calendar)
-def notify_on_calendar_flag_change(sender, instance, **kwargs):
-    if not instance.pk:
-        return  # It's a new record, not an update
+# @receiver(pre_save, sender=Calendar)
+# def notify_on_calendar_flag_change(sender, instance, **kwargs):
+#     if not instance.pk:
+#         return  # It's a new record, not an update
 
-    try:
-        previous = Calendar.objects.get(pk=instance.pk)
-    except Calendar.DoesNotExist:
-        return
-    # Check if either is_holiday or is_weekend has changed
-    if (
-        previous.is_holiday != instance.is_holiday
-        or previous.is_weekend != instance.is_weekend
-    ):
-        date_str = instance.date.strftime("%d-%m-%Y")
+#     try:
+#         previous = Calendar.objects.get(pk=instance.pk)
+#     except Calendar.DoesNotExist:
+#         return
+#     # Check if either is_holiday or is_weekend has changed
+#     if (
+#         previous.is_holiday != instance.is_holiday
+#         or previous.is_weekend != instance.is_weekend
+#     ):
+#         date_str = instance.date.strftime("%d-%m-%Y")
 
-        if instance.is_holiday:
-            message = (
-                f"Dear Team,\n\n"
-                f"The day {date_str} is marked as a holiday on occasion of '{instance.notes or 'unspecified'}'.\n\n"
-                "Regards,\nAdmin Team"
-            )
-        elif not instance.is_weekend and not instance.is_holiday:
-            message = f"The day {date_str} is marked as a working day."
-            message = (
-                f"Dear Team,\n\n"
-                f"The day {date_str} is marked as a working day because of '{instance.notes or 'unspecified'}'.\n\n"
-                "Regards,\nAdmin Team"
-            )
+#         if instance.is_holiday:
+#             message = (
+#                 f"Dear Team,\n\n"
+#                 f"The day {date_str} is marked as a holiday on occasion of '{instance.notes or 'unspecified'}'.\n\n"
+#                 "Regards,\nAdmin Team"
+#             )
+#         elif not instance.is_weekend and not instance.is_holiday:
+#             message = f"The day {date_str} is marked as a working day."
+#             message = (
+#                 f"Dear Team,\n\n"
+#                 f"The day {date_str} is marked as a working day because of '{instance.notes or 'unspecified'}'.\n\n"
+#                 "Regards,\nAdmin Team"
+#             )
 
-        subject = "Calendar Working day changed"
+#         subject = "Calendar Working day changed"
 
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,  # Replace with your configured from address
-            [settings.ALL_EMAIL],
-            # cc=[settings.ADMIN_EMAIL],  # Replace with your recipient(s)
-            fail_silently=False,
-        )
+        # send_mail(
+        #     subject,
+        #     message,
+        #     settings.DEFAULT_FROM_EMAIL,  # Replace with your configured from address
+        #     [settings.ALL_EMAIL],
+        #     # cc=[settings.ADMIN_EMAIL],  # Replace with your recipient(s)
+        #     fail_silently=False,
+        # )

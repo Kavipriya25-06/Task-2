@@ -1,12 +1,18 @@
 from rest_framework import serializers
 from django.db.models import Sum
-from ..models import Calendar, CompOffRequest, Employee, TimeSheet
+from ..models import Calendar, CompOffRequest, Employee, TimeSheet, CompOffExpiry
 from time_management.time_sheet.serializers import TimeSheetTaskSerializer
 
 
 class CompOffRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompOffRequest
+        fields = "__all__"
+
+
+class CompOffExpirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompOffExpiry
         fields = "__all__"
 
 

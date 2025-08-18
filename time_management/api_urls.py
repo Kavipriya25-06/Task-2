@@ -98,6 +98,7 @@ from time_management.compoff.views import (
     compoff_request_api,
     compoff_view_api,
     compoff_manager_view_api,
+    comp_off_expiry_api,
 )
 from time_management.project.views import (
     project_list_create,
@@ -179,6 +180,7 @@ from time_management.workexperience.views import work_experience_api
 from time_management.languagesknown.views import languages_known_api
 from time_management.employee_attachment.views import employee_attachment_api
 from time_management.company_policy.views import company_policy_api
+from time_management.salarybreakdown.views import salary_breakdown_api
 
 
 from time_management.views import MyTokenObtainPairView
@@ -242,6 +244,8 @@ urlpatterns = [
     path("leaves-available-lop/<str:employee_id>/", leaves_available_with_lop),
     path("comp-off/", comp_off_api),
     path("comp-off/<int:id>/", comp_off_api),
+    path("comp-off-expiry/", comp_off_expiry_api),
+    path("comp-off-expiry/<int:id>/", comp_off_expiry_api),
     path("comp-off-request/", compoff_request_api),
     path("comp-off-request/<str:compoff_request_id>/", compoff_request_api),
     path("comp-off-view/", compoff_view_api),
@@ -539,6 +543,8 @@ urlpatterns = [
     path("employee-attachment/<int:id>/", employee_attachment_api),
     path("company-policy/", company_policy_api),
     path("company-policy/<int:id>/", company_policy_api),
+    path("salary/", salary_breakdown_api),
+    path("salary/<int:id>/", salary_breakdown_api),
     # JWT tokens (commented out in original)
     # path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     # path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

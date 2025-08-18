@@ -1,10 +1,18 @@
 from rest_framework.viewsets import ModelViewSet
-from ..models import Calendar, CompOffRequest, CompOff, Employee, TimeSheet
+from ..models import (
+    Calendar,
+    CompOffRequest,
+    CompOff,
+    Employee,
+    TimeSheet,
+    CompOffExpiry,
+)
 from time_management.calendar.serializers import CalendarSerializer
 from time_management.compoff.serializers import (
     CompOffRequestSerializer,
     CompOffRequestEmployeeSerializer,
     CompOffRequestTaskSerializer,
+    CompOffExpirySerializer,
 )
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -157,3 +165,74 @@ def compoff_manager_view_api(request, compoff_request_id=None, manager_id=None):
 
     serializer = CompOffRequestTaskSerializer(compoff, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET", "POST", "PUT", "PATCH", "DELETE"])
+def comp_off_expiry_api(request, id=None):
+    if request.method == "GET":
+        if id:
+            try:
+                obj = CompOffExpiry.objects.get(id=id)
+                serializer = CompOffExpirySerializer(obj)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except CompOffExpiry.DoesNotExist:
+                return Response(
+                    {"error": "Leave record with leave id not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        else:
+            objs = CompOffExpiry.objects.all()
+            serializer = CompOffExpirySerializer(objs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == "POST":
+        serializer = CompOffExpirySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Leave balance created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method in ["PUT", "PATCH"]:
+        if not id:
+            return Response(
+                {"error": "Leave record ID is required for update"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            obj = CompOffExpiry.objects.get(id=id)
+        except CompOffExpiry.DoesNotExist:
+            return Response(
+                {"error": "Leave record not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CompOffExpirySerializer(
+            obj, data=request.data, partial=(request.method == "PATCH")
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Leave balance updated", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == "DELETE":
+        if not id:
+            return Response(
+                {"error": "Leave record ID is required for DELETE"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            obj = CompOffExpiry.objects.get(id=id)
+            obj.delete()
+            return Response(
+                {"message": "Leave balance deleted"}, status=status.HTTP_204_NO_CONTENT
+            )
+        except CompOffExpiry.DoesNotExist:
+            return Response(
+                {"error": "Leave record not found"}, status=status.HTTP_404_NOT_FOUND
+            )

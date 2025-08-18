@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     User,
     Employee,
+    SalaryBreakdown,
     Modifications,
     Designation,
     Assets,
@@ -30,6 +31,7 @@ from .models import (
     CompOff,
     Variation,
     CompOffRequest,
+    CompOffExpiry,
 )
 
 admin.site.register(Employee)
@@ -53,6 +55,7 @@ admin.site.register(TimeSheet)
 admin.site.register(Attachment)
 admin.site.register(CompOff)
 admin.site.register(CompOffRequest)
+admin.site.register(CompOffExpiry)
 admin.site.register(Variation)
 admin.site.register(Modifications)
 admin.site.register(Designation)
@@ -63,3 +66,4 @@ admin.site.register(WorkExperience)
 admin.site.register(LanguagesKnown)
 admin.site.register(EmployeeAttachment)
 admin.site.register(CompanyPolicy)
+admin.site.register(SalaryBreakdown)

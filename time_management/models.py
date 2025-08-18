@@ -182,6 +182,7 @@ class Employee(models.Model):
 
 # salary model
 
+
 class SalaryBreakdown(models.Model):
     employee = models.ForeignKey(
         Employee, on_delete=models.CASCADE, related_name="salary_breakdowns"
