@@ -183,13 +183,14 @@ from time_management.company_policy.views import company_policy_api
 from time_management.salarybreakdown.views import salary_breakdown_api
 
 
-from time_management.views import MyTokenObtainPairView
+from time_management.views import MyTokenObtainPairView, run_biometric_sync
 from rest_framework_simplejwt.views import TokenRefreshView
 
 # ---------- urlpatterns (single, deduplicated list) ----------
 urlpatterns = [
     # path("admin/", admin.site.urls),
     # Employees & related
+    path("sync-biometric/", run_biometric_sync, name="sync-biometric"),
     path("employees/", employee_api),
     path("employees/<str:employee_id>/", employee_api),
     path("employees-details/", employee_view_api),

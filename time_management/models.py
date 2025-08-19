@@ -1093,11 +1093,21 @@ class TimeSheet(models.Model):
                         ).aggregate(total=Sum("task_hours"))["total"]
                         or 0
                     )
+                    working = BiometricData.objects.filter(
+                        employee=self.employee, date=self.date
+                    )
+
+                    compoff_entry = None  # Default
+
+                    if working.exists():
+                        compoff_entry = CompOff.objects.filter(
+                            min_hours__lte=total_hours, max_hours__gte=total_hours
+                        ).first()
 
                     # Match with comp off thresholds
-                    compoff_entry = CompOff.objects.filter(
-                        min_hours__lte=total_hours, max_hours__gte=total_hours
-                    ).first()
+                    # compoff_entry = CompOff.objects.filter(
+                    #     min_hours__lte=total_hours, max_hours__gte=total_hours
+                    # ).first()
 
                     if compoff_entry:
                         duration = (
