@@ -851,6 +851,36 @@ class Discipline(models.Model):
         return self.name
 
 
+class Client(models.Model):
+    client_name = models.CharField(max_length=100, unique=True)
+    client_address = models.TextField(blank=True, null=True)
+    gst_number = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return self.client_name
+
+
+class ClientPOC(models.Model):
+    poc_name = models.CharField(max_length=40, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    department = models.CharField(
+        max_length=40,
+        choices=[
+            ("bd", "Business development"),
+            ("finance", "Finance"),
+            ("tech", "Tech"),
+        ],
+        default="bd",
+        blank=True,
+        null=True,
+    )
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return self.poc_name
+
+
 ### Projects Table
 
 
@@ -1171,6 +1201,13 @@ class Attachment(models.Model):
         null=True,
         blank=True,
         related_name="Projectattachments",
+    )
+    client = models.ForeignKey(
+        "Client",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="Clientattachments",
     )
     task = models.ForeignKey(
         "Task",

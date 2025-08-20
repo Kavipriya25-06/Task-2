@@ -289,3 +289,26 @@ def employee_all_details_api(request, employee_id=None):
             employees = Employee.objects.all()
             serializer = EmployeeAllSerializer(employees, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def get_last_employee(request):
+    try:
+        # Filter employees whose code starts with "DA"
+        employees_qs = Employee.objects.filter(employee_code__startswith="DA")
+
+        # Get the last employee based on employee_id
+        last_instance = employees_qs.order_by("employee_id").last()
+
+        if last_instance is None:
+            return Response(
+                {"error": "No employee found with code starting with 'DA'"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = EmployeeViewSerializer(last_instance)
+        return Response(serializer.data)
+
+    except Exception as e:
+        # Catch any unexpected errors
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

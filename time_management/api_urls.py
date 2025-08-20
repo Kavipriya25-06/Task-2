@@ -51,6 +51,7 @@ from time_management.employee.views import (
     unassigned_employee,
     employee_list_api,
     employee_all_details_api,
+    get_last_employee,
 )
 from time_management.assignment.views import manager_tl_projects, tl_projects
 from time_management.user.views import (
@@ -200,6 +201,7 @@ urlpatterns = [
     path("employees-all-details/", employee_all_details_api),
     path("employees-all-details/<str:employee_id>/", employee_all_details_api),
     path("unassigned-employees/", unassigned_employee),
+    path("last-employee/", get_last_employee, name="last-employee"),
     # Employee helper endpoints
     path("emp-details/", emp_under_mngr_view),
     path("emp-details/<str:employee_id>/", emp_under_mngr_view),
