@@ -164,6 +164,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "completed_status",
             "estimated_hours",
             "variation_hours",
+            "client",
             "total_hours",
             "consumed_hours",
             "project_description",

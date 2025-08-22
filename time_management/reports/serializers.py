@@ -594,10 +594,13 @@ class EmployeeLOPSerializer(serializers.ModelSerializer):
                 month = current_date.month
                 year = current_date.year
 
-                if day >= 21:
-                    payroll_month, payroll_year = add_months(month, year, 2)
-                else:
-                    payroll_month, payroll_year = add_months(month, year, 1)
+                # if day >= 21:
+                #     payroll_month, payroll_year = add_months(month, year, 2)
+                # else:
+                #     payroll_month, payroll_year = add_months(month, year, 1)
+
+                payroll_month = month
+                payroll_year = year
 
                 key = f"{payroll_year}-{str(payroll_month).zfill(2)}"
 
