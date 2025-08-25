@@ -176,7 +176,10 @@ def task_by_employee(request, employee_id=None):
     # print("Default project", default_tasks)
     if employee_id:
         try:
-            tasks = TaskAssign.objects.filter(employee__employee_id=employee_id)
+            tasks = TaskAssign.objects.filter(
+                employee__employee_id=employee_id,
+                building_assign__project_assign__project__completed_status=False,
+            )
             all_tasks = default_tasks | tasks
         except TaskAssign.DoesNotExist:
             return Response(

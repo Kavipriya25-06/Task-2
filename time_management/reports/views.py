@@ -216,9 +216,9 @@ def year_leaves(request):
     year = request.query_params.get("year")
     try:
         if year:
-            yearly_leaves = LeavesTaken.objects.filter(start_date__year=year).order_by(
-                "start_date"
-            )
+            yearly_leaves = LeavesTaken.objects.filter(
+                start_date__year=year, status="approved"
+            ).order_by("start_date")
         else:
             yearly_leaves = LeavesTaken.objects.all()
         serializer = LeaveRequestSerializer(yearly_leaves, many=True)

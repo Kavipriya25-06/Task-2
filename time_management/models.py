@@ -844,7 +844,7 @@ class AreaOfWork(models.Model):
 
 
 class Discipline(models.Model):
-    discipline_code = models.IntegerField(unique=True)
+    discipline_code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -890,6 +890,7 @@ class Project(models.Model):
     project_type = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
+    completed_date = models.DateField(null=True, blank=True)
     completed_status = models.BooleanField(default=False, blank=True, null=True)
     estimated_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     variation_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -926,6 +927,25 @@ class Project(models.Model):
         # Recalculate total hours
         self.total_hours = (self.estimated_hours or 0) + (self.variation_hours or 0)
 
+        # Check for completed_status change
+        # Check completed_status changes
+        if self.pk:
+            prev = Project.objects.get(pk=self.pk)
+
+            if not prev.completed_status and self.completed_status:
+                # Marked as completed now → set completed_date
+                self.completed_date = timezone.now().date()
+
+            elif prev.completed_status and not self.completed_status:
+                # Marked as not completed now → clear completed_date
+                self.completed_date = None
+
+        else:
+            # New object
+            if self.completed_status:
+                self.completed_date = timezone.now().date()
+            else:
+                self.completed_date = None
         super().save(*args, **kwargs)
 
     def __str__(self):

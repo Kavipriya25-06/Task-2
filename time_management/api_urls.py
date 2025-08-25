@@ -95,6 +95,7 @@ from time_management.biometric.views import (
     biometric_weekly_task,
     bulk_biometric_upload,
 )
+from time_management.client.views import client_api, client_poc_api
 from time_management.compoff.views import (
     compoff_request_api,
     compoff_view_api,
@@ -292,6 +293,10 @@ urlpatterns = [
     path("weekly-attendance/", weekly_attendance),
     path("weekly-attendance/<str:employee_id>/", weekly_attendance),
     # Projects / assignments / reports
+    path("client/", client_api),
+    path("client/<int:id>/", client_api),
+    path("client-poc/", client_poc_api),
+    path("client-poc/<int:id>/", client_poc_api),
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),

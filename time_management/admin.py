@@ -32,6 +32,8 @@ from .models import (
     Variation,
     CompOffRequest,
     CompOffExpiry,
+    Client,
+    ClientPOC,
 )
 
 admin.site.register(Employee)
@@ -67,3 +69,5 @@ admin.site.register(LanguagesKnown)
 admin.site.register(EmployeeAttachment)
 admin.site.register(CompanyPolicy)
 admin.site.register(SalaryBreakdown)
+admin.site.register(ClientPOC)
+admin.site.register(Client)

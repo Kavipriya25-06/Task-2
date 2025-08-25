@@ -370,7 +370,7 @@ def building_by_employee(request, employee_id=None):
         try:
             tasks = BuildingAssign.objects.filter(
                 employee__employee_id=employee_id,
-                project_assign__project__status=True,
+                project_assign__project__completed_status=False,
             )
             all_tasks = default_tasks | tasks
         except BuildingAssign.DoesNotExist:
