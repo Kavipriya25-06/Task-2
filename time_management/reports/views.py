@@ -45,6 +45,7 @@ from time_management.leaves_taken.serializers import (
     LeavesTakenSerializer,
     LeaveRequestSerializer,
 )
+from time_management.task.serializers import TaskSerializer
 
 
 @api_view(["GET"])
@@ -207,6 +208,20 @@ def get_last_building(request, project_id=None):
         else:
             return Response(
                 {"error": "project record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+@api_view(["GET"])
+def get_last_task(request):
+    if request.method == "GET":
+        try:
+            last_instance = Task.objects.order_by("task_id").last()
+            serializer = TaskSerializer(last_instance)
+            return Response(serializer.data)
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Task record not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 

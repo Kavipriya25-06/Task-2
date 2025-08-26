@@ -15,6 +15,7 @@ from ..models import (
 from time_management.building.serializers import BuildingAndProjectSerializer
 from time_management.attachments.serializers import AttachmentSerializer
 from time_management.variations.serializers import VariationSerializer
+from time_management.client.serializers import ClientSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -147,6 +148,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
     #     slug_field="area_name", many=True, read_only=True
     # )
     created_by = EmployeeSerializer(read_only=True)
+    client = ClientSerializer(read_only=True)
     assigns = serializers.SerializerMethodField()
     variation = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(
@@ -165,6 +167,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "estimated_hours",
             "variation_hours",
             "client",
+            "project_budget",
             "total_hours",
             "consumed_hours",
             "project_description",
