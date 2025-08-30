@@ -928,17 +928,25 @@ class Project(models.Model):
         self.total_hours = (self.estimated_hours or 0) + (self.variation_hours or 0)
 
         # Check for completed_status change
-        # Check completed_status changes
-        if self.pk:
-            prev = Project.objects.get(pk=self.pk)
+        # Check completed_status changes # Check here Suriya
+        is_new = not self.pk
+        prev = None
 
-            if not prev.completed_status and self.completed_status:
-                # Marked as completed now → set completed_date
-                self.completed_date = timezone.now().date()
+        if not is_new:
+            try:
+                prev = Project.objects.get(pk=self.pk)
+                if not prev.completed_status and self.completed_status:
+                    # Marked as completed now → set completed_date
+                    self.completed_date = timezone.now().date()
 
-            elif prev.completed_status and not self.completed_status:
-                # Marked as not completed now → clear completed_date
-                self.completed_date = None
+                elif prev.completed_status and not self.completed_status:
+                    # Marked as not completed now → clear completed_date
+                    self.completed_date = None
+
+            except Project.DoesNotExist:
+                pass
+        # if self.pk:
+        #     prev = Project.objects.get(pk=self.pk)
 
         else:
             # New object
