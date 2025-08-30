@@ -34,6 +34,7 @@ from .models import (
     CompOffExpiry,
     Client,
     ClientPOC,
+    Department,
 )
 
 admin.site.register(Employee)
@@ -61,6 +62,7 @@ admin.site.register(CompOffExpiry)
 admin.site.register(Variation)
 admin.site.register(Modifications)
 admin.site.register(Designation)
+admin.site.register(Department)
 admin.site.register(Assets)
 admin.site.register(Dependant)
 admin.site.register(Education)

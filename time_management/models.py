@@ -287,6 +287,13 @@ class Designation(models.Model):
         return self.designation
 
 
+class Department(models.Model):
+    department = models.CharField(max_length=200, unique=True)
+
+    def __str__(self):
+        return self.department
+
+
 class User(models.Model):
     user_id = models.CharField(max_length=50, primary_key=True, blank=True)
     email = models.EmailField(unique=True)

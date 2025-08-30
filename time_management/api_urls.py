@@ -176,6 +176,7 @@ from time_management.time_sheet.views import (
 
 from time_management.modifications.views import modifications_api
 from time_management.designation.views import designation_api
+from time_management.department.views import department_api
 from time_management.assets.views import assets_api
 from time_management.dependant.views import dependant_api
 from time_management.education.views import education_api
@@ -539,6 +540,8 @@ urlpatterns = [
     path("modifications/<int:id>/", modifications_api),
     path("designation/", designation_api),
     path("designation/<int:id>/", designation_api),
+    path("department/", department_api),
+    path("department/<int:id>/", department_api),
     path("assets/", assets_api),
     path("assets/<int:id>/", assets_api),
     path("dependant/", dependant_api),
