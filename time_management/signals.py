@@ -445,11 +445,11 @@ def update_consumed_hours(sender, instance, **kwargs):
 
 #         subject = "Calendar Working day changed"
 
-        # send_mail(
-        #     subject,
-        #     message,
-        #     settings.DEFAULT_FROM_EMAIL,  # Replace with your configured from address
-        #     [settings.ALL_EMAIL],
-        #     # cc=[settings.ADMIN_EMAIL],  # Replace with your recipient(s)
-        #     fail_silently=False,
-        # )
+# send_mail(
+#     subject,
+#     message,
+#     settings.DEFAULT_FROM_EMAIL,  # Replace with your configured from address
+#     [settings.ALL_EMAIL],
+#     # cc=[settings.ADMIN_EMAIL],  # Replace with your recipient(s)
+#     fail_silently=False,
+# )
