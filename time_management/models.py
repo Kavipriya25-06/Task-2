@@ -742,6 +742,12 @@ class LeavesTaken(models.Model):
         null=True,
         blank=True,
     )
+    comp_off = models.ForeignKey(
+        CompOffRequest,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     def save(self, *args, **kwargs):
         if not self.leave_taken_id:
