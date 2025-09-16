@@ -280,7 +280,7 @@ def active_emp_under_mngr_resign_date_view(request, employee_id=None):
                 manager = Employee.objects.get(employee_id=employee_id)
                 employees = get_emp_under_manager(manager)
                 employee = Employee.objects.filter(
-                    employee_id__in=employees, status="active"  # checking if active
+                    employee_id__in=employees,  # status="active"  # checking if active
                 )
 
                 # Apply additional date filters if `today` is given
@@ -301,7 +301,8 @@ def active_emp_under_mngr_resign_date_view(request, employee_id=None):
                 )
 
         else:
-            employees = Employee.objects.filter(status="active")  # checking if active
+            # employees = Employee.objects.filter(status="active")  # checking if active
+            employees = Employee.objects.all()
 
             # Apply additional date filters if `today` is given
             if today:
