@@ -290,7 +290,7 @@ def active_emp_under_mngr_resign_date_view(request, employee_id=None):
                             Q(resignation_date__lt=end)
                             | Q(resignation_date__isnull=True)
                         ),
-                        doj__gt=start,
+                        # doj__gt=start,
                     )
 
                 serializer = EmployeeViewSerializer(employee, many=True)
@@ -306,9 +306,9 @@ def active_emp_under_mngr_resign_date_view(request, employee_id=None):
 
             # Apply additional date filters if `today` is given
             if today:
-                employee = employee.filter(
+                employees = employees.filter(
                     (Q(resignation_date__lt=end) | Q(resignation_date__isnull=True)),
-                    doj__gt=start,
+                    # doj__gt=start,
                 )
 
             serializer = EmployeeViewSerializer(employees, many=True)
