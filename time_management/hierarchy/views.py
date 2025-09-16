@@ -95,7 +95,12 @@ def get_emp_all(request, manager_id=None):
     except Employee.DoesNotExist:
         return Response({"error": "Manager not found"}, status=404)
 
-    all_employee = get_emp_under_manager(manager)
+    all_complete_employee = get_emp_under_manager(manager)
+    # all_employee = all_complete_employee
+
+    all_employee = Employee.objects.filter(
+        employee_id__in=all_complete_employee, status="active"  # checking if active
+    )
 
     teamleads_data = []
     direct_employees = []

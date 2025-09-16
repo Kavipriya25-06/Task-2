@@ -312,6 +312,23 @@ def leaves_available_report(request):
 
 
 @api_view(["GET"])
+def active_leaves_available_report(request):
+    year = request.query_params.get("year")
+    if request.method == "GET":
+        try:
+            obj = LeavesAvailable.objects.filter(employee__user__status="active")
+            serializer = LeavesFullAvailableSerializer(
+                obj, many=True, context={"request": request, "year": year}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except LeavesAvailable.DoesNotExist:
+            return Response(
+                {"error": "Leave record with leave id not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+@api_view(["GET"])
 # @parser_classes([MultiPartParser, FormParser])
 def employee_lop_view(request):
     # GET (single or list)

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.db.models import Q
 from ..models import Employee, Hierarchy, User
 from time_management.employee.serializers import (
@@ -225,6 +226,86 @@ def emp_under_mngr_view(request, employee_id=None):
 
 @api_view(["GET"])
 # @parser_classes([MultiPartParser, FormParser])
+def active_emp_under_mngr_view(request, employee_id=None):
+    # GET (single or list)
+    """
+    This gives the Employee details of all the employees and team leads under a manager up to all levels only active
+    """
+    if request.method == "GET":
+        if employee_id:
+            try:
+                manager = Employee.objects.get(employee_id=employee_id)
+                employees = get_emp_under_manager(manager)
+                employee = Employee.objects.filter(
+                    employee_id__in=employees, status="active"  # checking if active
+                )
+                serializer = EmployeeViewSerializer(employee, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            employees = Employee.objects.filter(status="active")  # checking if active
+            serializer = EmployeeViewSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+# @parser_classes([MultiPartParser, FormParser])
+def active_emp_under_mngr_resign_date_view(request, employee_id=None):
+    # GET (single or list)
+    """
+    This gives the Employee details of all the employees and team leads under a manager up to all levels only active
+    """
+
+    todaystr = request.query_params.get("today")
+    if todaystr:
+        today = datetime.strptime(todaystr, "%Y-%m-%d").date()
+        weekday = today.weekday()
+        start = today - timedelta(days=weekday)
+        end = start + timedelta(days=6)
+    else:
+        today = None
+        start = None
+        end = None
+
+    if request.method == "GET":
+        if employee_id:
+            try:
+
+                # resignation_date
+
+                manager = Employee.objects.get(employee_id=employee_id)
+                employees = get_emp_under_manager(manager)
+                employee = Employee.objects.filter(
+                    employee_id__in=employees, status="active"  # checking if active
+                )
+
+                # Apply additional date filters if `today` is given
+                if today:
+                    employee = employee.filter(resignation_date__lt=end, doj__gt=start)
+
+                serializer = EmployeeViewSerializer(employee, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            employees = Employee.objects.filter(status="active")  # checking if active
+
+            # Apply additional date filters if `today` is given
+            if today:
+                employees = employees.filter(resignation_date__lt=end, doj__gt=start)
+            serializer = EmployeeViewSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+# @parser_classes([MultiPartParser, FormParser])
 def additional_resource_view(request, employee_id=None):
     # GET (single or list)
     """
@@ -256,6 +337,31 @@ def mntl_view_api(request, employee_id=None):
     if request.method == "GET":
         # Filter employees based on roles 'teamlead' or 'manager'
         employees_qs = Employee.objects.filter(user__role__in=["teamlead", "manager"])
+        if employee_id:
+            try:
+                employee = Employee.objects.get(employee_id=employee_id)
+                serializer = EmployeeViewSerializer(employees_qs)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "Manager or TeamLead not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            employees = Employee.objects.all()
+            serializer = EmployeeViewSerializer(employees_qs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+# @parser_classes([MultiPartParser, FormParser])
+def active_mntl(request, employee_id=None):
+    # GET (single or list)
+    if request.method == "GET":
+        # Filter employees based on roles 'teamlead' or 'manager'
+        employees_qs = Employee.objects.filter(
+            user__role__in=["teamlead", "manager"], user__status="active"
+        )
         if employee_id:
             try:
                 employee = Employee.objects.get(employee_id=employee_id)

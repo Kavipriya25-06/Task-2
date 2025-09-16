@@ -82,7 +82,9 @@ def manager_tl_projects(request, employee_id=None):
     direct_employees = []
 
     # filtering all employees in the hierarchy table who reports to the manager
-    teamleads_qs = Hierarchy.objects.filter(reporting_to=manager)
+    teamleads_qs = Hierarchy.objects.filter(
+        reporting_to=manager, employee__status="active"
+    )
 
     # iterating through each filtered hierarchy table entry
     for tl_hierarchy in teamleads_qs:
@@ -99,12 +101,14 @@ def manager_tl_projects(request, employee_id=None):
         pending_projects = project_assignments.filter(status="pending").count()
 
         user_qs = User.objects.filter(
-            employee_id=teamlead_emp
+            employee_id=teamlead_emp, status="active"
         ).first()  # matching the employee id in user table
 
         if user_qs and user_qs.role == "teamlead":
             # This employee, get their employees
-            employees_qs = Hierarchy.objects.filter(reporting_to=teamlead_emp)
+            employees_qs = Hierarchy.objects.filter(
+                reporting_to=teamlead_emp, employee__status="active"
+            )
             total_employees = employees_qs.count()
             employee_list = [
                 {
