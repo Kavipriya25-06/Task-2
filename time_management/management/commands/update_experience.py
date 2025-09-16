@@ -15,7 +15,7 @@ class Command(BaseCommand):
             if emp.doj:
                 delta = relativedelta(today, emp.doj)
                 arris_months = delta.years * 12 + delta.months
-                emp.arris_experience = arris_months
+                emp.aero360_experience = arris_months
                 emp.total_experience = arris_months + (emp.previous_experience or 0)
                 emp.experience_in_years = round(emp.total_experience / 12, 2)
                 emp.save()
