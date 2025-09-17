@@ -164,9 +164,18 @@ class Employee(models.Model):
         else:
             self.aero360_experience = 0
 
+        if self.dob and isinstance(self.dob, date):
+            today = date.today()
+            delta = (today.year - self.dob.year) * 12 + (today.month - self.dob.month)
+            if delta < 0:
+                delta = 0  # Future DOJ safety
+            self.age = delta // 12
+        else:
+            self.age = 0
+
         # --------- TOTAL EXPERIENCE AUTO-CALCULATION ---------
-        self.total_experience = (self.aero360_experience or 0) + (
-            self.previous_experience or 0
+        self.total_experience = (int(self.aero360_experience) or 0) + (
+            int(self.previous_experience) or 0
         )
 
         # --------- EXPERIENCE IN YEARS (for display) ---------

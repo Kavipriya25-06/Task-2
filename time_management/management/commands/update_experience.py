@@ -20,6 +20,12 @@ class Command(BaseCommand):
                 emp.experience_in_years = round(emp.total_experience / 12, 2)
                 emp.save()
 
+            if emp.dob:
+                delta = relativedelta(today, emp.dob)
+                age_months = delta.years * 12 + delta.months
+                emp.age = age_months // 12
+                emp.save()
+
         self.stdout.write(
             self.style.SUCCESS("Successfully updated experience for all employees")
         )
