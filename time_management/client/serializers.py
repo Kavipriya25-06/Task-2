@@ -25,6 +25,14 @@ class ClientPOCSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ClientAndPOCSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(read_only=True)
+
+    class Meta:
+        model = ClientPOC
+        fields = "__all__"
+
+
 # class TimeSheetSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = TimeSheet

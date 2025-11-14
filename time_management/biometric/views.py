@@ -1,10 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
 import uuid
 from django.db.models import OuterRef, Subquery
-from ..models import BiometricData, Employee, Calendar
+from ..models import BiometricData, Employee, Calendar, LeaveDay
 from time_management.biometric.serializers import (
     BiometricDataSerializer,
     BiometricTaskDataSerializer,
+    EmployeeAttendanceSerializer,
+    EmployeeWeekSerializer,
 )
 from time_management.hierarchy.serializers import (
     emp_under_manager,
@@ -14,8 +16,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import render
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as date_cls
 from django.http import JsonResponse
+from django.db.models import Prefetch, Q
 
 
 def generate_group_id(employee_code):
@@ -244,6 +247,227 @@ def attendance(request, employee_id=None):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+def _week_bounds(day: date_cls):
+    weekday = day.weekday()  # Monday=0..Sunday=6
+    start = day - timedelta(days=weekday)
+    end = start + timedelta(days=6)
+    return start, end
+
+
+@api_view(["GET"])
+def attendance_track(request, employee_id=None):
+    # Parse ?today=YYYY-MM-DD (optional)
+    today_param = request.query_params.get("today")
+    if today_param:
+        try:
+            today = datetime.strptime(today_param, "%Y-%m-%d").date()
+        except ValueError:
+            return Response(
+                {"error": "Invalid 'today' format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    else:
+        today = datetime.now().date()
+
+    start, end = _week_bounds(today)
+
+    # Resolve which employees to include
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        team = get_emp_under_manager(manager)
+        # Normalize to a queryset of employees incl. manager
+        if hasattr(team, "values"):
+            employees_qs = (team | Employee.objects.filter(pk=manager.pk)).distinct()
+        else:
+            ids = [e.pk for e in team] + [manager.pk]
+            employees_qs = Employee.objects.filter(pk__in=ids)
+    else:
+        employees_qs = Employee.objects.all()
+
+    employees = list(
+        employees_qs.only("employee_id", "employee_name", "department", "designation")
+    )
+    if not employees:
+        return Response([], status=status.HTTP_200_OK)
+
+    emp_ids = [e.pk for e in employees]
+
+    # Fetch the 7 calendar days once
+    calendar_days = list(
+        Calendar.objects.filter(date__range=(start, end)).order_by("date")
+    )
+    # Safety: ensure we always have 7 rows (if your Calendar table is guaranteed full, this is not needed)
+    if len(calendar_days) != 7:
+        # Optional: backfill missing dates from plain date range
+        # but best is to ensure Calendar is populated for all dates
+        pass
+
+    # Fetch biometric & leave rows for those employees in the week range
+    biometric_rows = BiometricData.objects.select_related("employee").filter(
+        employee_id__in=emp_ids, date__range=(start, end)
+    )
+    leave_rows = LeaveDay.objects.select_related("employee").filter(
+        employee_id__in=emp_ids, date__range=(start, end)
+    )
+
+    # Build fast lookup maps keyed by (employee_pk, date)
+    bio_map = {(row.employee_id, row.date): row for row in biometric_rows}
+    leave_map = {(row.employee_id, row.date): row for row in leave_rows}
+
+    # Serialize employees with week detail
+    ser = EmployeeWeekSerializer(
+        employees,
+        many=True,
+        context={
+            "calendar_days": calendar_days,
+            "bio_map": bio_map,
+            "leave_map": leave_map,
+        },
+    )
+    return Response(ser.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def weekly_attendance_track(request, employee_id=None):
+    today_param = request.query_params.get("today")
+    start = end = None
+
+    # Parse the optional ?today=YYYY-MM-DD to compute week range
+    if today_param:
+        try:
+            today = datetime.strptime(today_param, "%Y-%m-%d").date()
+            weekday = today.weekday()  # Monday=0 .. Sunday=6
+            start = today - timedelta(days=weekday)
+            end = start + timedelta(days=6)
+        except ValueError:
+            return Response(
+                {"error": "Invalid 'today' format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    # Resolve employees to include
+    if employee_id:
+        try:
+            manager = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        # Whatever your helper returns (QuerySet or list), we’ll normalize it
+        team_qs = get_emp_under_manager(manager)  # includes subordinates
+        # Make sure the manager is included too
+        if isinstance(team_qs, Employee.__class__):
+            # already a QuerySet
+            employees_qs = team_qs | Employee.objects.filter(pk=manager.pk)
+        else:
+            # assume list/iterable of Employee
+            ids = [e.pk for e in team_qs] + [manager.pk]
+            employees_qs = Employee.objects.filter(pk__in=ids)
+    else:
+        employees_qs = Employee.objects.all()
+
+    # Build the biometric filter (week range if provided)
+    biometric_filter = Q()
+    if start and end:
+        biometric_filter &= Q(date__range=(start, end))
+
+    biometric_qs = BiometricData.objects.filter(biometric_filter).order_by("date")
+
+    # Prefetch to a custom attribute so employees with no rows still appear
+    employees_qs = employees_qs.prefetch_related(
+        Prefetch(
+            "biometricdata_set",  # default reverse name; adjust if you set related_name=...
+            queryset=biometric_qs,
+            to_attr="biometric_entries",
+        )
+    )
+
+    # Serialize employees; nested list may be empty
+    serializer = EmployeeAttendanceSerializer(employees_qs, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def biometric_weekly_track(request, employee_id=None):
+    """
+    Returns employees (single or many) with a 7-day 'week' array.
+    Each day contains calendar metadata + biometric entry (or null) + leave entry (or null).
+    If employee_id is provided, returns only that employee; otherwise returns all active employees for the week.
+    Active filter: doj <= week_end AND (resignation_date is null OR resignation_date >= week_start)
+    """
+    # Parse ?today=YYYY-MM-DD
+    today_param = request.query_params.get("today")
+    if today_param:
+        try:
+            today = datetime.strptime(today_param, "%Y-%m-%d").date()
+        except ValueError:
+            return Response(
+                {"error": "Invalid 'today' format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    else:
+        today = datetime.now().date()
+
+    start, end = _week_bounds(today)
+
+    # ---- Employee scope ----
+    if employee_id:
+        # single employee by business key 'employee_id'
+        try:
+            emp = Employee.objects.get(employee_id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+        employees_qs = Employee.objects.filter(pk=emp.pk)
+    else:
+        # All employees active in this week
+        employees_qs = Employee.objects.filter(
+            Q(doj__lte=end)
+            & (Q(resignation_date__isnull=True) | Q(resignation_date__gte=start))
+        )
+
+    employees = list(
+        employees_qs.only("employee_id", "employee_name", "department", "designation")
+    )
+    if not employees:
+        return Response([], status=status.HTTP_200_OK)
+
+    emp_ids = [e.pk for e in employees]
+
+    # ---- Calendar days for the week (7 rows expected) ----
+    calendar_days = list(
+        Calendar.objects.filter(date__range=(start, end)).order_by("date")
+    )
+    # (Optional) assert or backfill if needed
+
+    # ---- Data rows for the week ----
+    biometric_rows = BiometricData.objects.select_related("employee").filter(
+        employee_id__in=emp_ids, date__range=(start, end)
+    )
+    leave_rows = LeaveDay.objects.select_related("employee").filter(
+        employee_id__in=emp_ids, date__range=(start, end)
+    )
+
+    # ---- Build lookup maps keyed by (employee_pk, date) ----
+    bio_map = {(row.employee_id, row.date): row for row in biometric_rows}
+    leave_map = {(row.employee_id, row.date): row for row in leave_rows}
+
+    # ---- Serialize in the same shape as attendance_track ----
+    ser = EmployeeWeekSerializer(
+        employees,
+        many=True,
+        context={
+            "calendar_days": calendar_days,
+            "bio_map": bio_map,
+            "leave_map": leave_map,
+        },
+    )
+    return Response(ser.data, status=status.HTTP_200_OK)
+
+
+# change here
 @api_view(["GET"])
 def weekly_attendance(request, employee_id=None):
 

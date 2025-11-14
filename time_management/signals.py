@@ -1,11 +1,15 @@
 from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 
+from decimal import Decimal
+from django.db import transaction
+from django.db.models.functions import ExtractYear, ExtractMonth, Coalesce
+from collections import defaultdict
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.db.models import Sum, Q
 from datetime import timedelta, date
 from django.conf import settings
-
+from django.db import IntegrityError
 from django.utils import timezone
 from .models import (
     Employee,
@@ -18,6 +22,11 @@ from .models import (
     Project,
     Calendar,
     TaskAssign,
+    LeaveDay,
+    MonthlyLeaveAvailed,
+    LeaveOpeningBalance,
+    MonthlyLeaveBalance,
+    CompOffRequest,
 )
 from time_management.management.commands.utils import (
     calculate_leave_entitlement,
@@ -453,3 +462,321 @@ def update_consumed_hours(sender, instance, **kwargs):
 #     # cc=[settings.ADMIN_EMAIL],  # Replace with your recipient(s)
 #     fail_silently=False,
 # )
+
+
+@receiver(post_save, sender=LeavesTaken)
+def create_leave_days_on_approval(sender, instance, created, **kwargs):
+    """
+    Automatically create LeaveDay records when a leave is approved or pending.
+    Ensures no overlapping leave days exist for the same employee.
+    """
+    if instance.status not in ["approved", "pending"]:
+        LeaveDay.objects.filter(leave_taken=instance).delete()
+        return
+
+    if not instance.start_date or not instance.end_date:
+        return
+
+    # Delete existing leave days linked to this specific leave (not others)
+    LeaveDay.objects.filter(leave_taken=instance).delete()
+
+    # Create or update leave days
+    current_date = instance.start_date
+    while current_date <= instance.end_date:
+        try:
+            LeaveDay.objects.update_or_create(
+                employee=instance.employee,
+                date=current_date,
+                defaults={
+                    "leave_taken": instance,
+                    # "duration": 1.0,
+                    "duration": 0.5 if (instance.duration % 1) else 1.0,
+                    "leave_type": instance.leave_type,
+                    "status": instance.status,
+                },
+            )
+        except IntegrityError:
+            # Handle conflict (another leave already covers this date)
+            print(
+                f"Skipped overlapping leave day: {instance.employee} on {current_date}"
+            )
+        current_date += timedelta(days=1)
+
+
+# below for the leave balance calculation
+
+
+def _rebuild_month(employee_id, year, month):
+    """Re-aggregate the month for a single employee from LeaveDay (approved)."""
+    qs = (
+        LeaveDay.objects.approved()
+        .filter(employee_id=employee_id, date__year=year, date__month=month)
+        .values("leave_type")
+        .annotate(total=Sum("duration"))
+    )
+
+    # Start with zeros
+    totals = {
+        "casual_leave_availed": Decimal("0.0"),
+        "sick_leave_availed": Decimal("0.0"),
+        "comp_off_availed": Decimal("0.0"),
+        "earned_leave_availed": Decimal("0.0"),
+    }
+
+    # Map your leave_type strings to the model fields above
+    FIELD_MAP = {
+        "casual": "casual_leave_availed",
+        "sick": "sick_leave_availed",
+        "comp_off": "comp_off_availed",
+        "earned": "earned_leave_availed",
+    }
+
+    for row in qs:
+        fld = FIELD_MAP.get(row["leave_type"])
+        if fld:
+            totals[fld] = row["total"] or Decimal("0.0")
+
+    obj, _ = MonthlyLeaveAvailed.objects.get_or_create(
+        employee_id=employee_id, year=year, month=month, defaults=totals
+    )
+    for k, v in totals.items():
+        setattr(obj, k, v)
+    obj.save(update_fields=list(totals.keys()))
+
+
+def _touch_month(instance: LeaveDay):
+    y, m = instance.date.year, instance.date.month
+    _rebuild_month(instance.employee_id, y, m)
+
+
+@receiver(post_save, sender=LeaveDay)
+def leave_day_saved(sender, instance: LeaveDay, **kwargs):
+    _touch_month(instance)
+
+
+@receiver(post_delete, sender=LeaveDay)
+def leave_day_deleted(sender, instance: LeaveDay, **kwargs):
+    _touch_month(instance)
+
+
+# ---- normalization exactly to your DB keys ----
+# Your LeaveDay.leave_type should already be one of these;
+# if not, adapt normalize() to map variants.
+VALID_TYPES = {"casual_leave", "sick_leave", "comp_off", "earned_leave"}
+
+
+def normalize(leave_type: str) -> str:
+    return leave_type.strip().lower() if leave_type else ""
+
+
+def _zero_dict():
+    return {
+        "casual_leave": Decimal("0.0"),
+        "sick_leave": Decimal("0.0"),
+        "comp_off": Decimal("0.0"),
+        "earned_leave": Decimal("0.0"),
+    }
+
+
+def _month_availed(employee_id: int, year: int, month: int):
+    """
+    Sum approved LeaveDay.duration per leave_type for the (year, month).
+    Only keys in VALID_TYPES are counted; others ignored.
+    """
+    rows = (
+        LeaveDay.objects.filter(
+            employee_id=employee_id,
+            status="approved",
+            date__year=year,
+            date__month=month,
+        )
+        .values("leave_type")
+        .annotate(total=Coalesce(Sum("duration"), Decimal("0.0")))
+    )
+
+    av = _zero_dict()
+    for r in rows:
+        lt = normalize(r["leave_type"])
+        if lt in VALID_TYPES:
+            av[lt] = r["total"] or Decimal("0.0")
+    return av
+
+
+def _comp_off_earned(employee_id: str, year: int, month: int) -> Decimal:
+    """
+    Sum of Comp-Off credits earned in the month = APPROVED compoff requests
+    whose 'date' falls in (year, month).
+    """
+    return (
+        CompOffRequest.objects.filter(
+            employee_id=employee_id,
+            status="approved",
+            date__year=year,
+            date__month=month,
+        )
+        .aggregate(s=Coalesce(Sum("duration"), Decimal("0.0")))
+        .get("s", Decimal("0.0"))
+    )
+
+
+def _get_january_opening(employee_id: int, year: int):
+    """
+    Opening for January comes from LeaveOpeningBalance (or zeros if missing).
+    """
+    opening = _zero_dict()
+    ob = LeaveOpeningBalance.objects.filter(employee_id=employee_id, year=year).first()
+    if ob:
+        opening["casual_leave"] = ob.casual_leave_opening or Decimal("0.0")
+        opening["sick_leave"] = ob.sick_leave_opening or Decimal("0.0")
+        opening["comp_off"] = ob.comp_off_opening or Decimal("0.0")
+        opening["earned_leave"] = ob.earned_leave_opening or Decimal("0.0")
+    return opening
+
+
+@transaction.atomic
+def rebuild_monthly_balances(employee_id: int, year: int, start_month: int):
+    """
+    Recompute MonthlyLeaveBalance for employee/year from start_month..12.
+
+    Logic per month m:
+      opening(m)  = january_opening if m == 1 else previous_month.balance
+      availed(m)  = sum(approved LeaveDay by type for (year, m))
+      balance(m)  = opening(m) - availed(m)          # for each type
+      save/update MonthlyLeaveBalance(m)
+
+    Notes:
+      * If you accrue comp-off "earned" separately, add + earned(m) into comp_off.
+      * If editing January, this cascades through the whole year — desired.
+    """
+    # Ensure start_month bounds
+    m0 = max(1, min(12, start_month))
+
+    # Seed opening for the first month we will compute
+    if m0 == 1:
+        opening = _get_january_opening(employee_id, year)
+    else:
+        prev = MonthlyLeaveBalance.objects.filter(
+            employee_id=employee_id, year=year, month=m0 - 1
+        ).first()
+        if prev:
+            opening = {
+                "casual_leave": prev.casual_leave_balance,
+                "sick_leave": prev.sick_leave_balance,
+                "comp_off": prev.comp_off_balance,
+                "earned_leave": prev.earned_leave_balance,
+            }
+        else:
+            # If the previous month record is missing, bootstrap from January opening
+            # and rebuild from January to keep chain consistent.
+            opening = _get_january_opening(employee_id, year)
+            m0 = 1  # rebuild whole year forward
+
+    # Walk months m0..12
+    for m in range(m0, 12 + 1):
+        av = _month_availed(employee_id, year, m)
+        co_earned = _comp_off_earned(employee_id, year, m)
+
+        # If you have comp-off earned accruals per month, add here, e.g.:
+        # earned_comp = _comp_off_earned(employee_id, year, m)   # implement if needed
+        # closing["comp_off"] = opening["comp_off"] + earned_comp - av["comp_off"]
+        closing = {
+            "casual_leave": opening["casual_leave"] - av["casual_leave"],
+            "sick_leave": opening["sick_leave"] - av["sick_leave"],
+            # NOTE: comp_off adds earned credits for the month
+            "comp_off": opening["comp_off"] + co_earned - av["comp_off"],
+            "earned_leave": opening["earned_leave"] - av["earned_leave"],
+        }
+
+        obj, _ = MonthlyLeaveBalance.objects.get_or_create(
+            employee_id=employee_id,
+            year=year,
+            month=m,
+            defaults=dict(
+                casual_leave_balance=closing["casual_leave"],
+                sick_leave_balance=closing["sick_leave"],
+                comp_off_balance=closing["comp_off"],
+                earned_leave_balance=closing["earned_leave"],
+            ),
+        )
+        # Update even if it existed
+        obj.casual_leave_balance = closing["casual_leave"]
+        obj.sick_leave_balance = closing["sick_leave"]
+        obj.comp_off_balance = closing["comp_off"]
+        obj.earned_leave_balance = closing["earned_leave"]
+        obj.save(
+            update_fields=[
+                "casual_leave_balance",
+                "sick_leave_balance",
+                "comp_off_balance",
+                "earned_leave_balance",
+            ]
+        )
+
+        # Next month opening = this month closing
+        opening = closing
+
+
+@receiver(post_save, sender=LeaveDay)
+def leave_day_saved(sender, instance: LeaveDay, created, **kwargs):
+    # Rebuild from the affected month forward in the same year
+    rebuild_monthly_balances(
+        employee_id=instance.employee_id,
+        year=instance.date.year,
+        start_month=instance.date.month,
+    )
+
+
+@receiver(post_delete, sender=LeaveDay)
+def leave_day_deleted(sender, instance: LeaveDay, **kwargs):
+    rebuild_monthly_balances(
+        employee_id=instance.employee_id,
+        year=instance.date.year,
+        start_month=instance.date.month,
+    )
+
+
+@receiver(post_save, sender=LeaveOpeningBalance)
+def leave_opening_saved(sender, instance: LeaveOpeningBalance, created, **kwargs):
+    """
+    Whenever the opening row is created/edited, rebuild the whole year Jan..Dec
+    so monthly openings/closings reflect the new January opening.
+    """
+    with transaction.atomic():
+        rebuild_monthly_balances(
+            employee_id=instance.employee_id,
+            year=instance.year,
+            start_month=1,  # IMPORTANT: start from January
+        )
+
+
+@receiver(post_delete, sender=LeaveOpeningBalance)
+def leave_opening_deleted(sender, instance: LeaveOpeningBalance, **kwargs):
+    """
+    If an opening row is deleted, treat January opening as 0.0 and rebuild Jan..Dec.
+    (Adjust if you prefer to also delete the MonthlyLeaveBalance rows.)
+    """
+    with transaction.atomic():
+        rebuild_monthly_balances(
+            employee_id=instance.employee_id,
+            year=instance.year,
+            start_month=1,
+        )
+
+
+@receiver(post_save, sender=CompOffRequest)
+def compoff_saved(sender, instance: CompOffRequest, **kwargs):
+    """
+    Recompute from the month of the comp-off 'date' forward whenever the record
+    is saved. This covers:
+      - status flip to 'approved'
+      - duration/date edits
+      - manager re-approval, etc.
+    """
+    y, m = instance.date.year, instance.date.month
+    rebuild_monthly_balances(employee_id=instance.employee_id, year=y, start_month=m)
+
+
+@receiver(post_delete, sender=CompOffRequest)
+def compoff_deleted(sender, instance: CompOffRequest, **kwargs):
+    y, m = instance.date.year, instance.date.month
+    rebuild_monthly_balances(employee_id=instance.employee_id, year=y, start_month=m)

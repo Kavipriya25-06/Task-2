@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from ..models import BiometricData, Calendar, TaskAssign, TimeSheet, LeavesTaken
+from ..models import (
+    BiometricData,
+    Calendar,
+    TaskAssign,
+    TimeSheet,
+    LeavesTaken,
+    LeaveDay,
+    Employee,
+)
 from time_management.time_sheet.serializers import (
     TimeSheetTaskSerializer,
 )
@@ -7,6 +15,7 @@ from time_management.leaves_taken.serializers import (
     LeavesTakenSerializer,
     LeaveRequestSerializer,
 )
+from time_management.leaveday.serializers import LeaveDaySerializer
 
 
 class BiometricDataSerializer(serializers.ModelSerializer):
@@ -21,9 +30,26 @@ class CalendarSerializer(serializers.ModelSerializer):
         fields = ["calendar_id", "date", "is_weekend", "is_holiday"]
 
 
+class CalendarMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Calendar
+        fields = (
+            "calendar_id",
+            "date",
+            "day_name",
+            "day_of_week",
+            "is_weekend",
+            "is_holiday",
+            "notes",
+            "month",
+            "month_name",
+            "week_of_year",
+        )
+
+
 class BiometricTaskDataSerializer(serializers.ModelSerializer):
     calendar = serializers.SerializerMethodField()
-    # leave = serializers.SerializerMethodField()
+    leaveday = serializers.SerializerMethodField()
     timesheets = serializers.SerializerMethodField()
     leave_deduction = serializers.SerializerMethodField()
 
@@ -47,23 +73,23 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             "modified_by",
             "calendar",
             "timesheets",
-            # "leave",
+            "leaveday",
             "leave_deduction",
         ]
 
-    # def get_leave(self, obj):
-    #     try:
-    #         leave = LeavesTaken.objects.filter(
-    #             employee=obj.employee, start_date__lte=obj.date, end_date__gte=obj.date
-    #         ).first()
-    #         return LeavesTakenSerializer(leave).data
-    #     except Calendar.DoesNotExist:
-    #         return None
+    def get_leaveday(self, obj):
+        try:
+            leave = LeaveDay.objects.filter(
+                employee=obj.employee, date=obj.date
+            ).first()
+            return LeaveDaySerializer(leave).data
+        except LeaveDay.DoesNotExist:
+            return None
 
     def get_calendar(self, obj):
         try:
             calendar = Calendar.objects.get(date=obj.date)
-            return CalendarSerializer(calendar).data
+            return CalendarMiniSerializer(calendar).data
         except Calendar.DoesNotExist:
             return None
 
@@ -82,3 +108,70 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             return get_comp_off(float(obj.total_duration or 0))
         except:
             return 0
+
+
+# class AttendanceSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Calendar
+#         fields = ["calendar_id", "date", "is_weekend", "is_holiday"]
+
+
+class EmployeeAttendanceSerializer(serializers.ModelSerializer):
+    # We’ll attach prefetched rows to `employee.biometric_entries`
+    biometric_entries = BiometricTaskDataSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Employee
+        fields = (
+            "employee_id",
+            "employee_code",
+            "employee_name",
+            "department",
+            "designation",
+            # any other Employee fields you want to return...
+            "biometric_entries",
+        )
+
+
+class EmployeeWeekSerializer(serializers.ModelSerializer):
+    week = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = (
+            "employee_id",
+            "employee_name",
+            "department",
+            "designation",
+            # add any other Employee fields you want
+            "week",
+        )
+
+    def get_week(self, employee):
+        """
+        Build a 7-day list from the provided calendar days,
+        attaching biometric/leave for (employee, date) or None.
+        """
+        cal_days = self.context["calendar_days"]  # list[Calendar]
+        bio_map = self.context["bio_map"]  # dict[(emp_pk, date)]=BiometricData
+        leave_map = self.context["leave_map"]  # dict[(emp_pk, date)]=LeaveDay
+
+        out = []
+        for cal in cal_days:
+            key = (employee.pk, cal.date)
+            biometric = bio_map.get(key)
+            leave = leave_map.get(key)
+
+            out.append(
+                {
+                    "date": cal.date,
+                    "calendar": CalendarMiniSerializer(cal).data,
+                    "biometric": (
+                        BiometricTaskDataSerializer(biometric).data
+                        if biometric
+                        else None
+                    ),
+                    "leave": (LeaveDaySerializer(leave).data if leave else None),
+                }
+            )
+        return out

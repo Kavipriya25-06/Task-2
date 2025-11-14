@@ -4,7 +4,11 @@ from ..models import (
     ClientPOC,
 )
 
-from time_management.client.serializers import ClientSerializer, ClientPOCSerializer
+from time_management.client.serializers import (
+    ClientSerializer,
+    ClientPOCSerializer,
+    ClientAndPOCSerializer,
+)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -155,3 +159,37 @@ def client_poc_api(request, id=None):
             return Response(
                 {"error": "Leave record not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+@api_view(["GET"])
+def client_poc_by_client_api(request, client_id=None):
+
+    if client_id:
+        try:
+            obj = ClientPOC.objects.filter(client=client_id)
+            serializer = ClientPOCSerializer(obj, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ClientPOC.DoesNotExist:
+            return Response(
+                {"error": "Leave record with leave id not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    else:
+        objs = ClientPOC.objects.all()
+        serializer = ClientPOCSerializer(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def client_and_poc(request, client_id=None):
+
+    try:
+        obj = ClientPOC.objects.all()
+        serializer = ClientAndPOCSerializer(obj, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except ClientPOC.DoesNotExist:
+        return Response(
+            {"error": "Leave record with leave id not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )

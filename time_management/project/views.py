@@ -28,6 +28,7 @@ from time_management.project.serializers import (
     AreaOfWorkSerializer,
     DisciplineSerializer,
     ProjectFullSerializer,
+    ProjectClientSerializer,
 )
 from time_management.building.serializers import (
     BuildingSerializer,
@@ -498,7 +499,7 @@ def project_creator(request, employee_id=None):
     else:
         project = Project.objects.all()
 
-    serializer = ProjectSerializer(project, many=True)
+    serializer = ProjectFullSerializer(project, many=True)
     return Response(serializer.data)
 
 

@@ -327,7 +327,9 @@ def additional_resource_view(request, employee_id=None):
             try:
                 manager = Employee.objects.get(employee_id=employee_id)
                 employees = get_emp_under_manager(manager)
-                employee = Employee.objects.exclude(employee_id__in=employees)
+                employee = Employee.objects.exclude(employee_id__in=employees).filter(
+                    status="active"
+                )
                 serializer = EmployeeViewSerializer(employee, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Employee.DoesNotExist:

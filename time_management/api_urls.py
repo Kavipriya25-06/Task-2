@@ -91,14 +91,28 @@ from time_management.biometric.views import (
     biometric_data_api,
     attendance,
     weekly_attendance,
+    weekly_attendance_track,
+    attendance_track,
     attendance_admin,
     biometric_daily,
     biometric_daily_task,
     biometric_manager_daily_task,
     biometric_weekly_task,
     bulk_biometric_upload,
+    biometric_weekly_track,
 )
-from time_management.client.views import client_api, client_poc_api
+from time_management.client.views import (
+    client_api,
+    client_poc_api,
+    client_poc_by_client_api,
+    client_and_poc,
+)
+from time_management.leaveday.views import (
+    leave_day_api,
+    leave_ledger_ytd,
+    opening_plus_monthly_availed,
+    opening_plus_monthly_availed_all,
+)
 from time_management.compoff.views import (
     compoff_request_api,
     compoff_view_api,
@@ -136,6 +150,8 @@ from time_management.reports.views import (
     employee_lop_view,
     department_weekly_hours_project,
     weekly_employees,
+    attrition_report,
+    monthly_attendance_summary,
 )
 from time_management.variations.views import variation_api
 from time_management.building.views import (
@@ -190,6 +206,7 @@ from time_management.employee_attachment.views import employee_attachment_api
 from time_management.company_policy.views import company_policy_api
 from time_management.salarybreakdown.views import salary_breakdown_api
 
+from time_management.services.leave_ledger import get_monthly_leave_report
 
 from time_management.views import MyTokenObtainPairView, run_biometric_sync
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -277,10 +294,26 @@ urlpatterns = [
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),
     path("leaves-taken/by_employee/<str:employee_id>/", leaves_taken_api),
+    path("leave-day/", leave_day_api),
+    path("leave-day/<int:id>/", leave_day_api),
+    path("leave-day/by_employee/<str:employee_id>/", leave_day_api),
+    path("leave-ledger/<int:year>/", leave_ledger_ytd, name="leave-ledger-ytd"),
+    path(
+        "leave/opening-monthly/<str:employee_id>/<int:year>/",
+        opening_plus_monthly_availed,
+        name="leave-opening-plus-monthly",
+    ),
+    path(
+        "leave/opening-monthly-all/<int:year>/",
+        opening_plus_monthly_availed_all,
+        name="leave-opening-monthly-all",
+    ),
     path("yearly-leaves/", year_leaves),
     path("leaves-available-report/", leaves_available_report),
     path("active-leaves-available-report/", active_leaves_available_report),
     path("employee-lop/", employee_lop_view),
+    path("attrition-report/", attrition_report),
+    path("monthly-attendance-report/", monthly_attendance_summary),
     path("leave-request/", leave_request_api),
     path("leave-request/<str:manager_id>/", leave_request_api),
     # Calendar
@@ -295,6 +328,7 @@ urlpatterns = [
     path("biometric-daily/<str:employee_id>/", biometric_daily),
     path("biometric-daily-task/<str:employee_id>/", biometric_daily_task),
     path("biometric-weekly-task/<str:employee_id>/", biometric_weekly_task),
+    path("biometric-weekly-track/<str:employee_id>/", biometric_weekly_track),
     path(
         "biometric-manager-daily-task/<str:manager_id>/", biometric_manager_daily_task
     ),
@@ -305,11 +339,15 @@ urlpatterns = [
     path("attendance-upload/", bulk_biometric_upload),
     path("weekly-attendance/", weekly_attendance),
     path("weekly-attendance/<str:employee_id>/", weekly_attendance),
+    path("weekly-attendance-track/", attendance_track),
+    path("weekly-attendance-track/<str:employee_id>/", attendance_track),
     # Projects / assignments / reports
     path("client/", client_api),
     path("client/<int:id>/", client_api),
     path("client-poc/", client_poc_api),
     path("client-poc/<int:id>/", client_poc_api),
+    path("client-poc-by-client/<int:client_id>/", client_poc_by_client_api),
+    path("client-and-poc/", client_and_poc),
     path("projects/", project_list_create, name="project-list-create"),
     path("projects/create/", create_full_project_flow, name="project-create-all"),
     path("projects/<str:project_id>/", project_detail, name="project-detail"),

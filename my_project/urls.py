@@ -21,6 +21,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django.http import JsonResponse
 from time_management.views import MyTokenObtainPairView, run_biometric_sync
 from rest_framework_simplejwt.views import TokenRefreshView
 

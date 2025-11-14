@@ -15,6 +15,8 @@ from ..models import (
     LeavesAvailable,
     LeavesTaken,
     Calendar,
+    LeaveOpeningBalance,
+    MonthlyLeaveAvailed,
 )
 from collections import defaultdict
 from datetime import timedelta
@@ -624,3 +626,113 @@ class CalendarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Calendar
         fields = "__all__"
+
+
+class EmployeeMonthlyAttendanceSerializer(serializers.ModelSerializer):
+    """
+    ModelSerializer on Employee with computed fields provided via `context["summaries"]`.
+    """
+
+    name = serializers.CharField(source="employee_name", read_only=True)
+    employee_code = serializers.CharField(read_only=True)
+    employee_id = serializers.CharField(read_only=True)
+    department = serializers.CharField(read_only=True)
+    absent = serializers.SerializerMethodField()
+    notes = serializers.SerializerMethodField()
+    late = serializers.SerializerMethodField()
+    od = serializers.SerializerMethodField()
+    wfh = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = (
+            "department",
+            "employee_code",
+            "employee_id",
+            "name",
+            "absent",
+            "notes",
+            "late",
+            "od",
+            "wfh",
+        )
+
+    # All getters read from a precomputed dict passed in context to avoid N+1.
+    def _get(self, obj, key, default=0):
+        summaries = self.context.get("summaries", {})
+        return summaries.get(obj.pk, {}).get(key, default)
+
+    def get_absent(self, obj):
+        return int(self._get(obj, "absent", 0))
+
+    def get_notes(self, obj):
+        return self._get(obj, "notes", "")
+
+    def get_late(self, obj):
+        return int(self._get(obj, "late", 0))
+
+    def get_od(self, obj):
+        return int(self._get(obj, "od", 0))
+
+    def get_wfh(self, obj):
+        return int(self._get(obj, "wfh", 0))
+
+
+def get_monthly_leave_balance(employee, year):
+    """
+    Returns list of dicts with month, opening, availed, and closing balances.
+    """
+    # Opening for that year
+    try:
+        opening = LeaveOpeningBalance.objects.get(employee=employee, year=year)
+    except LeaveOpeningBalance.DoesNotExist:
+        return []
+
+    opening_cl = opening.casual_leave_opening
+    opening_sl = opening.sick_leave_opening
+    opening_comp = opening.comp_off_opening
+    opening_el = opening.earned_leave_opening
+
+    rows = []
+    for m in range(1, 13):
+        month_availed = MonthlyLeaveAvailed.objects.filter(
+            employee=employee, year=year, month=m
+        ).first()
+
+        av_cl = month_availed.casual_leave_availed if month_availed else 0
+        av_sl = month_availed.sick_leave_availed if month_availed else 0
+        av_comp = month_availed.comp_off_availed if month_availed else 0
+        av_el = month_availed.earned_leave_availed if month_availed else 0
+
+        closing_cl = opening_cl - av_cl
+        closing_sl = opening_sl - av_sl
+        closing_comp = opening_comp - av_comp
+        closing_el = opening_el - av_el
+
+        rows.append(
+            {
+                "month": m,
+                "opening": {
+                    "CL": opening_cl,
+                    "SL": opening_sl,
+                    "COMP": opening_comp,
+                    "EL": opening_el,
+                },
+                "availed": {"CL": av_cl, "SL": av_sl, "COMP": av_comp, "EL": av_el},
+                "closing": {
+                    "CL": closing_cl,
+                    "SL": closing_sl,
+                    "COMP": closing_comp,
+                    "EL": closing_el,
+                },
+            }
+        )
+
+        opening_cl, opening_sl, opening_comp, opening_el = (
+            closing_cl,
+            closing_sl,
+            closing_comp,
+            closing_el,
+        )
+
+    return rows

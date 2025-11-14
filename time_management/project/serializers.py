@@ -190,3 +190,15 @@ class ProjectFullSerializer(serializers.ModelSerializer):
     def get_variation(self, obj):
         variation = Variation.objects.filter(project=obj)
         return VariationSerializer(variation, many=True).data
+
+
+class ProjectClientSerializer(serializers.ModelSerializer):
+
+    attachments = AttachmentSerializer(
+        many=True, source="Projectattachments", read_only=True
+    )
+    client = ClientSerializer(read_only=True)
+
+    class Meta:
+        model = Project
+        fields = "__all__"

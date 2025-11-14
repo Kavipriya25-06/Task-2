@@ -19,6 +19,7 @@ from django.utils import timezone
 import uuid
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from time_management.querysets import LeaveDayQuerySet
 
 
 # Employee Table
@@ -80,6 +81,7 @@ class Employee(models.Model):
         choices=[
             ("Fulltime", "Full-Time"),
             ("Probation", "Probation"),
+            ("Trainee", "Trainee"),
             ("Internship", "Internship"),
             ("Contract", "Contract"),
         ],
@@ -390,8 +392,9 @@ class User(models.Model):
                     cc=[settings.ADMIN_EMAIL],  # CC admin
                 )
                 try:
-                    email.send()
-                    # return
+                    # Change here when in prod
+                    # email.send()
+                    return
                 except Exception as e:
                     print(f"[ERROR] Email not sent: {e}")
 
@@ -673,6 +676,110 @@ class CompOffRequest(models.Model):
         )
 
 
+# Leave opening balance
+class LeaveOpeningBalance(models.Model):
+    balance_id = models.CharField(max_length=50, primary_key=True, blank=True)
+    employee = models.ForeignKey("Employee", on_delete=models.CASCADE)
+    year = models.IntegerField()
+    casual_leave_opening = models.DecimalField(
+        max_digits=6, decimal_places=1, default=0
+    )
+    sick_leave_opening = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+    comp_off_opening = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+    earned_leave_opening = models.DecimalField(
+        max_digits=6, decimal_places=1, default=0
+    )
+
+    class Meta:
+        unique_together = ("employee", "year")
+
+    def save(self, *args, **kwargs):
+        if not self.balance_id:
+            with transaction.atomic():
+                last = LeaveOpeningBalance.objects.select_for_update().aggregate(
+                    models.Max("balance_id")
+                )["balance_id__max"]
+                if last:
+                    last_num = int(last.split("_")[1])
+                    self.balance_id = f"LVOPN_{last_num + 1:05d}"
+                else:
+                    self.balance_id = "LVOPN_00001"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee.employee_name} - {self.year} Opening"
+
+
+class MonthlyLeaveAvailed(models.Model):
+    availed_id = models.CharField(max_length=50, primary_key=True, blank=True)
+    employee = models.ForeignKey("Employee", on_delete=models.CASCADE)
+    year = models.IntegerField()
+    month = models.IntegerField()
+    casual_leave_availed = models.DecimalField(
+        max_digits=6, decimal_places=1, default=0
+    )
+    sick_leave_availed = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+    comp_off_availed = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+    earned_leave_availed = models.DecimalField(
+        max_digits=6, decimal_places=1, default=0
+    )
+    lop_availed = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+
+    class Meta:
+        unique_together = ("employee", "year", "month")
+
+    def save(self, *args, **kwargs):
+        if not self.availed_id:
+            with transaction.atomic():
+                last = MonthlyLeaveAvailed.objects.select_for_update().aggregate(
+                    models.Max("availed_id")
+                )["availed_id__max"]
+                if last:
+                    last_num = int(last.split("_")[1])
+                    self.availed_id = f"LVAVLD_{last_num + 1:05d}"
+                else:
+                    self.availed_id = "LVAVLD_00001"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee.employee_name} - {self.month}/{self.year}"
+
+
+class MonthlyLeaveBalance(models.Model):
+    monthly_balance_id = models.CharField(max_length=50, primary_key=True, blank=True)
+    employee = models.ForeignKey("Employee", on_delete=models.CASCADE)
+    year = models.IntegerField()
+    month = models.IntegerField()
+    casual_leave_balance = models.DecimalField(
+        max_digits=6, decimal_places=1, default=0
+    )
+    sick_leave_balance = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+    comp_off_balance = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+    earned_leave_balance = models.DecimalField(
+        max_digits=6, decimal_places=1, default=0
+    )
+    # lop_availed = models.DecimalField(max_digits=6, decimal_places=1, default=0)
+
+    class Meta:
+        unique_together = ("employee", "year", "month")
+
+    def save(self, *args, **kwargs):
+        if not self.monthly_balance_id:
+            with transaction.atomic():
+                last = MonthlyLeaveBalance.objects.select_for_update().aggregate(
+                    models.Max("monthly_balance_id")
+                )["monthly_balance_id__max"]
+                if last:
+                    last_num = int(last.split("_")[1])
+                    self.monthly_balance_id = f"MNLV_{last_num + 1:05d}"
+                else:
+                    self.monthly_balance_id = "MNLV_00001"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee.employee_name} - {self.month}/{self.year}"
+
+
 # Leaves Available Table
 class LeavesAvailable(models.Model):
     leave_avail_id = models.CharField(max_length=50, primary_key=True, blank=True)
@@ -774,6 +881,39 @@ class LeavesTaken(models.Model):
 
     def __str__(self):
         return f"{self.leave_type} - {self.employee.employee_name if self.employee else 'None'}"
+
+
+class LeaveDay(models.Model):
+    objects = LeaveDayQuerySet.as_manager()
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    date = models.DateField()
+    leave_taken = models.ForeignKey(
+        LeavesTaken, on_delete=models.CASCADE, related_name="leave_days"
+    )
+    duration = models.DecimalField(
+        max_digits=6, decimal_places=1, blank=True, null=True, default=0
+    )
+    leave_type = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ],
+        default="pending",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["employee", "date"], name="unique_employee_leave_per_day"
+            )
+        ]
+
+    def __str__(self):
+        return f"Leave day for {self.employee.employee_name} on {self.date} ({self.leave_type})"
 
 
 class Calendar(models.Model):
@@ -1312,6 +1452,7 @@ class EmployeeAttachment(models.Model):
             ("relievingletter", "Last company relieving letter"),
             ("payslip", "Last company Payslip"),
             ("idproof", "ID Proof"),
+            ("revisedappraisal", "Revised appraisal letter"),
         ],
         blank=True,
         null=True,

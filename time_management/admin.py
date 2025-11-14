@@ -35,6 +35,10 @@ from .models import (
     Client,
     ClientPOC,
     Department,
+    LeaveOpeningBalance,
+    MonthlyLeaveAvailed,
+    MonthlyLeaveBalance,
+    LeaveDay,
 )
 
 admin.site.register(Employee)
@@ -73,3 +77,7 @@ admin.site.register(CompanyPolicy)
 admin.site.register(SalaryBreakdown)
 admin.site.register(ClientPOC)
 admin.site.register(Client)
+admin.site.register(LeaveOpeningBalance)
+admin.site.register(MonthlyLeaveAvailed)
+admin.site.register(MonthlyLeaveBalance)
+admin.site.register(LeaveDay)

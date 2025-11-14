@@ -24,8 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-8^)=kl-$82!lnhygjhs8#_p5i1t2(jquh=$1-#%5^!!d4gbqxn"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = False
+DEBUG = True
+# DEBUG = False
 
 # IS_PRODUCTION = False  # or False for dev
 
@@ -37,7 +37,10 @@ else:
     database_password = "mysql"
 
 
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS = ["*"]
+
+ALLOWED_HOSTS = ["dms.aero360.co.in", "127.0.0.1", "localhost"]
+CSRF_TRUSTED_ORIGINS = ["https://dms.aero360.co.in"]
 
 
 # Application definition
@@ -192,6 +195,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
