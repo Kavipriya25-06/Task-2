@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-8^)=kl-$82!lnhygjhs8#_p5i1t2(jquh=$1-#%5^!!d4gbqxn"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
 # DEBUG = False
 
 # IS_PRODUCTION = False  # or False for dev
@@ -39,8 +39,18 @@ else:
 
 # ALLOWED_HOSTS = ["*"]
 
+#ALLOWED_HOSTS = ["dms.aero360.co.in", "127.0.0.1", "localhost"]
+#CSRF_TRUSTED_ORIGINS = ["https://dms.aero360.co.in"]
+
+
+DEBUG = True
+
 ALLOWED_HOSTS = ["dms.aero360.co.in", "127.0.0.1", "localhost"]
+
 CSRF_TRUSTED_ORIGINS = ["https://dms.aero360.co.in"]
+
+SECURE_SSL_REDIRECT = False  # Apache terminates HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition

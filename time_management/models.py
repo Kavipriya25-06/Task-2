@@ -393,8 +393,8 @@ class User(models.Model):
                 )
                 try:
                     # Change here when in prod
-                    # email.send()
-                    return
+                    email.send()
+                    # return
                 except Exception as e:
                     print(f"[ERROR] Email not sent: {e}")
 
