@@ -122,8 +122,21 @@ DATABASES = {
         "PASSWORD": database_password,
         "HOST": "localhost",
         "PORT": "3306",
-    }
+    },
+    "reporting": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "DTMS_BIO",
+        "USER": "root",
+        "PASSWORD": database_password,
+        "HOST": "localhost",
+        "PORT": "3306",
+        "OPTIONS": {
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    },
 }
+
+DATABASE_ROUTERS = ["my_project.db_routers.ReportingRouter"]
 
 
 # Password validation
@@ -157,7 +170,7 @@ if IS_PRODUCTION:
     EMAIL_HOST_USER = "sme@aero360.co.in"  #
     EMAIL_HOST_PASSWORD = "xYJg8x6JStCd"  # Use app password, not your main password
     ALL_EMAIL = "all@aero360.co.in"
-    DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:9001/api"
+    DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:8001/api"
     # "http://148.135.138.195:9001/api/dtms_event_time/2025-08-07/"
 
 else:

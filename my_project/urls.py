@@ -25,10 +25,20 @@ from django.http import JsonResponse
 from time_management.views import MyTokenObtainPairView, run_biometric_sync
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from time_management.dtms_bio.views import dtms_event_summary, dtms_event_time
+
 urlpatterns = [
     path("api/test-debug/", lambda r: JsonResponse({"ok": True})),
     path("api/admin/", admin.site.urls),
     path("api/", include("time_management.api_urls")),
+    path(
+        "api/dtms-event-time/<str:date_str>/", dtms_event_time, name="dtms_event_time"
+    ),
+    path(
+        "api/dtms-event-summary/<str:date_str>/",
+        dtms_event_summary,
+        name="dtms_event_time",
+    ),
     path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
