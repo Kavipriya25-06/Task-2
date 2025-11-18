@@ -170,7 +170,9 @@ if IS_PRODUCTION:
     EMAIL_HOST_USER = "sme@aero360.co.in"  #
     EMAIL_HOST_PASSWORD = "xYJg8x6JStCd"  # Use app password, not your main password
     ALL_EMAIL = "all@aero360.co.in"
-    DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:8001/api"
+    # DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:8001/api"
+
+    DEFAULT_BIOMETRIC_URL = "https://dms.aero360.co.in/api2"
     # "http://148.135.138.195:9001/api/dtms_event_time/2025-08-07/"
 
 else:
