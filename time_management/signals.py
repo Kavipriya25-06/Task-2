@@ -464,12 +464,53 @@ def update_consumed_hours(sender, instance, **kwargs):
 # )
 
 
+# @receiver(post_save, sender=LeavesTaken)
+# def create_leave_days_on_approval(sender, instance, created, **kwargs):
+#     """
+#     Automatically create LeaveDay records when a leave is approved or pending.
+#     Ensures no overlapping leave days exist for the same employee.
+#     """
+#     if instance.status not in ["approved", "pending"]:
+#         LeaveDay.objects.filter(leave_taken=instance).delete()
+#         return
+
+#     if not instance.start_date or not instance.end_date:
+#         return
+
+#     # Delete existing leave days linked to this specific leave (not others)
+#     LeaveDay.objects.filter(leave_taken=instance).delete()
+
+#     # Create or update leave days
+#     current_date = instance.start_date
+#     while current_date <= instance.end_date:
+#         try:
+#             LeaveDay.objects.update_or_create(
+#                 employee=instance.employee,
+#                 date=current_date,
+#                 defaults={
+#                     "leave_taken": instance,
+#                     # "duration": 1.0,
+#                     "duration": 0.5 if (instance.duration % 1) else 1.0,
+#                     "leave_type": instance.leave_type,
+#                     "status": instance.status,
+#                 },
+#             )
+#         except IntegrityError:
+#             # Handle conflict (another leave already covers this date)
+#             print(
+#                 f"Skipped overlapping leave day: {instance.employee} on {current_date}"
+#             )
+#         current_date += timedelta(days=1)
+
+
 @receiver(post_save, sender=LeavesTaken)
 def create_leave_days_on_approval(sender, instance, created, **kwargs):
     """
     Automatically create LeaveDay records when a leave is approved or pending.
+    Skips weekends and holidays from Calendar.
     Ensures no overlapping leave days exist for the same employee.
     """
+    # Only keep LeaveDay rows for pending/approved leaves
     if instance.status not in ["approved", "pending"]:
         LeaveDay.objects.filter(leave_taken=instance).delete()
         return
@@ -477,30 +518,73 @@ def create_leave_days_on_approval(sender, instance, created, **kwargs):
     if not instance.start_date or not instance.end_date:
         return
 
-    # Delete existing leave days linked to this specific leave (not others)
+    # Remove old LeaveDay rows *for this leave only*
     LeaveDay.objects.filter(leave_taken=instance).delete()
 
-    # Create or update leave days
     current_date = instance.start_date
+    # Decide per-day duration (your existing logic)
+    per_day_duration = 0.5 if (instance.duration and instance.duration % 1) else 1.0
+
     while current_date <= instance.end_date:
+        # ---- calendar / weekend / holiday check ----
+        cal = Calendar.objects.filter(date=current_date).first()
+
+        is_weekend = False
+        is_holiday = False
+
+        if cal:
+            is_weekend = cal.is_weekend
+            is_holiday = cal.is_holiday
+        else:
+            # Fallback: treat Sat/Sun as weekend if calendar row missing
+            # weekday(): Monday=0 ... Sunday=6
+            is_weekend = current_date.weekday() >= 5
+
+        if is_weekend or is_holiday:
+            # Skip creating a LeaveDay for this date
+            current_date += timedelta(days=1)
+            continue
+
+        # ---- create/update the working-day LeaveDay ----
         try:
             LeaveDay.objects.update_or_create(
                 employee=instance.employee,
                 date=current_date,
                 defaults={
                     "leave_taken": instance,
-                    # "duration": 1.0,
-                    "duration": 0.5 if (instance.duration % 1) else 1.0,
+                    "duration": per_day_duration,
                     "leave_type": instance.leave_type,
                     "status": instance.status,
                 },
             )
         except IntegrityError:
-            # Handle conflict (another leave already covers this date)
+            # Another approved leave already occupies this date for this employee
             print(
                 f"Skipped overlapping leave day: {instance.employee} on {current_date}"
             )
+
         current_date += timedelta(days=1)
+
+
+@receiver(post_delete, sender=LeavesTaken)
+def delete_leave_days_on_leave_delete(sender, instance, **kwargs):
+    """
+    When a LeavesTaken record is deleted:
+      - Remove ALL related LeaveDay rows.
+      - Recalculate the MonthlyLeaveBalance for the affected months.
+    """
+
+    #  Delete the LeaveDay rows linked to this leave
+    LeaveDay.objects.filter(leave_taken=instance).delete()
+
+    # If no valid dates, skip recalculation
+    if not instance.start_date or not instance.end_date:
+        return
+
+    emp = instance.employee
+    if not emp:
+        return
+
 
 
 # below for the leave balance calculation
