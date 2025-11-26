@@ -27,9 +27,9 @@ SECRET_KEY = "django-insecure-8^)=kl-$82!lnhygjhs8#_p5i1t2(jquh=$1-#%5^!!d4gbqxn
 # DEBUG = True
 # DEBUG = False
 
-IS_PRODUCTION = False  # or False for dev
+# IS_PRODUCTION = False  # or False for dev
 
-# IS_PRODUCTION = True  # or True for production
+IS_PRODUCTION = True  # or True for production
 
 if IS_PRODUCTION:
     database_password = "mysql"
