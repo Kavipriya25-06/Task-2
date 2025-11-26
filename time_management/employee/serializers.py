@@ -91,6 +91,7 @@ class EmployeeViewSerializer(serializers.ModelSerializer):
         fields = [
             "employee_id",
             "employee_name",
+            "last_name",
             "employee_code",
             "employee_email",
             "status",
@@ -126,6 +127,7 @@ class EmployeeListSerializer(serializers.ModelSerializer):
         fields = [
             "employee_id",
             "employee_name",
+            "last_name",
             "employee_code",
             "employee_email",
             "status",

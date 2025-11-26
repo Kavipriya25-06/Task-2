@@ -35,6 +35,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = [
             "employee_id",
             "employee_name",
+            "last_name",
             "employee_code",
             "doj",
             "status",
@@ -569,6 +570,7 @@ class EmployeeLOPSerializer(serializers.ModelSerializer):
         fields = [
             "employee_id",
             "employee_name",
+            "last_name",
             "employee_code",
             "doj",
             "status",
@@ -634,6 +636,7 @@ class EmployeeMonthlyAttendanceSerializer(serializers.ModelSerializer):
     """
 
     name = serializers.CharField(source="employee_name", read_only=True)
+    last_name = serializers.CharField(read_only=True)
     employee_code = serializers.CharField(read_only=True)
     employee_id = serializers.CharField(read_only=True)
     department = serializers.CharField(read_only=True)
@@ -650,6 +653,7 @@ class EmployeeMonthlyAttendanceSerializer(serializers.ModelSerializer):
             "employee_code",
             "employee_id",
             "name",
+            "last_name",
             "absent",
             "notes",
             "late",

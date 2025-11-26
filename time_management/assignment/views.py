@@ -122,6 +122,7 @@ def manager_tl_projects(request, employee_id=None):
                 {
                     "teamlead_id": teamlead_emp.employee_id,
                     "teamlead_name": teamlead_emp.employee_name,
+                    "last_name": teamlead_emp.last_name,
                     "employees": employee_list,
                     "total_employees": total_employees,
                     "total_projects": total_projects,

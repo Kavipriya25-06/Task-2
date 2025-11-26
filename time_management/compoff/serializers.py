@@ -25,7 +25,7 @@ class TimeSheetSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields = ["employee_id", "employee_code", "employee_name"]
+        fields = ["employee_id", "employee_code", "employee_name", "last_name"]
 
 
 class CompOffRequestEmployeeSerializer(serializers.ModelSerializer):

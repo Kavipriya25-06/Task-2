@@ -84,6 +84,7 @@ from time_management.leaves_taken.views import (
     leaves_taken_api,
     org_leaves,
     leave_request_api,
+    leave_taken_employee_api,
 )
 from time_management.calendar.views import calendar_api
 from time_management.biometric.views import (
@@ -293,7 +294,7 @@ urlpatterns = [
     # Leaves taken / requests / reports
     path("leaves-taken/", leaves_taken_api),
     path("leaves-taken/<str:leave_taken_id>/", leaves_taken_api),
-    path("leaves-taken/by_employee/<str:employee_id>/", leaves_taken_api),
+    path("leaves-taken/by_employee/<str:employee_id>/", leave_taken_employee_api),
     path("leave-day/", leave_day_api),
     path("leave-day/<int:id>/", leave_day_api),
     path("leave-day/by_employee/<str:employee_id>/", leave_day_api),

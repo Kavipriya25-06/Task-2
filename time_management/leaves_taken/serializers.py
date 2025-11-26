@@ -9,6 +9,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = [
             "employee_id",
             "employee_name",
+            "last_name",
             "employee_code",
         ]
 
@@ -31,6 +32,7 @@ class LeavesTakenSerializer(serializers.ModelSerializer):
 
 class LeaveRequestSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer(read_only=True)
+    approved_by = EmployeeSerializer(read_only=True)
     attachments = AttachmentSerializer(
         many=True, source="leaveattachments", read_only=True
     )

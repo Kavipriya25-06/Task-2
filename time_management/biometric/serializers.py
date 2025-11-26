@@ -18,6 +18,20 @@ from time_management.leaves_taken.serializers import (
 from time_management.leaveday.serializers import LeaveDaySerializer
 
 
+class EmployeeNameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Employee
+        fields = (
+            "employee_id",
+            "employee_code",
+            "employee_name",
+            "last_name",
+            "department",
+            "designation",
+        )
+
+
 class BiometricDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = BiometricData
@@ -47,11 +61,19 @@ class CalendarMiniSerializer(serializers.ModelSerializer):
         )
 
 
+class BiometricAttendanceDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BiometricData
+        fields = "__all__"
+
+
 class BiometricTaskDataSerializer(serializers.ModelSerializer):
     calendar = serializers.SerializerMethodField()
     leaveday = serializers.SerializerMethodField()
     timesheets = serializers.SerializerMethodField()
     leave_deduction = serializers.SerializerMethodField()
+
+    employee_names = serializers.SerializerMethodField()
 
     class Meta:
         model = BiometricData
@@ -59,6 +81,7 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             "biometric_id",
             "employee_code",
             "employee_name",
+            "employee_names",
             "shift",
             "date",
             "in_time",
@@ -91,6 +114,13 @@ class BiometricTaskDataSerializer(serializers.ModelSerializer):
             calendar = Calendar.objects.get(date=obj.date)
             return CalendarMiniSerializer(calendar).data
         except Calendar.DoesNotExist:
+            return None
+
+    def get_employee_names(self, obj):
+        try:
+            employee_names = Employee.objects.get(employee_id=obj.employee)
+            return EmployeeNameSerializer(employee_names).data
+        except Employee.DoesNotExist:
             return None
 
     def get_timesheets(self, obj):
@@ -143,6 +173,7 @@ class EmployeeWeekSerializer(serializers.ModelSerializer):
             "employee_name",
             "department",
             "designation",
+            "last_name",
             # add any other Employee fields you want
             "week",
         )

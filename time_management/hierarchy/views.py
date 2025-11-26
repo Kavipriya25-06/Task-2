@@ -117,6 +117,7 @@ def get_emp_all(request, manager_id=None):
             {
                 "teamlead_id": teamlead_emp.employee_id,
                 "teamlead_name": teamlead_emp.employee_name,
+                "last_name": teamlead_emp.last_name,
                 "teamlead_role": teamlead_emp.designation,
                 "employee_code": teamlead_emp.employee_code,
                 "reporting_to": reporting_name,

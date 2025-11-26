@@ -234,7 +234,7 @@ def leave_request_api(request, manager_id=None):
                 #         )  # Getting the employee from hierarchy table
                 #         # employees_data.append(employee_emp)
 
-                    # teamleads_data.append(teamlead_emp)
+                # teamleads_data.append(teamlead_emp)
 
                 # Combining teamleads_data and employees_data
                 # all_employees = teamleads_data + employees_data
@@ -250,6 +250,38 @@ def leave_request_api(request, manager_id=None):
             except Employee.DoesNotExist:
                 return Response(
                     {"error": "Manager not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            except LeavesTaken.DoesNotExist:
+                return Response(
+                    {"error": "Leave record not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            objs = LeavesTaken.objects.all()
+            serializer = LeaveRequestSerializer(objs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def leave_taken_employee_api(request, employee_id=None):
+    """
+    This filters the leave requests from employees.
+    """
+    if request.method == "GET":
+        if employee_id:
+            try:
+                # Fetching the leave records for employees
+
+                obj = LeavesTaken.objects.filter(employee_id=employee_id)
+
+                serializer = LeaveRequestSerializer(obj, many=True)
+
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "employee not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 

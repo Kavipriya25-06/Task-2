@@ -707,6 +707,7 @@ def opening_plus_monthly_availed_all(request, year: int):
             "employee_id",
             "employee_code",
             "employee_name",
+            "last_name",
             "resignation_date",
             "employment_type",
             # "employment_type",  # or "status" if that's your field name
