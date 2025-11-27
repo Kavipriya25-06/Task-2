@@ -29,8 +29,8 @@ from time_management.dtms_bio.views import dtms_event_summary, dtms_event_time
 
 urlpatterns = [
     path("api/test-debug/", lambda r: JsonResponse({"ok": True})),
-    path("api/admin/", admin.site.urls),
-    path("api/", include("time_management.api_urls")),
+    path("admin/", admin.site.urls),
+    path("", include("time_management.api_urls")),
     path(
         "api/dtms-event-time/<str:date_str>/", dtms_event_time, name="dtms_event_time"
     ),

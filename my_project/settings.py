@@ -53,6 +53,9 @@ SECURE_SSL_REDIRECT = False  # Apache terminates HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
+
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -87,6 +90,15 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
+
+
+#LOGIN_URL = "/api2/admin/login/"
+
+
+# This app is served under /api2 on the domain
+
+
+
 
 ROOT_URLCONF = "my_project.urls"
 
@@ -172,7 +184,7 @@ if IS_PRODUCTION:
     ALL_EMAIL = "all@aero360.co.in"
     # DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:8001/api"
 
-    DEFAULT_BIOMETRIC_URL = "https://dms.aero360.co.in/api2"
+    DEFAULT_BIOMETRIC_URL = "https://dms.aero360.co.in/api2/api"
     # "http://148.135.138.195:9001/api/dtms_event_time/2025-08-07/"
 
 else:
@@ -208,8 +220,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "/app2/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# Static files (CSS, JS, images) for DTMS (App2)
+STATIC_URL = "/api2/static/"
+
+# This is where collectstatic will put all admin + app static files
+STATIC_ROOT = "/var/www/app2/backend/DTMS-BE/static/"
+
+
+FORCE_SCRIPT_NAME = "/api2"
+LOGIN_URL = "/admin/login/"
+LOGIN_REDIRECT_URL = "/admin/"
+
 
 
 # Default primary key field type
