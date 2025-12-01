@@ -36,7 +36,7 @@ class Command(BaseCommand):
         logging.info("---- Biometric API sync started ----")
 
         # Get today's date
-        today_str = date.today().strftime("%Y-%m-%d")
+        today_str = datetime.today().strftime("%Y-%m-%d")
 
         # Use it in your API URL
         api_url = f"{DEFAULT_BIOMETRIC_URL}/dtms-event-summary/{today_str}/"
