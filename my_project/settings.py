@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,20 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-8^)=kl-$82!lnhygjhs8#_p5i1t2(jquh=$1-#%5^!!d4gbqxn"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 # DEBUG = False
 
-# IS_PRODUCTION = False  # or False for dev
+IS_PRODUCTION = os.getenv("IS_PRODUCTION")  # or False for dev
 
-IS_PRODUCTION = True  # or True for production
-
-if IS_PRODUCTION:
-    database_password = "mysql"
-else:
-    database_password = "mysql"
+# IS_PRODUCTION = True  # or True for production
 
 
 # ALLOWED_HOSTS = ["*"]
@@ -43,7 +42,7 @@ else:
 # CSRF_TRUSTED_ORIGINS = ["https://dms.aero360.co.in"]
 
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = ["dms.aero360.co.in", "127.0.0.1", "localhost", "106.195.40.246"]
 
@@ -51,9 +50,6 @@ CSRF_TRUSTED_ORIGINS = ["https://dms.aero360.co.in"]
 
 SECURE_SSL_REDIRECT = False  # Apache terminates HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-
-
 
 
 # Application definition
@@ -92,12 +88,10 @@ MIDDLEWARE = [
 ]
 
 
-#LOGIN_URL = "/api2/admin/login/"
+# LOGIN_URL = "/api2/admin/login/"
 
 
 # This app is served under /api2 on the domain
-
-
 
 
 ROOT_URLCONF = "my_project.urls"
@@ -130,16 +124,16 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "DTMS",
-        "USER": "root",
-        "PASSWORD": database_password,
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": "localhost",
         "PORT": "3306",
     },
     "reporting": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "DTMS_BIO",
-        "USER": "root",
-        "PASSWORD": database_password,
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": "localhost",
         "PORT": "3306",
         "OPTIONS": {
@@ -171,34 +165,16 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ####### Production credentials
 
-if IS_PRODUCTION:
-    #### In case of Zoho mail
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # Use App Password
+ALL_EMAIL = os.getenv("ALL_EMAIL")
+DEFAULT_BIOMETRIC_URL = os.getenv("DEFAULT_BIOMETRIC_URL")
 
-    ADMIN_EMAIL = "sme@aero360.co.in"
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp.zoho.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = "sme@aero360.co.in"  #
-    EMAIL_HOST_PASSWORD = "xYJg8x6JStCd"  # Use app password, not your main password
-    ALL_EMAIL = "all@aero360.co.in"
-    # DEFAULT_BIOMETRIC_URL = "http://148.135.138.195:8001/api"
-
-    DEFAULT_BIOMETRIC_URL = "https://dms.aero360.co.in/api2/api"
-    # "http://148.135.138.195:9001/api/dtms_event_time/2025-08-07/"
-
-else:
-    ##### in case of Gmail
-
-    ADMIN_EMAIL = "suriya.aero360@gmail.com"
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp.gmail.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = "suriya.aero360@gmail.com"
-    EMAIL_HOST_PASSWORD = "avhc rlvq pbsu alni"  # Use App Password
-    ALL_EMAIL = "suriyaprakash.a@aero360.co.in"
-    DEFAULT_BIOMETRIC_URL = "http://192.168.0.132:9000/api"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_ALL_EMAIL = ALL_EMAIL
@@ -226,11 +202,15 @@ STATIC_URL = "/api2/static/"
 # This is where collectstatic will put all admin + app static files
 STATIC_ROOT = "/var/www/app2/backend/DTMS-BE/static/"
 
+if IS_PRODUCTION:
+    FORCE_SCRIPT_NAME = "/api2"
+# else:
+#     FORCE_SCRIPT_NAME = "/api"
 
-FORCE_SCRIPT_NAME = "/api2"
+
+# FORCE_SCRIPT_NAME = "/api2"
 LOGIN_URL = "/admin/login/"
 LOGIN_REDIRECT_URL = "/admin/"
-
 
 
 # Default primary key field type
