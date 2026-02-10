@@ -377,6 +377,7 @@ def sync_employee_status_to_user(sender, instance, **kwargs):
 @receiver(post_save, sender=User)
 def sync_user_status_to_employee(sender, instance, **kwargs):
     employee = instance.employee_id
+    employee = Employee.objects.filter(user=instance).first()
     if employee.status != instance.status:
         employee.status = instance.status
         employee.save(update_fields=["status"])

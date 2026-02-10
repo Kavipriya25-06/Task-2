@@ -131,6 +131,7 @@ class EmployeeListSerializer(serializers.ModelSerializer):
             "employee_code",
             "employee_email",
             "status",
+            "resignation_date",
             "designation",
             "department",
             "user_details",

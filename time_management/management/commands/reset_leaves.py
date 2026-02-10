@@ -70,6 +70,8 @@ class Command(BaseCommand):
         # You can switch to Employee.objects.all() if you don't rely on existing LeavesAvailable.
         employees = Employee.objects.all().iterator()
 
+    if today.month == 1:
+
         for emp in employees:
             with transaction.atomic():
                 policy = policy_entitlements_for(emp)
@@ -106,6 +108,59 @@ class Command(BaseCommand):
                     lob.casual_leave_opening = policy["casual"]
                     lob.earned_leave_opening = policy["earned"]
                     lob.comp_off_opening = comp_cf
+                    lob.save(
+                        update_fields=[
+                            "sick_leave_opening",
+                            "casual_leave_opening",
+                            "earned_leave_opening",
+                            "comp_off_opening",
+                        ]
+                    )
+
+                # 3) Rebuild this year's monthly balances (Jan→Dec)
+                rebuild_monthly_balances(
+                    employee_id=emp.pk, year=current_year, start_month=1
+                )
+
+                count += 1
+    else:
+
+        for emp in employees:
+            with transaction.atomic():
+                policy = policy_entitlements_for(emp)
+                comp_cf = get_comp_off_carry_forward(emp, prev_year)
+
+                # 1) Snapshot: LeavesAvailable reflects the NEW opening
+                leaves_avail, _ += LeavesAvailable.objects.get_or_create(employee=emp)
+                leaves_avail.sick_leave += policy["sick"]
+                leaves_avail.casual_leave += policy["casual"]
+                leaves_avail.earned_leave += policy["earned"]
+                leaves_avail.comp_off += comp_cf
+                leaves_avail.save(
+                    update_fields=[
+                        "sick_leave",
+                        "casual_leave",
+                        "earned_leave",
+                        "comp_off",
+                    ]
+                )
+
+                # 2) Upsert: LeaveOpeningBalance for current_year
+                lob, created = LeaveOpeningBalance.objects.get_or_create(
+                    employee=emp,
+                    year=current_year,
+                    defaults=dict(
+                        sick_leave_opening=policy["sick"],
+                        casual_leave_opening=policy["casual"],
+                        earned_leave_opening=policy["earned"],
+                        comp_off_opening=comp_cf,
+                    ),
+                )
+                if not created:
+                    lob.sick_leave_opening += policy["sick"]
+                    lob.casual_leave_opening += policy["casual"]
+                    lob.earned_leave_opening += policy["earned"]
+                    lob.comp_off_opening += comp_cf
                     lob.save(
                         update_fields=[
                             "sick_leave_opening",

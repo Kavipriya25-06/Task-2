@@ -25,7 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+# SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY= 'django-insecure-1234567890-change-this-later'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -42,7 +43,8 @@ IS_PRODUCTION = os.getenv("IS_PRODUCTION")  # or False for dev
 # CSRF_TRUSTED_ORIGINS = ["https://dms.aero360.co.in"]
 
 
-DEBUG = os.getenv("DEBUG")
+# DEBUG = os.getenv("DEBUG")
+DEBUG = True
 
 ALLOWED_HOSTS = ["dms.aero360.co.in", "127.0.0.1", "localhost", "106.195.40.246"]
 
@@ -124,16 +126,16 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "DTMS",
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "USER": "root",
+        "PASSWORD": "root",
         "HOST": "localhost",
         "PORT": "3306",
     },
     "reporting": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "DTMS_BIO",
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "USER":"root",
+        "PASSWORD": "root",
         "HOST": "localhost",
         "PORT": "3306",
         "OPTIONS": {
@@ -202,8 +204,8 @@ STATIC_URL = "/api2/static/"
 # This is where collectstatic will put all admin + app static files
 STATIC_ROOT = "/var/www/app2/backend/DTMS-BE/static/"
 
-if IS_PRODUCTION:
-    FORCE_SCRIPT_NAME = "/api2"
+# if IS_PRODUCTION:
+#     FORCE_SCRIPT_NAME = "/api2"
 # else:
 #     FORCE_SCRIPT_NAME = "/api"
 
